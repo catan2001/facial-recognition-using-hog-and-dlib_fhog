@@ -202,7 +202,7 @@ def face_recognition(I_target, I_template):
     ## THRESHOLDING ##
     thresholded_boxes = []
     for box in all_bounding_boxes:
-        if box[2] >= 0.5: # Thresholding
+        if box[2] >= 0.6: # Thresholding
             thresholded_boxes.append(box)
     ## NON MAXIMUM SUPPRESSION ##
     while thresholded_boxes != []:
@@ -263,26 +263,34 @@ def visualize_face_detection(I_target,bounding_boxes):
     fimg = cv2.cvtColor(fimg, cv2.COLOR_BGR2RGB)
 
 
-    plt.figure(3)
+    '''plt.figure(3)
     plt.imshow(fimg, vmin=0, vmax=1)
-    plt.savefig('output_HOG_face_detection.png')
+    plt.savefig('output_HOG_face_detection.png')'''
+
+    return fimg
 
 
 def face_recognition_range(I_target, max_num_faces, step):
     
     found_faces = []
 
-    I_template = cv2.imread('template.png', 0)
-    #I_template = resize(I_template, 3) #increase template size to 150x150
+    real_face = []
+    x1=[]
+    y1=[]
+    x2=[]
+    y2=[]
+
+    I_template = cv2.imread('obama.jpg', 0)
+    I_template = resize(I_template, 0.5) #increase template size to 150x150
     I_resized = I_template
 
     lower_boundary = I_template.shape[0] #TEMPLATE is a square so no need for min
     print("\n lower_boundary = ", lower_boundary)
 
-    max_dim = max(I_target.shape[0], I_target.shape[1])
-    I_target = resize(I_target, 200/max_dim) #resize so the max dimension is 200
-    #upper_boundary = min(I_target.shape[0], I_target.shape[1])
-    upper_boundary = 200
+    #max_dim = max(I_target.shape[0], I_target.shape[1])
+    #I_target = resize(I_target, 200/max_dim) #resize so the max dimension is 200
+    upper_boundary = min(I_target.shape[0], I_target.shape[1])
+    #upper_boundary = 200
 
     print("\n upper_boundary = ", upper_boundary)
 
@@ -295,17 +303,47 @@ def face_recognition_range(I_target, max_num_faces, step):
 
         if(len(found_boxes)):
             for box in found_boxes:
-                found_faces.append([box[0], box[1], box[0]+I_resized.shape[0], box[1]+I_resized.shape[0]])
+                found_faces.append([box[0], box[1], box[0]+I_resized.shape[0], box[1]+I_resized.shape[0], box[2]])
+                x1.append(box[0]) #x1
+                y1.append(box[1]) #y1
+                x2.append(box[0]+I_resized.shape[0]) #x2
+                y2.append(box[1]+I_resized.shape[0]) #y2
 
-        if len(found_faces) >= max_num_faces:
+                print("a face: \n", box)
+
+
+        '''if len(found_faces) >= max_num_faces:
             print("\n found it!")
             found_faces = sorted(list(found_faces),key=lambda box: box[2], reverse=True)
             found_faces = found_faces[: max_num_faces]
-            break
+            break'''
 
-        
+    found_faces = sorted(list(found_faces),key=lambda box: box[4], reverse=True)
+    
+    num_faces = len(found_faces)
 
-    return found_faces
+    if num_faces>4:
+        real_face.append([sum(x1)/num_faces, sum(y1)/num_faces, sum(x2)/num_faces, sum(y2)/num_faces])
+    else:
+        real_face.append([found_faces[0][0], found_faces[0][1], found_faces[0][2], found_faces[0][3]])
+    #real_face.append([weighed_mean(x1), weighed_mean(y1), weighed_mean(x2), weighed_mean(y2)])   
+
+    return found_faces, real_face
+
+
+def weighed_mean(coordinates):
+
+    coordinates = sorted(list(coordinates), reverse=True)
+    true_mean = sum(coordinates)/len(coordinates)
+
+    for i in range(0, len(coordinates)-1):
+        t=(1-abs(true_mean-coordinates[i])/abs(true_mean-coordinates[0]))
+        coordinates[i] = t*coordinates[i]
+
+    new_mean = sum(coordinates)/len(coordinates)
+
+    return new_mean
+
 
 
 def resize(img, scale_percent):
