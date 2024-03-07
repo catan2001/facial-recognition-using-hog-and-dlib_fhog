@@ -270,7 +270,7 @@ def visualize_face_detection(I_target,bounding_boxes):
     return fimg
 
 
-def face_recognition_range(I_target, max_num_faces, step):
+def face_recognition_range(I_target, step):
     
     found_faces = []
 
@@ -280,7 +280,7 @@ def face_recognition_range(I_target, max_num_faces, step):
     x2=[]
     y2=[]
 
-    I_template = cv2.imread('obama.jpg', 0)
+    I_template = cv2.imread('template.png', 0)
     I_template = resize(I_template, 0.5) #increase template size to 150x150
     I_resized = I_template
 
@@ -311,12 +311,6 @@ def face_recognition_range(I_target, max_num_faces, step):
 
                 print("a face: \n", box)
 
-
-        '''if len(found_faces) >= max_num_faces:
-            print("\n found it!")
-            found_faces = sorted(list(found_faces),key=lambda box: box[2], reverse=True)
-            found_faces = found_faces[: max_num_faces]
-            break'''
 
     found_faces = sorted(list(found_faces),key=lambda box: box[4], reverse=True)
     
@@ -352,24 +346,3 @@ def resize(img, scale_percent):
     dim = (width, height)
 
     return cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
-
-
-
-'''if __name__=='__main__':
-
-    #TODO: 1# write a function that return two edges like we need for the main program
-    #TODO: 2# implement camera instead of picture
-
-
-    I_target= cv2.imread('Vuk.jpg', 0)
-    #I_template = cv2.imread('template.png', 0)
-
-    bounding_boxes=face_recognition_range(I_target, 1, 25, 3, 3)
-
-    print("bounding box:", bounding_boxes)
-
-    I_target_c= cv2.imread('Vuk.jpg')
-
-    # MxN image (just for visualization)
-    visualize_face_detection(I_target_c, bounding_boxes)
-    #this is visualization code.'''
