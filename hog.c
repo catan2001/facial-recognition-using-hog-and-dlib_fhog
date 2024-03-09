@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 //assume the size of our picture is fixed and already determined
@@ -42,23 +43,23 @@ void filter_image(int img[ROWS][COLS], int im_filtered[ROWS][COLS], const char* 
     }
 
     //filter image:
-    int chunk[9];
+    int imROI[9];
 
     for (int i=0; i<ROWS; ++i){
         for (int j=0; j<COLS; ++j){
 
             //np.dot(img[i:i+3][j:j+3].flatten(), filter)
             for(int k=0; k<9; ++k){
-                chunk[k]=padded_img[i+(int)k/3][j+(k%3)];
+                imROI[k]=padded_img[i+(int)k/3][j+(k%3)];
 
-                im_filtered[i][j]+=chunk[k]*filter[k];
+                im_filtered[i][j]+=imROI[k]*filter[k];
             }
         }
     }
 }
 
 //getting the amplitude and phase matrix of the filtered image
-void get_gradient(int im_dx[ROWS][COLS], int im_dy[ROWS][COLS], int grad_mag[ROWS][COLS], int grad_angle[ROWS][COLS]){
+void get_gradient(int im_dx[ROWS][COLS], int im_dy[ROWS][COLS], float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS]){
     
     for(int i=0; i<ROWS; ++i){
         for(int j=0; j<COLS; ++j){
@@ -70,7 +71,7 @@ void get_gradient(int im_dx[ROWS][COLS], int im_dy[ROWS][COLS], int grad_mag[ROW
 
             //determining the phase matrix:
             if(abs(dX)>0.00001){
-                grad_angle[i][j] = arctan(dY/dX) + PI/2;
+                grad_angle[i][j] = atan(dY/dX) + PI/2;
             }else if(dY<0 && dX<0){
                 grad_angle[i][j] = 0;
             }else{
@@ -80,15 +81,51 @@ void get_gradient(int im_dx[ROWS][COLS], int im_dy[ROWS][COLS], int grad_mag[ROW
     }
 }
 
-void build_histogram(int grad_mag[ROWS][COLS], int grad_angle[ROWS][COLS], float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]){
+void build_histogram(float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS], float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]){
 
+    //start from the upper left corner
     int x_corner = 0;
     int y_corner = 0;
+    //define REGION of INTEREST, our new chunks
+    int cell_pow2 = CELL_SIZE*CELL_SIZE;
+    float magROI[cell_pow2], angleROI[cell_pow2];
+
+    float angleInDeg;
 
     while(x_corner+CELL_SIZE <= ROWS){
         while(y_corner+CELL_SIZE <= COLS){
             float hist[6]={0, 0, 0, 0, 0, 0};
+
+            for(int k=0; k<9; ++k){
+                magROI[k]=grad_mag[x_corner+(int)k/CELL_SIZE][y_corner+(k%CELL_SIZE)];
+                angleROI[k]=grad_angle[x_corner+(int)k/CELL_SIZE][y_corner+(k%CELL_SIZE)];
+            }
+
+            for(int i=0; i<cell_pow2; ++i){
+                angleInDeg = angleROI[i]*(180 / PI);
+
+                if(angleInDeg >=0 && angleInDeg < 30){
+                    hist[0] += magROI[i];
+                }else if(angleInDeg >=30 && angleInDeg < 60){
+                    hist[1] += magROI[i];
+                }else if(angleInDeg >=60 && angleInDeg < 90){
+                    hist[2] += magROI[i];
+                }else if(angleInDeg >=90 && angleInDeg < 120){
+                    hist[3] += magROI[i];
+                }else if(angleInDeg >=120 && angleInDeg < 150){
+                    hist[4] += magROI[i];
+                }else{
+                    hist[5] += magROI[i];
+                }  
+            }
+
+            //ori_histo[int(x_corner/cell_size),int(y_corner/cell_size),:] = hist
+            for(int i=0; i<nBINS; ++i) ori_histo[(int)x_corner/CELL_SIZE][(int)y_corner/CELL_SIZE][i] = hist[i];
+
+            y_corner+=CELL_SIZE;
         }
+        x_corner+=CELL_SIZE;
+        y_corner=0;
     }
 }
 
@@ -96,18 +133,23 @@ void build_histogram(int grad_mag[ROWS][COLS], int grad_angle[ROWS][COLS], float
 
 int main(){
 
-    int image[2][3]={{1, 0, 5}, {2, 2, 7}};
+    /*FILE * out;
+    out = fopen("color_test.ppm", "wb");
 
-    for(int i=0; i<2; ++i){
-        for(int j=0; j<3; ++j){
-            //printf("%d ", image[i][j]);
+    fprintf(out, "P6 256 256 255\n");
+    
+    for(int r=0; r<256; r++) {
+        for(int b=0; b<256; b++) {
+            fputc(r, out);
+            fputc(0, out);
+            fputc(b, out);
         }
-        printf("/n");
     }
+  
+    fclose(out);*/
 
-    /*for(int i=0; i<2; ++i){
-        printf("%d ", image[i]);
-    }*/
+    FILE * rach;
+    rach = fopen("disgustedrachel.ppm", "r");
 
-    return 0;
+  return 0;
 }
