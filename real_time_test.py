@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 
 from utils import landmark_detector_dlib
+from utils import landmark_detector_hog
 from utils import distance_calculator_test
 
 emotions = ["anger", "contempt", "disgust", "fear", "happy", "sadness", "surprise"]
@@ -30,7 +31,10 @@ while True:
     video_frame_cpy = video_frame
     #cv2.imwrite('frame_being_analised.jpg', video_frame_cpy)
         
-    video_frame_landmarks = landmark_detector_dlib(video_frame)
+    #for dlib fhog recognition:
+    #video_frame_landmarks = landmark_detector_dlib(video_frame)
+    #for hog recognition:
+    video_frame_landmarks = landmark_detector_hog(video_frame)
 
     if (np.all(video_frame_landmarks == 0)):
         cv2.imshow("AdaBoost Prediction ",video_frame_cpy)   

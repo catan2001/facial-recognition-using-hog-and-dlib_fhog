@@ -281,7 +281,7 @@ def face_recognition_range(I_target, step):
     y2=[]
 
     I_template = cv2.imread('template.png', 0)
-    I_template = resize(I_template, 0.5) #increase template size to 150x150
+    I_template = resize(I_template, 1) #increase template size to 150x150
     I_resized = I_template
 
     lower_boundary = I_template.shape[0] #TEMPLATE is a square so no need for min
@@ -320,7 +320,6 @@ def face_recognition_range(I_target, step):
         real_face.append([sum(x1)/num_faces, sum(y1)/num_faces, sum(x2)/num_faces, sum(y2)/num_faces])
     else:
         real_face.append([found_faces[0][0], found_faces[0][1], found_faces[0][2], found_faces[0][3]])
-    #real_face.append([weighed_mean(x1), weighed_mean(y1), weighed_mean(x2), weighed_mean(y2)])   
 
     return found_faces, real_face
 

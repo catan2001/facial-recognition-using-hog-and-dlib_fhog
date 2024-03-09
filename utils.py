@@ -5,6 +5,7 @@ import os
 import glob
 import random
 import hog
+import matplotlib.pyplot as plt
 
 #TODO: smanjiti velicinu matrice landmarks u landmark_detector_dlib sa 68 na 68-16
 
@@ -94,32 +95,35 @@ def landmark_detector_dlib(image) :
     
 def landmark_detector_hog(image) :
 
+    max_dim = max(image.shape[0], image.shape[1])
+    image = hog.resize(image, 200/max_dim)
+
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    cv2.imwrite('frame_in_gray.jpg', gray)
     
-    bounding_boxes = hog.face_recognition_range(gray, 1, 10)
+    bounding_boxes, real_face = hog.face_recognition_range(gray, 10)
     print("bounding boxes from HOG:", bounding_boxes)
-    
-    hog.visualize_face_detection(image, np.array(bounding_boxes))
+    print("face found by HOG:", real_face)
 
-    faces = []
-
-    for box in bounding_boxes:
-        face = dlib.rectangle(int(box[0]), int(box[1]), int(box[2]), int(box[3]))
-        faces.append(face)
+    all_faces = hog.visualize_face_detection(image, np.array(bounding_boxes))
+    plt.imshow(all_faces, vmin=0, vmax=1)
+    plt.savefig('all_face.png')
     
-    print("faces in dlib:", faces)
+    arithmetic_face = hog.visualize_face_detection(image, np.array(real_face))
+    plt.imshow(arithmetic_face, vmin=0, vmax=1)
+    plt.savefig('arithmetic_face.png')
+
+    face = dlib.rectangle(int(real_face[0][0]), int(real_face[0][1]), int(real_face[0][2]), int(real_face[0][3]))
+    
 
     # go through the face bounding boxes
-    if len(faces) < 1:
+    if face.is_empty():
         #In case no case selected, print "error" values
         #u slucaju da nema detektovanog lica vrati error
         #vrati landmarkse
         return np.zeros((68, 2))
-    else:
-        for face in faces:        
-            # apply the shape predictor to the face ROI
-            shape = predictor(gray, face)
+    else:    
+        # apply the shape predictor to the face ROI
+        shape = predictor(gray, face)
         
         landmarks = np.zeros((68, 2))
         #print(result)
