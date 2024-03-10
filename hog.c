@@ -13,8 +13,8 @@
 
 #define PI 3.14159265358979323846
 
-#define HEIGHT 25
-#define WIDTH 25
+#define HEIGHT (ROWS/CELL_SIZE)
+#define WIDTH (COLS/CELL_SIZE)
 
 #define HIST_SIZE 6*BLOCK_SIZE*BLOCK_SIZE
 
@@ -136,10 +136,10 @@ void build_histogram(float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS], f
     }
 }
 
-void get_block_descriptor(float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]){
+void get_block_descriptor(float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS], float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][6*(BLOCK_SIZE*BLOCK_SIZE)]){
     int x_window = 0;
     int y_window = 0;
-    float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][6*(BLOCK_SIZE*BLOCK_SIZE)];        
+
     while(x_window + BLOCK_SIZE <= HEIGHT){
         while(y_window + BLOCK_SIZE <= WIDTH){
             float concatednatedHist[HIST_SIZE];
@@ -170,7 +170,7 @@ void get_block_descriptor(float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SI
     }
 }
 
-void extract_hog(float im[ROWS][COLS], float hog[]) {
+void extract_hog(float im[ROWS][COLS], float hog[(HEIGHT-(BLOCK_SIZE-1)) * (WIDTH-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE)]) {
     
     // im_min and im_max used for normalizing the image
     im[0][0] = im[0][0]/255.0;
@@ -200,11 +200,19 @@ void extract_hog(float im[ROWS][COLS], float hog[]) {
     float grad_angle[ROWS][COLS];
     get_gradient(dx, dy, grad_mag, grad_angle);
     
-    float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS];
+    float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]; // TODO: check to replace ROWS/CELL_SIZE with HEIGHT
     build_histogram(grad_mag, grad_angle, ori_histo);
     
-    //TODO: Finish the function when Andjela finishes with her function
+    // TODO: Make makro to replace underneath
+    float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][6*(BLOCK_SIZE*BLOCK_SIZE)];        
     
+    get_block_descriptor(ori_histo, ori_histo_normalized);
+    
+    int l = 0;
+    for(int i = 0; i < HEIGHT-(BLOCK_SIZE-1); ++i)
+      for(int j = 0; j < WIDTH-(BLOCK_SIZE-1); ++j)
+        for(int k = 0; k < 6*BLOCK_SIZE*BLOCK_SIZE; ++k)
+          hog[l++] = ori_histo_normalized[i][j][k];
 }
 
 int main(){
