@@ -9,6 +9,8 @@
 #define CELL_SIZE 8
 #define nBINS 6
 
+#define BLOCK_SIZE 2
+
 #define PI 3.14159265358979323846
 
 //3 x 3 Sobel filter
@@ -17,10 +19,10 @@ const char filter_y[9] = {1,2,1, 0,0,0, -1,-2,-1};    //Dy = filter_y conv D
 
 //TODO: in main before calling this function you need to pad the image on all edges by 1 and fill them with zeros
 //so the filtered image has the same rezolution as the original
-void filter_image(int img[ROWS][COLS], int im_filtered[ROWS][COLS], const char* filter){
+void filter_image(float img[ROWS][COLS], float im_filtered[ROWS][COLS], const char* filter){
 
     //create a local matrix that will hold the padded image:
-    int padded_img[ROWS+2][COLS+2];
+    float padded_img[ROWS+2][COLS+2];
     
     //pad the image on the outer edges with zeros:
     for(int i=0; i<ROWS+2; ++i) {
@@ -43,7 +45,7 @@ void filter_image(int img[ROWS][COLS], int im_filtered[ROWS][COLS], const char* 
     }
 
     //filter image:
-    int imROI[9];
+    float imROI[9];
 
     for (int i=0; i<ROWS; ++i){
         for (int j=0; j<COLS; ++j){
@@ -59,13 +61,13 @@ void filter_image(int img[ROWS][COLS], int im_filtered[ROWS][COLS], const char* 
 }
 
 //getting the amplitude and phase matrix of the filtered image
-void get_gradient(int im_dx[ROWS][COLS], int im_dy[ROWS][COLS], float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS]){
+void get_gradient(float im_dx[ROWS][COLS], float im_dy[ROWS][COLS], float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS]){
     
     for(int i=0; i<ROWS; ++i){
         for(int j=0; j<COLS; ++j){
             int dX = im_dx[i][j];
             int dY = im_dy[i][j];
-
+  
             //determining the amplitude matrix:
             grad_mag[i][j] = sqrt(pow(dX,2)+pow(dY,2));
 
@@ -129,7 +131,42 @@ void build_histogram(float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS], f
     }
 }
 
-
+void extract_hog(float im[ROWS][COLS], float hog[]) {
+    
+    // im_min and im_max used for normalizing the image
+    im[0][0] = im[0][0]/255.0;
+    float im_min = im[0][0]; // initalize
+    float im_max = im[0][0]; // initalize
+    
+    for(int i = 0; i < ROWS; ++i)
+      for(int j = 0; j < COLS; ++j) {
+        im[i][j] = im[i][j]/255.0; // converting to float format
+        if(im_min > im[i][j]) im_min = im[i][j]; // find min im
+        if(im_max < im[i][j]) im_max = im[i][j]; // find max im
+      }
+    
+    for(int i = 0; i < ROWS; ++i)
+      for(int j = 0; j < COLS; ++j) {
+        im[i][j] = (im[i][j] - im_min) / im_max; // Normalize image to [0, 1]
+      }
+    
+    float dx[ROWS][COLS];
+    float dy[ROWS][COLS];
+    //GET X GRADIENT OF THE PICTURE
+    filter_image(im, dx, filter_x);
+    //GET Y GRADIENT OF THE PICTURE
+    filter_image(im, dy, filter_y);
+    
+    float grad_mag[ROWS][COLS];
+    float grad_angle[ROWS][COLS];
+    get_gradient(dx, dy, grad_mag, grad_angle);
+    
+    float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS];
+    build_histogram(grad_mag, grad_angle, ori_histo);
+    
+    //TODO: Finish the function when Andjela finishes with her function
+    
+}
 
 int main(){
 
@@ -147,7 +184,7 @@ int main(){
     }
   
     fclose(out);*/
-
+    
     FILE * rach;
     rach = fopen("disgustedrachel.ppm", "r");
 
