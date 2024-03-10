@@ -13,6 +13,11 @@
 
 #define PI 3.14159265358979323846
 
+#define HEIGHT 25
+#define WIDTH 25
+
+#define HIST_SIZE 6*BLOCK_SIZE*BLOCK_SIZE
+
 //3 x 3 Sobel filter
 const char filter_x[9] = {1,0,-1, 2,0,-2, 1,0,-1};  //Dx = filter_x conv D
 const char filter_y[9] = {1,2,1, 0,0,0, -1,-2,-1};    //Dy = filter_y conv D
@@ -128,6 +133,40 @@ void build_histogram(float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS], f
         }
         x_corner+=CELL_SIZE;
         y_corner=0;
+    }
+}
+
+void get_block_descriptor(float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]){
+    int x_window = 0;
+    int y_window = 0;
+    float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][6*(BLOCK_SIZE*BLOCK_SIZE)];        
+    while(x_window + BLOCK_SIZE <= HEIGHT){
+        while(y_window + BLOCK_SIZE <= WIDTH){
+            float concatednatedHist[HIST_SIZE];
+            int index = 0;
+            for(int i = 0;i <= x_window + BLOCK_SIZE;i++){
+                for(int j = 0;j <= y_window + BLOCK_SIZE;j++){
+                    for(int k = 0;k < 6; k++){
+                        concatednatedHist[index]=ori_histo[i][j][k];
+                        ++index;
+                    }
+                }
+            }
+            float histNorm = 0.0;
+            for(int i = 0; i < HIST_SIZE;i++){
+                histNorm += concatednatedHist[i] * concatednatedHist[i];
+            }
+            histNorm = sqrt(histNorm + 0.001);
+
+            int h_i = 0;
+            for(int i = 0; i < HIST_SIZE; i++){
+                ori_histo_normalized[x_window][y_window][i] = concatednatedHist[h_i] / histNorm;
+                h_i++;
+                y_window += BLOCK_SIZE;
+            }
+        }
+        x_window += BLOCK_SIZE;
+        y_window = 0; 
     }
 }
 
