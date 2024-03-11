@@ -1,16 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <string.h>
 
 //assume the size of our picture is fixed and already determined
 #define ROWS 200
-#define COLS 600
+#define COLS 200
+
+#define BLOCK_SIZE 2
 
 #define CELL_SIZE 8
 #define nBINS 6
-
-#define BLOCK_SIZE 2
 
 #define PI 3.14159265358979323846
 
@@ -23,11 +22,6 @@
 const char filter_x[9] = {1,0,-1, 2,0,-2, 1,0,-1};  //Dx = filter_x conv D
 const char filter_y[9] = {1,2,1, 0,0,0, -1,-2,-1};    //Dy = filter_y conv D
 
-<<<<<<< HEAD
-=======
-//TODO: in main before calling this function you need to pad the image on all edges by 1 and fill them with zeros
-//so the filtered image has the same rezolution as the original
->>>>>>> f80eaf4909ce7a44bebfa92d25ff8f2efb34e825
 void filter_image(float img[ROWS][COLS], float im_filtered[ROWS][COLS], const char* filter){
 
     //create a local matrix that will hold the padded image:
@@ -64,6 +58,9 @@ void filter_image(float img[ROWS][COLS], float im_filtered[ROWS][COLS], const ch
                 imROI[k]=padded_img[i+(int)k/3][j+(k%3)];
 
                 im_filtered[i][j]+=imROI[k]*filter[k];
+                
+                im_filtered[i][j]=(float)((512+(int)im_filtered[i][j])%256);
+                
             }
         }
     }
@@ -76,7 +73,7 @@ void get_gradient(float im_dx[ROWS][COLS], float im_dy[ROWS][COLS], float grad_m
         for(int j=0; j<COLS; ++j){
             int dX = im_dx[i][j];
             int dY = im_dy[i][j];
-  
+
             //determining the amplitude matrix:
             grad_mag[i][j] = sqrt(pow(dX,2)+pow(dY,2));
 
@@ -219,37 +216,115 @@ void extract_hog(float im[ROWS][COLS], float hog[(HEIGHT-(BLOCK_SIZE-1)) * (WIDT
           hog[l++] = ori_histo_normalized[i][j][k];
 }
 
+
 int main(){
 
+
+    unsigned int a,b;
+    float gray[ROWS][COLS], c_hog[(HEIGHT-(BLOCK_SIZE-1)) * (WIDTH-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE)];
+
     FILE * rach;
-    rach = fopen("dx.ppm", "rb");
+    rach = fopen("gray.txt", "rb");
 
-    unsigned char ch;
-    unsigned char a;
-    unsigned char matrix[ROWS][COLS], dx[ROWS][COLS];
-
-
-    printf("\n");
-
-    for(int k=0; k<15; ++k) ch = fgetc(rach); //predji na prvi clan niza
 
     for (int i=0; i<ROWS; ++i){
         for (int j=0; j<COLS; ++j){
-            
-            //ch = fgetc(rach);
-            //ch = fgetc(rach);
-            ch = fgetc(rach);
-            a=ch;
 
-            matrix[i][j] = a;
-            printf("%d ", (unsigned int)matrix[i][j]);
+            fscanf(rach, "%d", &a);
+
+            gray[i][j] = a;
+            //printf("%f ", gray[i][j]);
         }
-        printf("\n");
-    }     
-
-     //printf("%d ", (int)matrix[1][0]);
+        //printf("\n");
+    }
 
     fclose(rach);
+
+    extract_hog(gray, c_hog);
+
+    FILE * dx_rach;
+
+    dx_rach = fopen("c_hog.txt", "wb");
+
+    for (int i=0; i<13824; ++i){
+
+            a = c_hog[i];
+
+            fprintf(dx_rach, "%d ", a);
+    }
+
+    fclose(dx_rach);
+
+
+
+    /*FILE * rach;
+    FILE * ptr;
+    rach = fopen("dx.txt", "rb");
+    rach = fopen("dj_c.txt", "rb");
+
+    for (int i=0; i<ROWS; ++i){
+        for (int j=0; j<COLS; ++j){
+
+            fscanf(rach, "%d", &a);
+            fscanf(ptr, "%d", &b);
+
+            if(a==b) 
+            //printf("%f ", gray[i][j]);
+        }
+        //printf("\n");
+    }
+
+    fclose(rach);*/
+
+    /*FILE * rach;
+    rach = fopen("gray.txt", "rb");
+
+
+    for (int i=0; i<ROWS; ++i){
+        for (int j=0; j<COLS; ++j){
+
+            fscanf(rach, "%d", &a);
+
+            gray[i][j] = a;
+            //printf("%f ", gray[i][j]);
+        }
+        //printf("\n");
+    }
+
+    fclose(rach);
+
+    filter_image(gray, dx, filter_x);
+
+    FILE * dx_rach;
+
+    dx_rach = fopen("dx_c.txt", "wb");
+
+    int c;
+
+
+    for (int i=0; i<ROWS; ++i){
+        for (int j=0; j<COLS; ++j){
+
+            a = dx[i][j];
+
+            fprintf(dx_rach, "%d ", a);
+
+        }
+        fprintf(dx_rach, "\n");
+    }
+
+    fclose(dx_rach);
+
+
+
+
+
+
+    unsigned char c=-150;
+
+    c = ~c;
+
+    printf("c=%d ", c);*/
 
     /*FILE* dx, *dc;
     dx = fopen("dx.ppm", "rb");
@@ -314,7 +389,6 @@ int main(){
         fputc((int)dx[i][j], dx_rach);
         }
     }
-<<<<<<< HEAD
     fclose(dx_rach);
 
 
@@ -330,13 +404,3 @@ int main(){
 
     return 0;
 }
-=======
-  
-    fclose(out);*/
-    
-    FILE * rach;
-    rach = fopen("disgustedrachel.ppm", "r");
-
-  return 0;
-}
->>>>>>> f80eaf4909ce7a44bebfa92d25ff8f2efb34e825
