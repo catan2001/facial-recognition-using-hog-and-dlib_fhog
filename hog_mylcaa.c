@@ -10,24 +10,12 @@
 #define CELL_SIZE 8
 #define nBINS 6
 
-#define BLOCK_SIZE 2
-
 #define PI 3.14159265358979323846
-
-#define HEIGHT (ROWS/CELL_SIZE)
-#define WIDTH (COLS/CELL_SIZE)
-
-#define HIST_SIZE 6*BLOCK_SIZE*BLOCK_SIZE
 
 //3 x 3 Sobel filter
 const char filter_x[9] = {1,0,-1, 2,0,-2, 1,0,-1};  //Dx = filter_x conv D
 const char filter_y[9] = {1,2,1, 0,0,0, -1,-2,-1};    //Dy = filter_y conv D
 
-<<<<<<< HEAD
-=======
-//TODO: in main before calling this function you need to pad the image on all edges by 1 and fill them with zeros
-//so the filtered image has the same rezolution as the original
->>>>>>> f80eaf4909ce7a44bebfa92d25ff8f2efb34e825
 void filter_image(float img[ROWS][COLS], float im_filtered[ROWS][COLS], const char* filter){
 
     //create a local matrix that will hold the padded image:
@@ -76,7 +64,7 @@ void get_gradient(float im_dx[ROWS][COLS], float im_dy[ROWS][COLS], float grad_m
         for(int j=0; j<COLS; ++j){
             int dX = im_dx[i][j];
             int dY = im_dy[i][j];
-  
+
             //determining the amplitude matrix:
             grad_mag[i][j] = sqrt(pow(dX,2)+pow(dY,2));
 
@@ -140,84 +128,7 @@ void build_histogram(float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS], f
     }
 }
 
-void get_block_descriptor(float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS], float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][6*(BLOCK_SIZE*BLOCK_SIZE)]){
-    int x_window = 0;
-    int y_window = 0;
 
-    while(x_window + BLOCK_SIZE <= HEIGHT){
-        while(y_window + BLOCK_SIZE <= WIDTH){
-            float concatednatedHist[HIST_SIZE];
-            int index = 0;
-            for(int i = 0;i <= x_window + BLOCK_SIZE;i++){
-                for(int j = 0;j <= y_window + BLOCK_SIZE;j++){
-                    for(int k = 0;k < 6; k++){
-                        concatednatedHist[index]=ori_histo[i][j][k];
-                        ++index;
-                    }
-                }
-            }
-            float histNorm = 0.0;
-            for(int i = 0; i < HIST_SIZE;i++){
-                histNorm += concatednatedHist[i] * concatednatedHist[i];
-            }
-            histNorm = sqrt(histNorm + 0.001);
-
-            int h_i = 0;
-            for(int i = 0; i < HIST_SIZE; i++){
-                ori_histo_normalized[x_window][y_window][i] = concatednatedHist[h_i] / histNorm;
-                h_i++;
-                y_window += BLOCK_SIZE;
-            }
-        }
-        x_window += BLOCK_SIZE;
-        y_window = 0; 
-    }
-}
-
-void extract_hog(float im[ROWS][COLS], float hog[(HEIGHT-(BLOCK_SIZE-1)) * (WIDTH-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE)]) {
-    
-    // im_min and im_max used for normalizing the image
-    im[0][0] = im[0][0]/255.0;
-    float im_min = im[0][0]; // initalize
-    float im_max = im[0][0]; // initalize
-    
-    for(int i = 0; i < ROWS; ++i)
-      for(int j = 0; j < COLS; ++j) {
-        im[i][j] = im[i][j]/255.0; // converting to float format
-        if(im_min > im[i][j]) im_min = im[i][j]; // find min im
-        if(im_max < im[i][j]) im_max = im[i][j]; // find max im
-      }
-    
-    for(int i = 0; i < ROWS; ++i)
-      for(int j = 0; j < COLS; ++j) {
-        im[i][j] = (im[i][j] - im_min) / im_max; // Normalize image to [0, 1]
-      }
-    
-    float dx[ROWS][COLS];
-    float dy[ROWS][COLS];
-    //GET X GRADIENT OF THE PICTURE
-    filter_image(im, dx, filter_x);
-    //GET Y GRADIENT OF THE PICTURE
-    filter_image(im, dy, filter_y);
-    
-    float grad_mag[ROWS][COLS];
-    float grad_angle[ROWS][COLS];
-    get_gradient(dx, dy, grad_mag, grad_angle);
-    
-    float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]; // TODO: check to replace ROWS/CELL_SIZE with HEIGHT
-    build_histogram(grad_mag, grad_angle, ori_histo);
-    
-    // TODO: Make makro to replace underneath
-    float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][6*(BLOCK_SIZE*BLOCK_SIZE)];        
-    
-    get_block_descriptor(ori_histo, ori_histo_normalized);
-    
-    int l = 0;
-    for(int i = 0; i < HEIGHT-(BLOCK_SIZE-1); ++i)
-      for(int j = 0; j < WIDTH-(BLOCK_SIZE-1); ++j)
-        for(int k = 0; k < 6*BLOCK_SIZE*BLOCK_SIZE; ++k)
-          hog[l++] = ori_histo_normalized[i][j][k];
-}
 
 int main(){
 
@@ -314,7 +225,6 @@ int main(){
         fputc((int)dx[i][j], dx_rach);
         }
     }
-<<<<<<< HEAD
     fclose(dx_rach);
 
 
@@ -330,13 +240,3 @@ int main(){
 
     return 0;
 }
-=======
-  
-    fclose(out);*/
-    
-    FILE * rach;
-    rach = fopen("disgustedrachel.ppm", "r");
-
-  return 0;
-}
->>>>>>> f80eaf4909ce7a44bebfa92d25ff8f2efb34e825
