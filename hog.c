@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 //assume the size of our picture is fixed and already determined
 #define ROWS 200
@@ -16,7 +17,7 @@
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)
 
-#define HIST_SIZE 6*BLOCK_SIZE*BLOCK_SIZE
+#define HIST_SIZE nBINS*BLOCK_SIZE*BLOCK_SIZE
 
 //3 x 3 Sobel filter
 const char filter_x[9] = {1,0,-1, 2,0,-2, 1,0,-1};  //Dx = filter_x conv D
@@ -55,7 +56,7 @@ void filter_image(float img[ROWS][COLS], float im_filtered[ROWS][COLS], const ch
 
             //np.dot(img[i:i+3][j:j+3].flatten(), filter)
             for(int k=0; k<9; ++k){
-                imROI[k]=padded_img[i+(int)k/3][j+(k%3)];
+                imROI[k]=padded_img[i+(int)(k/3)][j+(k%3)];
 
                 im_filtered[i][j]+=imROI[k]*filter[k];
                 
@@ -68,6 +69,8 @@ void filter_image(float img[ROWS][COLS], float im_filtered[ROWS][COLS], const ch
 
 //getting the amplitude and phase matrix of the filtered image
 void get_gradient(float im_dx[ROWS][COLS], float im_dy[ROWS][COLS], float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS]){
+
+    printf("USAO U GET GRADIENT!!!!");
     
     for(int i=0; i<ROWS; ++i){
         for(int j=0; j<COLS; ++j){
@@ -91,6 +94,7 @@ void get_gradient(float im_dx[ROWS][COLS], float im_dy[ROWS][COLS], float grad_m
 
 void build_histogram(float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS], float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]){
 
+    printf("USAO U BUILD HISTOGRAM!!!!");
     //start from the upper left corner
     int x_corner = 0;
     int y_corner = 0;
@@ -100,78 +104,69 @@ void build_histogram(float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS], f
 
     float angleInDeg;
 
-    while(x_corner+CELL_SIZE <= ROWS){
-        while(y_corner+CELL_SIZE <= COLS){
-            float hist[6]={0, 0, 0, 0, 0, 0};
+    for(int i = x_corner+CELL_SIZE; i <= ROWS; i+=CELL_SIZE){
+        for(int j = y_corner+CELL_SIZE; j <= COLS; j+=CELL_SIZE){
+            float hist[nBINS]={0, 0, 0, 0, 0, 0};
 
-            for(int k=0; k<9; ++k){
-                magROI[k]=grad_mag[x_corner+(int)k/CELL_SIZE][y_corner+(k%CELL_SIZE)];
-                angleROI[k]=grad_angle[x_corner+(int)k/CELL_SIZE][y_corner+(k%CELL_SIZE)];
+            for(int k=0; k<cell_pow2; ++k){
+                magROI[k]=grad_mag[i-CELL_SIZE+(int)(k/CELL_SIZE)][j-CELL_SIZE+(k%CELL_SIZE)];
+                angleROI[k]=grad_angle[i-CELL_SIZE+(int)(k/CELL_SIZE)][j-CELL_SIZE+(k%CELL_SIZE)];
             }
 
-            for(int i=0; i<cell_pow2; ++i){
-                angleInDeg = angleROI[i]*(180 / PI);
+            for(int k=0; k<cell_pow2; ++k){
+                angleInDeg = angleROI[k]*(180 / PI);
 
                 if(angleInDeg >=0 && angleInDeg < 30){
-                    hist[0] += magROI[i];
+                    hist[0] += magROI[k];
                 }else if(angleInDeg >=30 && angleInDeg < 60){
-                    hist[1] += magROI[i];
+                    hist[1] += magROI[k];
                 }else if(angleInDeg >=60 && angleInDeg < 90){
-                    hist[2] += magROI[i];
+                    hist[2] += magROI[k];
                 }else if(angleInDeg >=90 && angleInDeg < 120){
-                    hist[3] += magROI[i];
+                    hist[3] += magROI[k];
                 }else if(angleInDeg >=120 && angleInDeg < 150){
-                    hist[4] += magROI[i];
+                    hist[4] += magROI[k];
                 }else{
-                    hist[5] += magROI[i];
+                    hist[5] += magROI[k];
                 }  
             }
 
-            //ori_histo[int(x_corner/cell_size),int(y_corner/cell_size),:] = hist
-            for(int i=0; i<nBINS; ++i) ori_histo[(int)x_corner/CELL_SIZE][(int)y_corner/CELL_SIZE][i] = hist[i];
 
-            y_corner+=CELL_SIZE;
+            //ori_histo[int(x_corner/cell_size),int(y_corner/cell_size),:] = hist
+            for(int k=0; k<nBINS; ++k) ori_histo[(int)(i-CELL_SIZE)/CELL_SIZE][(int)(j-CELL_SIZE)/CELL_SIZE][k] = hist[k];
+
         }
-        x_corner+=CELL_SIZE;
-        y_corner=0;
     }
 }
 
-void get_block_descriptor(float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS], float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][6*(BLOCK_SIZE*BLOCK_SIZE)]){
+void get_block_descriptor(float ori_histo[ROWS/CELL_SIZE][COLS/CELL_SIZE][nBINS], float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][nBINS*(BLOCK_SIZE*BLOCK_SIZE)]){
+    printf("USAO U GET BLOCK!!!!");
+    
     int x_window = 0;
     int y_window = 0;
 
-    while(x_window + BLOCK_SIZE <= HEIGHT){
-        while(y_window + BLOCK_SIZE <= WIDTH){
+    for(int i = x_window + BLOCK_SIZE; i <= HEIGHT; i+=BLOCK_SIZE){
+        for(int j = y_window + BLOCK_SIZE; j <= WIDTH; j+=BLOCK_SIZE){
             float concatednatedHist[HIST_SIZE];
-            int index = 0;
-            for(int i = 0;i <= x_window + BLOCK_SIZE;i++){
-                for(int j = 0;j <= y_window + BLOCK_SIZE;j++){
-                    for(int k = 0;k < 6; k++){
-                        concatednatedHist[index]=ori_histo[i][j][k];
-                        ++index;
-                    }
-                }
-            }
             float histNorm = 0.0;
-            for(int i = 0; i < HIST_SIZE;i++){
-                histNorm += concatednatedHist[i] * concatednatedHist[i];
-            }
-            histNorm = sqrt(histNorm + 0.001);
 
-            int h_i = 0;
-            for(int i = 0; i < HIST_SIZE; i++){
-                ori_histo_normalized[x_window][y_window][i] = concatednatedHist[h_i] / histNorm;
-                h_i++;
-                y_window += BLOCK_SIZE;
+            for(int k=0; k<HIST_SIZE; ++k) {
+                concatednatedHist[k]=ori_histo[i+(int)k/2][j+(k%2)][(int)k/4];
+                concatednatedHist[k]*=concatednatedHist[k];
+                concatednatedHist[k]+=0.001;
+                histNorm+=concatednatedHist[k];
             }
+
+            histNorm = sqrt(histNorm);
+
+            for(int i = 0; i < HIST_SIZE; i++) ori_histo_normalized[i-BLOCK_SIZE][j-BLOCK_SIZE][i] = concatednatedHist[i] / histNorm;
         }
-        x_window += BLOCK_SIZE;
-        y_window = 0; 
     }
 }
 
 void extract_hog(float im[ROWS][COLS], float hog[(HEIGHT-(BLOCK_SIZE-1)) * (WIDTH-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE)]) {
+
+    printf("USAO U EXTRACT HOG!!!!");
     
     // im_min and im_max used for normalizing the image
     im[0][0] = im[0][0]/255.0;
@@ -216,12 +211,46 @@ void extract_hog(float im[ROWS][COLS], float hog[(HEIGHT-(BLOCK_SIZE-1)) * (WIDT
           hog[l++] = ori_histo_normalized[i][j][k];
 }
 
+void mat_txt(FILE * ptr, char * name_txt, float matrix[ROWS][COLS]){
+
+    ptr = fopen(name_txt, "wb");
+
+    for (int i=0; i<ROWS; ++i){
+        for (int j=0; j<COLS; ++j){
+            fprintf(ptr, "%f ", matrix[i][j]);
+        }
+        fprintf(ptr, "\n");
+    }
+    fclose(ptr);
+}
+
+void cube_txt(FILE * ptr, char * name_txt, float matrix[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]){
+
+    ptr = fopen(name_txt, "wb");
+
+    for (int i=0; i<ROWS/CELL_SIZE; ++i){
+        for (int j=0; j<COLS/CELL_SIZE; ++j){
+            for (int k=0; k<nBINS; ++k){
+                fprintf(ptr, "%f ", matrix[i][j][k]);
+            }
+            fprintf(ptr, "\n");
+        }
+        fprintf(ptr, "\n");
+    }
+    fclose(ptr);
+}
+
 
 int main(){
 
 
-    unsigned int a,b;
+    unsigned int a;
+    float b;
     float gray[ROWS][COLS], c_hog[(HEIGHT-(BLOCK_SIZE-1)) * (WIDTH-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE)];
+    float im_dx[ROWS][COLS], im_dy[ROWS][COLS], grad_mag[ROWS][COLS], grad_angle[ROWS][COLS];
+    float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS];
+    float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][nBINS*(BLOCK_SIZE*BLOCK_SIZE)];
+
 
     FILE * rach;
     rach = fopen("gray.txt", "rb");
@@ -233,174 +262,49 @@ int main(){
             fscanf(rach, "%d", &a);
 
             gray[i][j] = a;
-            //printf("%f ", gray[i][j]);
+            //printf("%d ", a);
         }
         //printf("\n");
     }
 
     fclose(rach);
 
-    extract_hog(gray, c_hog);
+    filter_image(gray, im_dx, filter_x);
+    filter_image(gray, im_dy, filter_y);
 
-    FILE * dx_rach;
+    get_gradient(im_dx, im_dy, grad_mag, grad_angle);
 
-    dx_rach = fopen("c_hog.txt", "wb");
+    build_histogram(grad_mag, grad_angle, ori_histo);
 
-    for (int i=0; i<13824; ++i){
+    get_block_descriptor(ori_histo, ori_histo_normalized);
 
-            a = c_hog[i];
-
-            fprintf(dx_rach, "%d ", a);
-    }
-
-    fclose(dx_rach);
+    FILE * ori;
+    cube_txt(ori, "orihist_norm_c.txt", ori_histo_normalized);
 
 
 
-    /*FILE * rach;
-    FILE * ptr;
-    rach = fopen("dx.txt", "rb");
-    rach = fopen("dj_c.txt", "rb");
+    /*FILE * mag;
+    FILE * angle;
+
+    mag = fopen("c_grad_mag.txt", "wb");
+    angle = fopen("c_grad_angle.txt", "wb");
 
     for (int i=0; i<ROWS; ++i){
         for (int j=0; j<COLS; ++j){
 
-            fscanf(rach, "%d", &a);
-            fscanf(ptr, "%d", &b);
+            a = grad_mag[i][j];
+            b = grad_angle[i][j];
 
-            if(a==b) 
-            //printf("%f ", gray[i][j]);
+            fprintf(mag, "%d ", a);
+            fprintf(angle, "%f ", b);
+
         }
-        //printf("\n");
+        fprintf(mag, "\n");
+        fprintf(angle, "\n");
     }
 
-    fclose(rach);*/
-
-    /*FILE * rach;
-    rach = fopen("gray.txt", "rb");
-
-
-    for (int i=0; i<ROWS; ++i){
-        for (int j=0; j<COLS; ++j){
-
-            fscanf(rach, "%d", &a);
-
-            gray[i][j] = a;
-            //printf("%f ", gray[i][j]);
-        }
-        //printf("\n");
-    }
-
-    fclose(rach);
-
-    filter_image(gray, dx, filter_x);
-
-    FILE * dx_rach;
-
-    dx_rach = fopen("dx_c.txt", "wb");
-
-    int c;
-
-
-    for (int i=0; i<ROWS; ++i){
-        for (int j=0; j<COLS; ++j){
-
-            a = dx[i][j];
-
-            fprintf(dx_rach, "%d ", a);
-
-        }
-        fprintf(dx_rach, "\n");
-    }
-
-    fclose(dx_rach);
-
-
-
-
-
-
-    unsigned char c=-150;
-
-    c = ~c;
-
-    printf("c=%d ", c);*/
-
-    /*FILE* dx, *dc;
-    dx = fopen("dx.ppm", "rb");
-    dc = fopen("dx_C.ppm", "rb");
-
-    char c, x;
-    int a=0;
-
-    do{
-        c = fgetc(dc);
-        x = fgetc(dx);
-        a++;
-
-        if(c != x){
-            printf("c=%d ", c);
-            printf("x=%d ", x);
-            printf("redni broj=%d \n", a);
-        }
-
-
-    }while(c != EOF);*/
-
-    /*FILE * rach;
-    rach = fopen("gray_rachel.ppm", "rb");
-
-    char ch;
-    float a;
-    float matrix[ROWS][COLS], dx[ROWS][COLS];
-
-
-    printf("\n");
-
-    for(int k=0; k<15; ++k) ch = fgetc(rach); //predji na prvi clan niza
-
-    for (int i=0; i<ROWS; ++i){
-        for (int j=0; j<COLS; ++j){
-            
-            //ch = fgetc(rach);
-            //ch = fgetc(rach);
-            ch = fgetc(rach);
-            a=ch;
-
-            matrix[i][j] = a;
-            //printf("%d ", (int)matrix[i][j]);
-        }
-        //printf("\n");
-    }      
-
-    fclose(rach);
-
-    filter_image(matrix, dx, filter_x);
-
-    printf("\n\n\n");
-
-    FILE * dx_rach;
-    dx_rach = fopen("dx_C.ppm", "wb");
-
-    fprintf(dx_rach, "P6 200 200 255\n");
-  
-    for(int i=0; i<200; i++) {
-        for(int j=0; j<600; j++) {
-        fputc((int)dx[i][j], dx_rach);
-        }
-    }
-    fclose(dx_rach);
-
-
-    for (int i=0; i<ROWS; ++i){
-        for (int j=0; j<COLS; ++j){
-        
-            printf("%d ", (int)dx[i][j]);
-        }
-        break;
-        printf("\n");
-    }  */
-
+    fclose(mag);
+    fclose(angle);*/
 
     return 0;
 }
