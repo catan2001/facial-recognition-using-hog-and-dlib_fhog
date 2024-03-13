@@ -141,25 +141,22 @@ void build_histogram(float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS], f
 
 void get_block_descriptor(float ori_histo[ROWS/CELL_SIZE][COLS/CELL_SIZE][nBINS], float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][nBINS*(BLOCK_SIZE*BLOCK_SIZE)]){
     printf("USAO U GET BLOCK!!!!");
-    
-    int x_window = 0;
-    int y_window = 0;
 
-    for(int i = x_window + BLOCK_SIZE; i <= HEIGHT; i+=BLOCK_SIZE){
-        for(int j = y_window + BLOCK_SIZE; j <= WIDTH; j+=BLOCK_SIZE){
-            float concatednatedHist[HIST_SIZE];
+    for(int i = BLOCK_SIZE; i <= HEIGHT; i+=BLOCK_SIZE){
+        for(int j = BLOCK_SIZE; j <= WIDTH; j+=BLOCK_SIZE){
+            float concatednatedHist[HIST_SIZE], concatednatedHist2[HIST_SIZE];
             float histNorm = 0.0;
 
             for(int k=0; k<HIST_SIZE; ++k) {
-                concatednatedHist[k]=ori_histo[i+(int)k/2][j+(k%2)][(int)k/4];
-                concatednatedHist[k]*=concatednatedHist[k];
-                concatednatedHist[k]+=0.001;
-                histNorm+=concatednatedHist[k];
+                concatednatedHist[k]=ori_histo[i-BLOCK_SIZE+(int)k/12][j-BLOCK_SIZE+(int)k/6][(k%6)];
+                concatednatedHist2[k]=concatednatedHist[k]*concatednatedHist[k];
+                concatednatedHist2[k]+=0.001;
+                histNorm+=concatednatedHist2[k];
             }
 
             histNorm = sqrt(histNorm);
 
-            for(int i = 0; i < HIST_SIZE; i++) ori_histo_normalized[i-BLOCK_SIZE][j-BLOCK_SIZE][i] = concatednatedHist[i] / histNorm;
+            for(int k = 0; k < HIST_SIZE; ++k) ori_histo_normalized[i-BLOCK_SIZE][j-BLOCK_SIZE][k] = concatednatedHist[k] / histNorm;
         }
     }
 }
@@ -224,13 +221,29 @@ void mat_txt(FILE * ptr, char * name_txt, float matrix[ROWS][COLS]){
     fclose(ptr);
 }
 
-void cube_txt(FILE * ptr, char * name_txt, float matrix[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]){
+void orihisto_txt(FILE * ptr, char * name_txt, float matrix[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]){
 
     ptr = fopen(name_txt, "wb");
 
     for (int i=0; i<ROWS/CELL_SIZE; ++i){
         for (int j=0; j<COLS/CELL_SIZE; ++j){
             for (int k=0; k<nBINS; ++k){
+                fprintf(ptr, "%f ", matrix[i][j][k]);
+            }
+            fprintf(ptr, "\n");
+        }
+        fprintf(ptr, "\n");
+    }
+    fclose(ptr);
+}
+
+void orihistonorm_txt(FILE * ptr, char * name_txt, float matrix[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][nBINS*(BLOCK_SIZE*BLOCK_SIZE)]){
+
+    ptr = fopen(name_txt, "wb");
+
+    for (int i=0; i<(HEIGHT-(BLOCK_SIZE-1)); ++i){
+        for (int j=0; j<(HEIGHT-(BLOCK_SIZE-1)); ++j){
+            for (int k=0; k<(nBINS*(BLOCK_SIZE*BLOCK_SIZE)); ++k){
                 fprintf(ptr, "%f ", matrix[i][j][k]);
             }
             fprintf(ptr, "\n");
@@ -279,7 +292,7 @@ int main(){
     get_block_descriptor(ori_histo, ori_histo_normalized);
 
     FILE * ori;
-    cube_txt(ori, "orihist_norm_c.txt", ori_histo_normalized);
+    orihistonorm_txt(ori, "orihist_norm_c.txt", ori_histo_normalized);
 
 
 
