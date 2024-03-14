@@ -114,17 +114,17 @@ void build_histogram(float grad_mag[ROWS][COLS], float grad_angle[ROWS][COLS], f
             }
 
             for(int k=0; k<cell_pow2; ++k){
-                angleInDeg = angleROI[k]*(180 / PI);
+                angleInDeg = angleROI[k]*(180.0 / PI);
 
-                if(angleInDeg >=0 && angleInDeg < 30){
+                if(angleInDeg >=0.0 && angleInDeg < 30.0){
                     hist[0] += magROI[k];
-                }else if(angleInDeg >=30 && angleInDeg < 60){
+                }else if(angleInDeg >=30.0 && angleInDeg < 60.0){
                     hist[1] += magROI[k];
-                }else if(angleInDeg >=60 && angleInDeg < 90){
+                }else if(angleInDeg >=60.0 && angleInDeg < 90.0){
                     hist[2] += magROI[k];
-                }else if(angleInDeg >=90 && angleInDeg < 120){
+                }else if(angleInDeg >=90.0 && angleInDeg < 120.0){
                     hist[3] += magROI[k];
-                }else if(angleInDeg >=120 && angleInDeg < 150){
+                }else if(angleInDeg >=120.0 && angleInDeg < 150.0){
                     hist[4] += magROI[k];
                 }else{
                     hist[5] += magROI[k];
@@ -144,68 +144,28 @@ void get_block_descriptor(float ori_histo[ROWS/CELL_SIZE][COLS/CELL_SIZE][nBINS]
 
     for(int i = BLOCK_SIZE; i <= HEIGHT; i+=BLOCK_SIZE){
         for(int j = BLOCK_SIZE; j <= WIDTH; j+=BLOCK_SIZE){
-            float concatednatedHist[HIST_SIZE], concatednatedHist2[HIST_SIZE];
-            float histNorm = 0.0;
+            float concatednatedHist[HIST_SIZE];
+            double concatednatedHist2[HIST_SIZE];
+            double histNorm = 0.0;
 
             for(int k=0; k<HIST_SIZE; ++k) {
                 concatednatedHist[k]=ori_histo[i-BLOCK_SIZE+(int)k/12][j-BLOCK_SIZE+(int)k/6][(k%6)];
+                //printf("concatednatedHIST: %lf \n", concatednatedHist[k]);
                 concatednatedHist2[k]=concatednatedHist[k]*concatednatedHist[k];
-                concatednatedHist2[k]+=0.001;
+                printf("kvadrirano: %lf \n", concatednatedHist2[k]);
                 histNorm+=concatednatedHist2[k];
             }
-
+            printf("suma prije 0.001: %d %d %lf \n", (i-BLOCK_SIZE), (j-BLOCK_SIZE), histNorm);
+            histNorm+=0.001;
+            //printf("suma: %d %d %f \n", (i-BLOCK_SIZE), (j-BLOCK_SIZE), histNorm);
             histNorm = sqrt(histNorm);
+
+            //printf("korijen: %d %d %f \n", (i-BLOCK_SIZE), (j-BLOCK_SIZE), histNorm);
+            //break;
 
             for(int k = 0; k < HIST_SIZE; ++k) ori_histo_normalized[i-BLOCK_SIZE][j-BLOCK_SIZE][k] = concatednatedHist[k] / histNorm;
         }
     }
-}
-
-void extract_hog(float im[ROWS][COLS], float hog[(HEIGHT-(BLOCK_SIZE-1)) * (WIDTH-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE)]) {
-
-    printf("USAO U EXTRACT HOG!!!!");
-    
-    // im_min and im_max used for normalizing the image
-    im[0][0] = im[0][0]/255.0;
-    float im_min = im[0][0]; // initalize
-    float im_max = im[0][0]; // initalize
-    
-    for(int i = 0; i < ROWS; ++i)
-      for(int j = 0; j < COLS; ++j) {
-        im[i][j] = im[i][j]/255.0; // converting to float format
-        if(im_min > im[i][j]) im_min = im[i][j]; // find min im
-        if(im_max < im[i][j]) im_max = im[i][j]; // find max im
-      }
-    
-    for(int i = 0; i < ROWS; ++i)
-      for(int j = 0; j < COLS; ++j) {
-        im[i][j] = (im[i][j] - im_min) / im_max; // Normalize image to [0, 1]
-      }
-    
-    float dx[ROWS][COLS];
-    float dy[ROWS][COLS];
-    //GET X GRADIENT OF THE PICTURE
-    filter_image(im, dx, filter_x);
-    //GET Y GRADIENT OF THE PICTURE
-    filter_image(im, dy, filter_y);
-    
-    float grad_mag[ROWS][COLS];
-    float grad_angle[ROWS][COLS];
-    get_gradient(dx, dy, grad_mag, grad_angle);
-    
-    float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]; // TODO: check to replace ROWS/CELL_SIZE with HEIGHT
-    build_histogram(grad_mag, grad_angle, ori_histo);
-    
-    // TODO: Make makro to replace underneath
-    float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][6*(BLOCK_SIZE*BLOCK_SIZE)];        
-    
-    get_block_descriptor(ori_histo, ori_histo_normalized);
-    
-    int l = 0;
-    for(int i = 0; i < HEIGHT-(BLOCK_SIZE-1); ++i)
-      for(int j = 0; j < WIDTH-(BLOCK_SIZE-1); ++j)
-        for(int k = 0; k < 6*BLOCK_SIZE*BLOCK_SIZE; ++k)
-          hog[l++] = ori_histo_normalized[i][j][k];
 }
 
 void mat_txt(FILE * ptr, char * name_txt, float matrix[ROWS][COLS]){
@@ -221,6 +181,71 @@ void mat_txt(FILE * ptr, char * name_txt, float matrix[ROWS][COLS]){
     fclose(ptr);
 }
 
+void extract_hog(float im[ROWS][COLS], float hog[(HEIGHT-(BLOCK_SIZE-1)) * (WIDTH-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE)]) {
+
+    printf("USAO U EXTRACT HOG!!!!");
+    
+    // im_min and im_max used for normalizing the image
+    im[0][0] = im[0][0]/255.0;
+    float im_min = im[0][0]; // initalize
+    float im_max = im[0][0]; // initalize
+    
+    for(int i = 0; i < ROWS; ++i){
+      for(int j = 0; j < COLS; ++j){
+            im[i][j] = im[i][j]/255.0; // converting to float format
+            if(im_min > im[i][j]) im_min = im[i][j]; // find min im
+            if(im_max < im[i][j]) im_max = im[i][j]; // find max im
+        }
+    }
+
+    for(int i = 0; i < ROWS; ++i){
+      for(int j = 0; j < COLS; ++j){
+            im[i][j] = (im[i][j] - im_min) / im_max; // Normalize image to [0, 1]
+        }
+    }
+
+    FILE * ptr;
+    mat_txt(ptr, "gray_norm.txt", im);
+
+    float dx[ROWS][COLS];
+    float dy[ROWS][COLS];
+    //GET X GRADIENT OF THE PICTURE
+    filter_image(im, dx, filter_x);
+    //GET Y GRADIENT OF THE PICTURE
+    filter_image(im, dy, filter_y);
+    
+    float grad_mag[ROWS][COLS];
+    float grad_angle[ROWS][COLS];
+    get_gradient(dx, dy, grad_mag, grad_angle);
+    
+    float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]; // TODO: check to replace ROWS/CELL_SIZE with HEIGHT
+    build_histogram(grad_mag, grad_angle, ori_histo);
+    
+    // TODO: Make makro to replace underneath
+    float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][nBINS*(BLOCK_SIZE*BLOCK_SIZE)];        
+    
+    get_block_descriptor(ori_histo, ori_histo_normalized);
+    
+    int l = 0;
+    for(int i = 0; i < HEIGHT-(BLOCK_SIZE-1); ++i){
+        for(int j = 0; j < WIDTH-(BLOCK_SIZE-1); ++j){
+             for(int k = 0; k < nBINS*BLOCK_SIZE*BLOCK_SIZE; ++k){
+                 hog[l++] = ori_histo_normalized[i][j][k];
+             }
+        }
+    }
+}
+
+void array_txt(FILE * ptr, char * name_txt, float matrix[(HEIGHT-(BLOCK_SIZE-1)) * (WIDTH-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE)]){
+
+    ptr = fopen(name_txt, "wb");
+
+    for (int i=0; i<ROWS; ++i){
+        fprintf(ptr, "%f ", matrix[i]);
+    }
+    fclose(ptr);
+}
+
 void orihisto_txt(FILE * ptr, char * name_txt, float matrix[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS]){
 
     ptr = fopen(name_txt, "wb");
@@ -228,7 +253,7 @@ void orihisto_txt(FILE * ptr, char * name_txt, float matrix[(int)ROWS/CELL_SIZE]
     for (int i=0; i<ROWS/CELL_SIZE; ++i){
         for (int j=0; j<COLS/CELL_SIZE; ++j){
             for (int k=0; k<nBINS; ++k){
-                fprintf(ptr, "%f ", matrix[i][j][k]);
+                fprintf(ptr, "%lf ", matrix[i][j][k]);
             }
             fprintf(ptr, "\n");
         }
@@ -263,7 +288,7 @@ int main(){
     float im_dx[ROWS][COLS], im_dy[ROWS][COLS], grad_mag[ROWS][COLS], grad_angle[ROWS][COLS];
     float ori_histo[(int)ROWS/CELL_SIZE][(int)COLS/CELL_SIZE][nBINS];
     float ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][nBINS*(BLOCK_SIZE*BLOCK_SIZE)];
-
+    float hog[(HEIGHT-(BLOCK_SIZE-1)) * (WIDTH-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE)];
 
     FILE * rach;
     rach = fopen("gray.txt", "rb");
@@ -291,8 +316,10 @@ int main(){
 
     get_block_descriptor(ori_histo, ori_histo_normalized);
 
-    FILE * ori;
-    orihistonorm_txt(ori, "orihist_norm_c.txt", ori_histo_normalized);
+    extract_hog(gray, hog);
+
+    FILE * hog_ptr;
+    array_txt(hog_ptr, "hog_c.txt", hog);
 
 
 
