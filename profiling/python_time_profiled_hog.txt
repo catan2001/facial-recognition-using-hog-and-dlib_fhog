@@ -1,0 +1,8 @@
+Time to finish whole algorithm with python functions implemented: 166.820098 
+Time to finish HOG algorithm: 166.802545 
+               in percentage: 99.989478 
+Time to calculate distance: 0.000066 
+             in percentage: 0.000040 
+Time to predict expression: 0.017482 
+             in percentage: 0.010480 
+

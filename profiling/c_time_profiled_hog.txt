@@ -1,0 +1,8 @@
+Time to finish whole algorithm with C functions implemented: 2.237948 
+Time to finish HOG algorithm: 2.224590 
+               in percentage: 99.403119 
+Time to calculate distance: 0.000058 
+             in percentage: 0.002599 
+Time to predict expression: 0.013296 
+             in percentage: 0.594111 
+

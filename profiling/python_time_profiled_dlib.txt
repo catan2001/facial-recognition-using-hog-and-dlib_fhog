@@ -1,0 +1,8 @@
+Time to finish whole algorithm with python functions implemented: 0.062268 
+Time to finish DLIB algorithm: 0.048574 
+               in percentage: 78.008194 
+Time to calculate distance: 0.000067 
+             in percentage: 0.107593 
+Time to predict expression: 0.013622 
+             in percentage: 21.875790 
+
