@@ -1,0 +1,29 @@
+Time to finish whole algorithm with ONLY PYTHON HOG: 141.450193 
+Time to finish HOG algorithm with DLIB landmarks: 141.436491 
+Time to finish HOG algorithm with DLIB landmarks in percentage: 99.990313 
+Time to calculate HOG algorithm alone: 141.433449 
+Time to calculate HOG algorithm alone in percentage: 99.988162 
+Time to calculate DLIB landmarks: 0.003042 
+Time to calculate DLIB landmarks in percentage: 0.002151 
+Time to calculate distance: 0.000057 
+Time to calculate distance in percentage: 0.000040 
+Time to predict expression: 0.013640 
+Time to predict expression in percentage: 0.009643 
+
+************************************************************** 
+Time to do face_recognition_range: 141.432780 
+Number of times face_recognition was called: 5.000000 
+Number of times extract_hog was called: 1017.000000 
+Cumulative time to do normalize and scale functions: 0.061127 
+Mean time to do normalize and scale functions: 0.000060 
+Cumulative time to do filter image: 69.626009 
+Mean time to do filter image: 0.068462 
+Cumulative time to do get_gradient: 61.322912 
+Mean time to do get_gradient: 0.060298 
+Cumulative time to do build_histogram: 9.783690 
+Mean time to do build_histogram: 0.009620 
+Cumulative time to do get_block_descriptor: 0.593770 
+Mean time to do get_block_descriptor: 0.000584 
+Cumulative time to do flattening of HOG: 0.002920 
+Mean time to do flattening of HOG: 0.000003 
+************************************************************** 
