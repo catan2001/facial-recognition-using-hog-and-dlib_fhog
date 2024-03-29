@@ -1,0 +1,122 @@
+﻿  bram.cpp
+  interconnect.cpp
+C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+  (compiling source file 'bram.cpp')
+  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
+  see declaration of 'sc_dt'
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2143: syntax error: missing ';' before '<'
+  (compiling source file 'bram.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+  (compiling source file 'bram.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+  (compiling source file 'bram.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+  (compiling source file 'interconnect.cpp')
+  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
+  see declaration of 'sc_dt'
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2143: syntax error: missing ';' before '<'
+  (compiling source file 'interconnect.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+  (compiling source file 'interconnect.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+  (compiling source file 'interconnect.cpp')
+  
+  main.cpp
+C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+  (compiling source file 'main.cpp')
+  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
+  see declaration of 'sc_dt'
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2143: syntax error: missing ';' before '<'
+  (compiling source file 'main.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+  (compiling source file 'main.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+  (compiling source file 'main.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+  (compiling source file 'main.cpp')
+  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
+  see declaration of 'sc_dt'
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+  (compiling source file 'main.cpp')
+  
+C:\TT_SWHW\VP\VP\sw.hpp(24,37): error C2061: syntax error: identifier 'num_t'
+  (compiling source file 'main.cpp')
+  
+C:\TT_SWHW\VP\VP\sw.hpp(25,38): error C2061: syntax error: identifier 'num_t'
+  (compiling source file 'main.cpp')
+  
+  sw.cpp
+C:\TT_SWHW\VP\VP\sw.hpp(18,7): error C3646: 'pl': unknown override specifier
+  (compiling source file 'sw.cpp')
+  
+C:\TT_SWHW\VP\VP\sw.hpp(18,9): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+  (compiling source file 'sw.cpp')
+  
+C:\TT_SWHW\VP\VP\sw.hpp(24,37): error C2061: syntax error: identifier 'num_t'
+  (compiling source file 'sw.cpp')
+  
+C:\TT_SWHW\VP\VP\sw.hpp(25,38): error C2061: syntax error: identifier 'num_t'
+  (compiling source file 'sw.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+  (compiling source file 'sw.cpp')
+  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
+  see declaration of 'sc_dt'
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2143: syntax error: missing ';' before '<'
+  (compiling source file 'sw.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+  (compiling source file 'sw.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+  (compiling source file 'sw.cpp')
+  
+C:\TT_SWHW\VP\VP\sw.cpp(26,5): error C2065: 'num_t': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(26,11): error C2146: syntax error: missing ';' before identifier 'write_value'
+C:\TT_SWHW\VP\VP\sw.cpp(26,11): error C2065: 'write_value': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(26,24): error C2065: 'read_value': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(41,40): error C2061: syntax error: identifier 'num_t'
+C:\TT_SWHW\VP\VP\sw.cpp(54,41): error C2061: syntax error: identifier 'num_t'
+  VP.cpp
+C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+  (compiling source file 'VP.cpp')
+  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
+  see declaration of 'sc_dt'
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2143: syntax error: missing ';' before '<'
+  (compiling source file 'VP.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+  (compiling source file 'VP.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+  (compiling source file 'VP.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+  (compiling source file 'VP.cpp')
+  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
+  see declaration of 'sc_dt'
+  
+C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+  (compiling source file 'VP.cpp')
+  
+C:\TT_SWHW\VP\VP\sw.hpp(24,37): error C2061: syntax error: identifier 'num_t'
+  (compiling source file 'VP.cpp')
+  
+C:\TT_SWHW\VP\VP\sw.hpp(25,38): error C2061: syntax error: identifier 'num_t'
+  (compiling source file 'VP.cpp')
+  
+  Generating Code...
