@@ -1,122 +1,211 @@
 ﻿  bram.cpp
+C:\TT_SWHW\VP\VP\def.hpp(30,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+  (compiling source file 'bram.cpp')
+  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
+  see declaration of 'sc_dt'
+  
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2143: syntax error: missing ';' before '<'
+  (compiling source file 'bram.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+  (compiling source file 'bram.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2059: syntax error: '<'
+  (compiling source file 'bram.cpp')
+  
+C:\TT_SWHW\VP\VP\bram.hpp(22,9): error C2065: 'num_t': undeclared identifier
+  (compiling source file 'bram.cpp')
+  
+C:\TT_SWHW\VP\VP\bram.hpp(22,2): error C2923: 'std::vector': 'num_t' is not a valid template type argument for parameter '_Ty'
+  (compiling source file 'bram.cpp')
+  C:\TT_SWHW\VP\VP\bram.hpp(22,9):
+  see declaration of 'num_t'
+  
+C:\TT_SWHW\VP\VP\bram.hpp(22,2): error C2976: 'std::vector': too few template arguments
+  (compiling source file 'bram.cpp')
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\vector(436,1):
+  see declaration of 'std::vector'
+  
+C:\TT_SWHW\VP\VP\bram.cpp(5,1): error C2512: 'std::vector': no appropriate default constructor available
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\vector(436,1):
+  see declaration of 'std::vector'
+  
+C:\TT_SWHW\VP\VP\bram.cpp(8,8): error C2662: 'void std::vector<_Ty,_Alloc>::reserve(allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type)': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+  C:\TT_SWHW\VP\VP\bram.cpp(8,5):
+  Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+  C:\TT_SWHW\VP\VP\bram.cpp(8,5):
+  Conversion requires a second user-defined-conversion operator or constructor
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\vector(1685,23):
+  see declaration of 'std::vector<_Ty,_Alloc>::reserve'
+  C:\TT_SWHW\VP\VP\bram.cpp(8,8):
+  while trying to match the argument list '(int)'
+  
+C:\TT_SWHW\VP\VP\bram.cpp(30,13): error C2678: binary '[': no operator found which takes a left-hand operand of type 'std::vector' (or there is no acceptable conversion)
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\vector(1900,40):
+  could be 'const _Ty &std::vector<_Ty,_Alloc>::operator [](const allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type) noexcept const'
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\vector(1890,34):
+  or       '_Ty &std::vector<_Ty,_Alloc>::operator [](const allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type) noexcept'
+  C:\TT_SWHW\VP\VP\bram.cpp(30,13):
+  while trying to match the argument list '(std::vector, sc_dt::uint64)'
+  
+C:\TT_SWHW\VP\VP\bram.cpp(37,23): error C2678: binary '[': no operator found which takes a left-hand operand of type 'std::vector' (or there is no acceptable conversion)
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\vector(1900,40):
+  could be 'const _Ty &std::vector<_Ty,_Alloc>::operator [](const allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type) noexcept const'
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\vector(1890,34):
+  or       '_Ty &std::vector<_Ty,_Alloc>::operator [](const allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type) noexcept'
+  C:\TT_SWHW\VP\VP\bram.cpp(37,23):
+  while trying to match the argument list '(std::vector, sc_dt::uint64)'
+  
+  hw.cpp
+C:\TT_SWHW\VP\VP\def.hpp(30,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+  (compiling source file 'hw.cpp')
+  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
+  see declaration of 'sc_dt'
+  
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2143: syntax error: missing ';' before '<'
+  (compiling source file 'hw.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+  (compiling source file 'hw.cpp')
+  
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2059: syntax error: '<'
+  (compiling source file 'hw.cpp')
+  
   interconnect.cpp
-C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
-  (compiling source file 'bram.cpp')
-  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
-  see declaration of 'sc_dt'
-  
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2143: syntax error: missing ';' before '<'
-  (compiling source file 'bram.cpp')
-  
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
-  (compiling source file 'bram.cpp')
-  
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
-  (compiling source file 'bram.cpp')
-  
-C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+C:\TT_SWHW\VP\VP\def.hpp(30,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
   (compiling source file 'interconnect.cpp')
   C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
   see declaration of 'sc_dt'
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2143: syntax error: missing ';' before '<'
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2143: syntax error: missing ';' before '<'
   (compiling source file 'interconnect.cpp')
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
   (compiling source file 'interconnect.cpp')
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2059: syntax error: '<'
   (compiling source file 'interconnect.cpp')
   
   main.cpp
-C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+C:\TT_SWHW\VP\VP\def.hpp(30,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
   (compiling source file 'main.cpp')
   C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
   see declaration of 'sc_dt'
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2143: syntax error: missing ';' before '<'
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2143: syntax error: missing ';' before '<'
   (compiling source file 'main.cpp')
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
   (compiling source file 'main.cpp')
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2059: syntax error: '<'
   (compiling source file 'main.cpp')
   
-C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
-  (compiling source file 'main.cpp')
-  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
-  see declaration of 'sc_dt'
-  
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+C:\TT_SWHW\VP\VP\bram.hpp(22,9): error C2065: 'num_t': undeclared identifier
   (compiling source file 'main.cpp')
   
-C:\TT_SWHW\VP\VP\sw.hpp(24,37): error C2061: syntax error: identifier 'num_t'
+C:\TT_SWHW\VP\VP\bram.hpp(22,2): error C2923: 'std::vector': 'num_t' is not a valid template type argument for parameter '_Ty'
+  (compiling source file 'main.cpp')
+  C:\TT_SWHW\VP\VP\bram.hpp(22,9):
+  see declaration of 'num_t'
+  
+C:\TT_SWHW\VP\VP\bram.hpp(22,2): error C2976: 'std::vector': too few template arguments
+  (compiling source file 'main.cpp')
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\vector(436,1):
+  see declaration of 'std::vector'
+  
+C:\TT_SWHW\VP\VP\sw.hpp(25,37): error C2061: syntax error: identifier 'num_t'
   (compiling source file 'main.cpp')
   
-C:\TT_SWHW\VP\VP\sw.hpp(25,38): error C2061: syntax error: identifier 'num_t'
+C:\TT_SWHW\VP\VP\sw.hpp(26,38): error C2061: syntax error: identifier 'num_t'
   (compiling source file 'main.cpp')
   
   sw.cpp
-C:\TT_SWHW\VP\VP\sw.hpp(18,7): error C3646: 'pl': unknown override specifier
-  (compiling source file 'sw.cpp')
-  
-C:\TT_SWHW\VP\VP\sw.hpp(18,9): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
-  (compiling source file 'sw.cpp')
-  
-C:\TT_SWHW\VP\VP\sw.hpp(24,37): error C2061: syntax error: identifier 'num_t'
-  (compiling source file 'sw.cpp')
-  
-C:\TT_SWHW\VP\VP\sw.hpp(25,38): error C2061: syntax error: identifier 'num_t'
-  (compiling source file 'sw.cpp')
-  
-C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+C:\TT_SWHW\VP\VP\def.hpp(30,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
   (compiling source file 'sw.cpp')
   C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
   see declaration of 'sc_dt'
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2143: syntax error: missing ';' before '<'
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2143: syntax error: missing ';' before '<'
   (compiling source file 'sw.cpp')
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
   (compiling source file 'sw.cpp')
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2059: syntax error: '<'
+  (compiling source file 'sw.cpp')
+  
+C:\TT_SWHW\VP\VP\sw.hpp(25,37): error C2061: syntax error: identifier 'num_t'
+  (compiling source file 'sw.cpp')
+  
+C:\TT_SWHW\VP\VP\sw.hpp(26,38): error C2061: syntax error: identifier 'num_t'
   (compiling source file 'sw.cpp')
   
 C:\TT_SWHW\VP\VP\sw.cpp(26,5): error C2065: 'num_t': undeclared identifier
 C:\TT_SWHW\VP\VP\sw.cpp(26,11): error C2146: syntax error: missing ';' before identifier 'write_value'
 C:\TT_SWHW\VP\VP\sw.cpp(26,11): error C2065: 'write_value': undeclared identifier
 C:\TT_SWHW\VP\VP\sw.cpp(26,24): error C2065: 'read_value': undeclared identifier
-C:\TT_SWHW\VP\VP\sw.cpp(41,40): error C2061: syntax error: identifier 'num_t'
-C:\TT_SWHW\VP\VP\sw.cpp(54,41): error C2061: syntax error: identifier 'num_t'
+C:\TT_SWHW\VP\VP\sw.cpp(27,5): error C2065: 'num_t': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(27,11): error C2146: syntax error: missing ';' before identifier 'img'
+C:\TT_SWHW\VP\VP\sw.cpp(27,11): error C2065: 'img': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(28,5): error C2065: 'num_t': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(28,11): error C2146: syntax error: missing ';' before identifier 'img_min'
+C:\TT_SWHW\VP\VP\sw.cpp(28,11): error C2065: 'img_min': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(28,20): error C2065: 'img_max': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(34,36): error C2065: 'write_value': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(35,39): error C2065: 'write_value': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(44,5): error C2065: 'img_min': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(44,15): error C2065: 'img': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(45,5): error C2065: 'img_max': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(45,15): error C2065: 'img': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(49,13): error C2065: 'img': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(49,25): error C2065: 'img': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(50,16): error C2065: 'img_min': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(50,26): error C2065: 'img': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(50,37): error C2065: 'img_min': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(50,47): error C2065: 'img': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(51,17): error C2065: 'img_max': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(51,27): error C2065: 'img': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(51,38): error C2065: 'img_max': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(51,48): error C2065: 'img': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(57,13): error C2065: 'img': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(57,26): error C2065: 'img': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(57,38): error C2065: 'img_min': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(57,49): error C2065: 'img_max': undeclared identifier
+C:\TT_SWHW\VP\VP\sw.cpp(68,40): error C2061: syntax error: identifier 'num_t'
+C:\TT_SWHW\VP\VP\sw.cpp(81,41): error C2061: syntax error: identifier 'num_t'
   VP.cpp
-C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
+C:\TT_SWHW\VP\VP\def.hpp(30,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
   (compiling source file 'VP.cpp')
   C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
   see declaration of 'sc_dt'
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2143: syntax error: missing ';' before '<'
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2143: syntax error: missing ';' before '<'
   (compiling source file 'VP.cpp')
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
   (compiling source file 'VP.cpp')
   
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+C:\TT_SWHW\VP\VP\def.hpp(30,30): error C2059: syntax error: '<'
   (compiling source file 'VP.cpp')
   
-C:\TT_SWHW\VP\VP\def.hpp(17,16): error C2039: 'sc_fixed_fast': is not a member of 'sc_dt'
-  (compiling source file 'VP.cpp')
-  C:\TT_SWHW\systemc-2.3.4\src\sysc\datatypes\misc\sc_concatref.h(106,11):
-  see declaration of 'sc_dt'
-  
-C:\TT_SWHW\VP\VP\def.hpp(17,30): error C2059: syntax error: '<'
+C:\TT_SWHW\VP\VP\bram.hpp(22,9): error C2065: 'num_t': undeclared identifier
   (compiling source file 'VP.cpp')
   
-C:\TT_SWHW\VP\VP\sw.hpp(24,37): error C2061: syntax error: identifier 'num_t'
+C:\TT_SWHW\VP\VP\bram.hpp(22,2): error C2923: 'std::vector': 'num_t' is not a valid template type argument for parameter '_Ty'
+  (compiling source file 'VP.cpp')
+  C:\TT_SWHW\VP\VP\bram.hpp(22,9):
+  see declaration of 'num_t'
+  
+C:\TT_SWHW\VP\VP\bram.hpp(22,2): error C2976: 'std::vector': too few template arguments
+  (compiling source file 'VP.cpp')
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\vector(436,1):
+  see declaration of 'std::vector'
+  
+C:\TT_SWHW\VP\VP\sw.hpp(25,37): error C2061: syntax error: identifier 'num_t'
   (compiling source file 'VP.cpp')
   
-C:\TT_SWHW\VP\VP\sw.hpp(25,38): error C2061: syntax error: identifier 'num_t'
+C:\TT_SWHW\VP\VP\sw.hpp(26,38): error C2061: syntax error: identifier 'num_t'
   (compiling source file 'VP.cpp')
   
   Generating Code...

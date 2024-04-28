@@ -5,6 +5,7 @@
 #include <fstream>
 #include "systemc.h"
 #include <tlm_utils/simple_initiator_socket.h>
+#include "def.hpp"
 
 
 class SW : public sc_core::sc_module
@@ -18,7 +19,6 @@ protected:
 	pl_t pl;
 	sc_core::sc_time offset;
 	std::ifstream matrix_picture_file;
-	//int a_w, a_h, b_w, b_h, width, height, log2w, log2h;
 	int img_width, img_height;
 	void process_img();
 	void read_bram(sc_dt::uint64 addr, num_t& val);

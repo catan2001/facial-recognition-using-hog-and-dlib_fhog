@@ -138,6 +138,7 @@
     <ClCompile Include="interconnect.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="sw.cpp" />
+    <ClCompile Include="utils.cpp" />
     <ClCompile Include="VP.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -146,6 +147,7 @@
     <ClInclude Include="hw.hpp" />
     <ClInclude Include="interconnect.hpp" />
     <ClInclude Include="sw.hpp" />
+    <ClInclude Include="utils.hpp" />
     <ClInclude Include="VP.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

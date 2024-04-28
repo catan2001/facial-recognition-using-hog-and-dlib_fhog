@@ -3,7 +3,10 @@
 
 Bram::Bram(sc_core::sc_module_name name) : sc_module(name)
 {
+    interconnect_socket.register_b_transport(this, &Bram::b_transport);
+    hw_socket.register_b_transport(this, &Bram::b_transport);
     mem.reserve(RESERVED_MEM);
+
     SC_REPORT_INFO("BRAM", "Constructed.");
 }
 
@@ -14,10 +17,10 @@ Bram::~Bram()
 
 void Bram::b_transport(pl_t& pl, sc_core::sc_time& offset)
 {
-    sc_dt::uint64 addr = pl.get_address(); //adresa kojoj se pristupa
-    tlm::tlm_command cmd = pl.get_command(); //odredjuje da li ce cita ili pise na odg adresu
-    unsigned char* data = pl.get_data_ptr(); //pokazivac na podatke koji se upisuju ili gdje se smjestaju
-    unsigned int len = pl.get_data_length(); //broj podataka za citanje/pisanje
+    sc_dt::uint64 addr = pl.get_address(); 
+    tlm::tlm_command cmd = pl.get_command(); 
+    unsigned char* data = pl.get_data_ptr(); 
+    unsigned int len = pl.get_data_length();
 
     switch (cmd)
     {

@@ -5,8 +5,7 @@
 #include <math.h>
 #include <tlm_utils/simple_initiator_socket.h>
 #include <tlm_utils/simple_target_socket.h>
-
-typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
+#include "def.hpp"
 
 class HW : public sc_core::sc_module
 {
@@ -14,9 +13,8 @@ public:
 	// SC_HAS_PROCESS(Hard);
 	HW(sc_core::sc_module_name name);
 	~HW();
-	//tlm_utils::simple_initiator_socket<HW> bram_re_socket;
-	//tlm_utils::simple_initiator_socket<HW> bram_im_socket;
-	//tlm_utils::simple_target_socket<HW> soft_socket;
+	tlm_utils::simple_initiator_socket<HW> bram_socket;
+	tlm_utils::simple_target_socket<HW> interconnect_socket;
 
 protected:
 	pl_t pl;
