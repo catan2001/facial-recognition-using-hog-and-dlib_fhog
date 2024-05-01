@@ -3,9 +3,10 @@
 
 #include <iostream>
 #include <fstream>
-#include "systemc.h"
+#include <systemc>
 #include <tlm_utils/simple_initiator_socket.h>
 #include "def.hpp"
+#include "utils.hpp"
 
 
 class SW : public sc_core::sc_module

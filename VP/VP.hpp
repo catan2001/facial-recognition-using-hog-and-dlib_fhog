@@ -1,9 +1,10 @@
 #ifndef VP_HPP_
 #define VP_HPP_
 
-#include "systemc.h"
+#include <systemc>
 #include <tlm_utils/simple_initiator_socket.h>
 #include <tlm_utils/simple_target_socket.h>
+#include "def.hpp"
 #include "interconnect.hpp"
 #include "bram.hpp"
 #include "sw.hpp"

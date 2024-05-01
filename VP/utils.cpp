@@ -1,102 +1,102 @@
 #include "utils.hpp"
 
-char flip(char c) { return (c == '0') ? '1' : '0'; }
+void build_histogram(num_t grad_mag[ROWS][COLS], num_t grad_angle[ROWS][COLS], num_t ori_histo[ROWS / CELL_SIZE][COLS / CELL_SIZE][nBINS]) {
 
-string twos_complement(string bin)
-{
-    int n = bin.length();
-    int i;
+    int x_corner = 0;
+    int y_corner = 0;
+    //define REGION of INTEREST, our new chunks
+    int cell_pow2 = CELL_SIZE * CELL_SIZE;
+    num_t magROI[cell_pow2], angleROI[cell_pow2];
 
-    string ones, twos;
-    ones = twos = "";
+    num_t angleInDeg;
 
-    //  for ones complement flip every bit
-    for (i = 0; i < n; i++)
-        ones += flip(bin[i]);
+    for (int i = x_corner + CELL_SIZE; i <= ROWS; i += CELL_SIZE) {
+        for (int j = y_corner + CELL_SIZE; j <= COLS; j += CELL_SIZE) {
+            num_t hist[nBINS] = { 0, 0, 0, 0, 0, 0 };
 
-    //  for two's complement go from right to left in
-    //  ones complement and if we get 1 make, we make
-    //  them 0 and keep going left when we get first
-    //  0, make that 1 and go out of loop
-    twos = ones;
-    for (i = n - 1; i >= 0; i--)
-    {
-        if (ones[i] == '1')
-            twos[i] = '0';
-        else
-        {
-            twos[i] = '1';
-            break;
+            for (int k = 0; k < cell_pow2; ++k) {
+                magROI[k] = grad_mag[i - CELL_SIZE + (int)(k / CELL_SIZE)][j - CELL_SIZE + (k % CELL_SIZE)];
+                angleROI[k] = grad_angle[i - CELL_SIZE + (int)(k / CELL_SIZE)][j - CELL_SIZE + (k % CELL_SIZE)];
+            }
+
+            for (int k = 0; k < cell_pow2; ++k) {
+                angleInDeg = angleROI[k] * (180.0 / PI);
+
+                if (angleInDeg >= 0.0 && angleInDeg < 30.0) {
+                    hist[0] += magROI[k];
+                }
+                else if (angleInDeg >= 30.0 && angleInDeg < 60.0) {
+                    hist[1] += magROI[k];
+                }
+                else if (angleInDeg >= 60.0 && angleInDeg < 90.0) {
+                    hist[2] += magROI[k];
+                }
+                else if (angleInDeg >= 90.0 && angleInDeg < 120.0) {
+                    hist[3] += magROI[k];
+                }
+                else if (angleInDeg >= 120.0 && angleInDeg < 150.0) {
+                    hist[4] += magROI[k];
+                }
+                else {
+                    hist[5] += magROI[k];
+                }
+            }
+
+
+            //ori_histo[int(x_corner/cell_size),int(y_corner/cell_size),:] = hist
+            for (int k = 0; k < nBINS; ++k) ori_histo[(int)(i - CELL_SIZE) / CELL_SIZE][(int)(j - CELL_SIZE) / CELL_SIZE][k] = hist[k];
+
         }
     }
 
-    // If No break : all are 1  as in 111  or  11111;
-    // in such case, add extra 1 at beginning
-    if (i == -1)
-        twos = '1' + twos;
-
-    // cout << "1's complement: " << ones << endl;
-    // cout << "2's complement: " << twos << endl; 
-    return twos;
 }
 
-double to_fixed(unsigned char* buf)
-{
-    string concated = "";
-    for (int i = 0; i < CHARS_AMOUNT; ++i) // concatenate char array into eg. "10101101000"
-        concated += bitset<CHAR_LEN>((int)buf[i]).to_string();
-    // cout << "concated = " << concated << endl;
-    double multiplier = 1;
-    if (concated[0] == '1')
-    {
-        concated = twos_complement(concated);
-        multiplier = -1;
+void get_gradient(num_t im_dx[ROWS][COLS], num_t im_dy[ROWS][COLS], num_t grad_mag[ROWS][COLS], num_t grad_angle[ROWS][COLS]) {
+
+    num_t dX, dY;
+    for (int i = 0; i < ROWS; ++i) {
+        for (int j = 0; j < COLS; ++j) {
+            dX = im_dx[i][j];
+            dY = im_dy[i][j];
+
+            //determining the amplitude matrix:
+            grad_mag[i][j] = sqrt(pow(dX, 2) + pow(dY, 2));
+            //determining the phase matrix:
+            if (fabs(dX) > 0.00001) {
+                grad_angle[i][j] = atan((float)dY / dX) + PI / 2;
+            }
+            else if (dY < 0 && dX < 0) {
+                grad_angle[i][j] = 0;
+            }
+            else {
+                grad_angle[i][j] = PI;
+            }
+
+        }
     }
-    // cout << "concated = " << concated << endl;
-    double sum = 0;
-    for (int i = 0; i < DATA_WIDTH; ++i)
-    {
-        // cout << "[" << i << "] sum = " << sum << endl;
-        sum += (concated[i] - '0') * pow(2.0, DATA_WIDTH - FIXED_POINT_WIDTH - i - 1);
+
+}
+
+void get_block_descriptor(num_t ori_histo[ROWS / CELL_SIZE][COLS / CELL_SIZE][nBINS], num_t ori_histo_normalized[HEIGHT - (BLOCK_SIZE - 1)][WIDTH - (BLOCK_SIZE - 1)][nBINS * (BLOCK_SIZE * BLOCK_SIZE)]) {
+
+    for (int i = BLOCK_SIZE; i <= HEIGHT; i += BLOCK_SIZE) {
+        for (int j = BLOCK_SIZE; j <= WIDTH; j += BLOCK_SIZE) {
+            num_t concatednatedHist[HIST_SIZE];
+            num_t concatednatedHist2[HIST_SIZE];
+            num_t histNorm = 0.0;
+
+            for (int k = 0; k < HIST_SIZE; ++k) {
+                concatednatedHist[k] = (float)ori_histo[i - BLOCK_SIZE + (int)k / 12][j - BLOCK_SIZE + ((int)k / 6) % 2][(k % 6)];
+                concatednatedHist2[k] = concatednatedHist[k] * concatednatedHist[k];
+                histNorm += concatednatedHist2[k];
+            }
+            histNorm += 0.001;
+            histNorm = sqrt(histNorm);
+ 
+ 
+            for (int k = 0; k < HIST_SIZE; ++k) ori_histo_normalized[i - BLOCK_SIZE][j - BLOCK_SIZE][k] = concatednatedHist[k] / histNorm;
+        }
     }
-    // cout << "sum = " << sum << endl;
-    return sum * multiplier;
-}
-
-void to_char(unsigned char* buf, string s)
-{
-    s.erase(0, 2); // remove "0b"
-    s.erase(DATA_WIDTH - FIXED_POINT_WIDTH, 1); // remove the dot
-    char single_char[CHAR_LEN];
-    for (int i = 0; i < CHARS_AMOUNT; ++i)
-    {
-        s.copy(single_char, CHAR_LEN, i * CHAR_LEN); // copy 8 letters (0s and 1s) to char array
-        int char_int = stoi(single_char, nullptr, 2); // binary string -> int
-        buf[i] = (unsigned char)char_int;
-    }
-}
-
-void to_uchar(unsigned char* c, num_t d)
-{
-    to_char(c, d.to_bin());
-}
-
-int to_int(unsigned char* buf)
-{
-    int sum = 0;
-    sum += ((int)buf[0]) << 24;
-    sum += ((int)buf[1]) << 16;
-    sum += ((int)buf[2]) << 8;
-    sum += ((int)buf[3]);
-    return sum;
-}
-
-void to_uchar(unsigned char* buf, int d)
-{
-    buf[0] = (char)(d >> 24);
-    buf[1] = (char)(d >> 16);
-    buf[2] = (char)(d >> 8);
-    buf[3] = (char)(d);
 }
 
 

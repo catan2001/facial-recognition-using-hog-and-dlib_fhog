@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "systemc.h"
+#include <systemc>
 #include <tlm_utils/simple_initiator_socket.h>
 #include <tlm_utils/simple_target_socket.h>
 #include "def.hpp"

@@ -1,8 +1,17 @@
 #ifndef DEF_HPP
 #define DEF_HPP
-
-#include "systemc.h"
+#include </home/andjela/systemc-2.3.3/include/sysc/datatypes/fx/sc_fixed.h>
+#define SC_INCLUDE_FX
+#include <systemc>
 #include <tlm>
+
+#define W 32 // DATA_WIDTH
+#define I 16 // FIXED_POINT_WIDTH
+#define Q sc_dt::SC_TRN // quantization methods
+#define O sc_dt::SC_WRAP // overflow methods
+
+typedef sc_dt::sc_fixed_fast <W, I, Q, O> num_t;
+typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 
 #define BRAM_BASE_ADDR 0x01000000
 #define BRAM_LOW_ADDR 0x01000000
@@ -17,17 +26,19 @@
 #define ADDR_STATUS 0x1c
 
 #define MAX_SIZE 200
+#define ROWS 200
+#define COLS 200
+#define nBINS 6
+#define CELL_SIZE 8
+#define BLOCK_SIZE 2
+
+#define HEIGHT (ROWS/CELL_SIZE)
+#define WIDTH (COLS/CELL_SIZE)
+
+#define HIST_SIZE nBINS*BLOCK_SIZE*BLOCK_SIZE
+
+#define PI 3.14159265358979323846
 
 #define RESERVED_MEM 100000
-
-#define SC_INCLUDE_FX
-//popraviti poslije bitske
-#define W 32 // DATA_WIDTH
-#define I 16 // FIXED_POINT_WIDTH
-#define Q sc_dt::SC_TRN // quantization methods: SC_RND_ZERO, SC_RND_MIN_INF, SC_RND_INF, SC_RND_CONV, SC_TRN, SC_TRN_ZERO
-#define O sc_dt::SC_WRAP // overflow methods: SC_SAT_ZERO, SC_SAT_SYM, SC_WRAP, SC_WRAP_SYM
-
-typedef sc_dt::sc_fixed_fast <W, I, Q, O> num_t; //stavi odgovarajuce parametre poslije bitske
-typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 
 #endif

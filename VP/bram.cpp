@@ -1,6 +1,5 @@
 #include "bram.hpp"
 
-
 Bram::Bram(sc_core::sc_module_name name) : sc_module(name)
 {
     interconnect_socket.register_b_transport(this, &Bram::b_transport);

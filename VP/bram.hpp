@@ -1,12 +1,12 @@
 #ifndef BRAM_HPP
 #define BRAM_HPP
 
-#include "systemc.h"
+#include <systemc>
 #include <tlm>
 #include <tlm_utils/simple_target_socket.h>
 #include <vector>
-#include <iostream>
 #include "def.hpp"
+#include <iostream>
 
 using namespace std;
 
@@ -19,7 +19,7 @@ public:
 	tlm_utils::simple_target_socket<Bram> hw_socket;
 protected:
 	void b_transport(pl_t&, sc_core::sc_time&);
-	vector<num_t> mem;
+	vector <num_t> mem;
 };
 
 #endif // BRAM_HPP
