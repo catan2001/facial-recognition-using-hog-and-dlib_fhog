@@ -179,33 +179,26 @@ int sc_main(int, char*[]) {
     for (int i=0; i<ROWS; ++i){
         for (int j=0; j<COLS; ++j){
             fscanf(rach, "%f", &a);
-            cout << a << endl;
             orig_gray[i][j] = a;
-            //cout << orig_gray[i][j] << endl;
         }
     }
     fclose(rach);
     
     int i = 1;
-    int W = 128;
-    const int I = 4;
-    /*
-    //RANDOM TESTING
-    num_t test(W, I);
-    float tt = 22.222222222;
-    test = 1.111111111111;
-    tt = tt + test;
-    cout << std::setprecision(20);
-    cout << tt << endl;
-    */
+    int W = 64;
+    const int I = 3;
+    
+    // loop to find minimal bitwidth
     do {
+        
+        cout << "Width W: " << W << endl;
+        cout << "Fixed point: " << I << endl;
 
         matrix_t matrix_gray(ROWS, array_t(COLS, num_t(W,I, Q, O)));
         matrix_t matrix_im_filtered_y(ROWS, array_t(COLS, num_t(W,I,Q,O)));
         matrix_t matrix_im_filtered_x(ROWS, array_t(COLS, num_t(W,I,Q,O)));
         matrix_t padded_img(ROWS+2, array_t(COLS+2, num_t(W,I,Q, O)));
         cast_to_fix(matrix_gray, orig_gray, W, I);
-        --i;
                 
         //pad the image on the outer edges with zeros:
         for(int i=0; i<ROWS+2; ++i) {
@@ -246,8 +239,8 @@ int sc_main(int, char*[]) {
                 dx[i][j] = matrix_im_filtered_x[i][j];
                 dy[i][j] = matrix_im_filtered_y[i][j];
                 //cout << std::setprecision(50);
-                //cout << "dy: "<< dy[i][j] << endl;
-                //cout << "matrix_im_filtered_y: " << matrix_im_filtered_y[i][j] << endl;
+                //cout << "dx: "<< dy[i][j] << endl;
+                //cout << "matrix_im_filtered_x: " << matrix_im_filtered_x[i][j] << endl;
             }
         }
         extract_hog(dx, dy, hog);
@@ -255,8 +248,11 @@ int sc_main(int, char*[]) {
         for (int i=0; i<(HEIGHT-(BLOCK_SIZE-1)) * (WIDTH-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE); ++i){
             //cout << hog[i] << endl;             
         }
+        cout << std::setprecision(20);
+        cout << "hog[0]: " << hog[0] << endl;
+        W--;
     }
-    while (i > 0);
+    while (W > 20);
   
     sc_start();
     return 0;
