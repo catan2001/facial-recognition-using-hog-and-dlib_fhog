@@ -77,18 +77,17 @@ void SW::process_img(){
     num_t ori_histo[ROWS / CELL_SIZE][COLS / CELL_SIZE][nBINS];
     build_histogram(grad_mag, grad_angle, ori_histo);
 
-    num_t ori_histo_normalized[HEIGHT - (BLOCK_SIZE - 1)][WIDTH - (BLOCK_SIZE - 1)][nBINS * (BLOCK_SIZE*BLOCK_SIZE)];
+    num_t ori_histo_normalized[HEIGHT-(BLOCK_SIZE-1)][WIDTH-(BLOCK_SIZE-1)][nBINS*(BLOCK_SIZE*BLOCK_SIZE)];
     get_block_descriptor(ori_histo, ori_histo_normalized);
 
-    num_t hog[(HEIGHT - (BLOCK_SIZE - 1)) * (WIDTH - (BLOCK_SIZE - 1)) * (6 * BLOCK_SIZE * BLOCK_SIZE)];
 
-    int l = 0;
-    for (int i = 0; i < HEIGHT - (BLOCK_SIZE - 1); ++i) {
-        for (int j = 0; j < WIDTH - (BLOCK_SIZE - 1); ++j) {
-            for (int k = 0; k < nBINS * BLOCK_SIZE * BLOCK_SIZE; ++k) {
-                hog[l++] = ori_histo_normalized[i][j][k];
-            }
-        }
+    num_t hog[(HEIGHT-(BLOCK_SIZE-1))*(WIDTH-(BLOCK_SIZE-1))*(6*BLOCK_SIZE*BLOCK_SIZE)];
+
+    int HOG_LEN = (HEIGHT-1)*(WIDTH-1)*(nBINS*BLOCK_SIZE*BLOCK_SIZE);
+    int i = nBINS*BLOCK_SIZE*BLOCK_SIZE*(WIDTH-1);
+
+    for(int l=0; l < HOG_LEN; ++l){
+        hog[l] = ori_histo_normalized[(int)(l/i)][(int)((l/24)%(WIDTH-1))][l%24];
     }
 }
 
@@ -129,7 +128,8 @@ int SW::read_hard(sc_dt::uint64 addr)
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     sc_core::sc_time offset = sc_core::SC_ZERO_TIME;
     interconnect_socket->b_transport(pl, offset);
-    //jos
+    
+    return to_int(buf);
 }
 
 void SW::write_hard(sc_dt::uint64 addr, int val)
