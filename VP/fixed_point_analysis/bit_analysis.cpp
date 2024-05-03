@@ -40,6 +40,34 @@ typedef std::vector<std::vector<float>> orig_array_t;
 //assume the size of our picture is fixed and already determined
 //getting the amplitude and phase matrix of the filtered image
 
+float mean_subtract(int len, float *array) {
+    float mean = 0;
+    //cout << "inside: " << *array << endl;
+    //cout << "len: " << len << endl;
+    for(int i = 0; i < len; ++i) {
+        mean += *(array + i);
+        //cout << *(array + i) << endl;
+    }
+    //cout << *(array + 6935)<< endl;
+    //cout << "mean: " << mean << endl;
+    //cout << mean/len << endl;
+    return (mean/len);
+}
+
+float array_norm(int len, float *array) {
+    float norm = 0;
+    for(int i = 0; i < len; ++i)
+        norm += ((*(array + i)) * (*(array + i)));
+    return sqrt(norm);
+}
+
+float array_dot(int len, float *array1, float *array2) {
+    float dot = 0;
+    for(int i = 0; i < len; ++i) 
+        dot += (*(array1 + i)) * (*(array2 + i));
+    return dot;
+}
+
 void cast_to_fix(matrix_t& dest, orig_array_t& src, int W, int I) {
     for(int i = 0; i != ROWS; ++i) {
         for (int j = 0; j != COLS; ++j) {
@@ -141,10 +169,10 @@ void get_block_descriptor(int rows, int cols, float *ori_histo, float *ori_histo
 }
 //changed so it accepts both filtered by x and y filter
 void extract_hog(int rows, int cols, int W, int I, float *im, float *hog) { 
-    
-    float im_min = *(im)/255.0;
-    float im_max = *(im)/255.0;
-    
+    //TODO: check why it fails again to have correct values
+    float im_min = *(im + 0)/255.00000000;
+    float im_max = *(im + 0)/255.00000000;
+
     for(int i = 0; i < rows; ++i){
         for(int j = 0; j < cols; ++j){
             *(im + i*cols + j) = *(im + i*cols + j)/255.0; // converting to double format
@@ -158,10 +186,9 @@ void extract_hog(int rows, int cols, int W, int I, float *im, float *hog) {
             *(im + i*cols + j) = (*(im + i*cols + j) - im_min) / im_max; // Normalize image to [0, 1]
         }
     }
-    
     // Hardware part of the code:
     orig_array_t orig_gray(rows, vector<float>(cols));
-
+    //cout << *im << endl;
     for (int i=0; i<rows; ++i){
         for (int j=0; j<cols; ++j){
             orig_gray[i][j] = *(im + i*cols + j);
@@ -235,6 +262,64 @@ void extract_hog(int rows, int cols, int W, int I, float *im, float *hog) {
     }  
 }
 
+void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, float *I_target, float *I_template) {
+    
+    int hog_len = ((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24;
+    
+    for(int i = 0; i < box_h; ++i)
+        for(int j = 0; j < box_w; ++j);
+        
+    float template_HOG[((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24];
+    
+    extract_hog(box_h, box_w, W, I, &(I_template[0]), template_HOG);
+    
+    //for(int i = 0; i < hog_len; ++i);
+        //cout << *(template_HOG + i) << endl;
+
+    float template_HOG_norm = 0;
+    float template_HOG_mean = 0;
+    //cout << "template_HOG 0: " << template_HOG[0] << endl;
+    template_HOG_mean = mean_subtract(hog_len, &template_HOG[0]);
+    //cout << "template_HOG_mean: " << template_HOG_mean << endl;
+    
+        for(int l = 0; l < hog_len; ++l) 
+        template_HOG[l] -= template_HOG_mean;
+      
+    template_HOG_norm = array_norm(hog_len, &template_HOG[0]); 
+
+    int x = 0;
+    int y = 0;
+
+    float img_HOG[((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24];
+    float img_window[box_h][box_w];
+    float score = 0;
+    float img_HOG_norm = 0;
+    float img_HOG_mean = 0;
+    int bb = 0;
+    for (x = x+box_h; x <= img_h; x+=3){
+        for(y = y+box_w; y <= img_w; y+=3) {
+            for(int i = 0; i < box_h; ++i)
+                for(int j = 0; j < box_w; ++j) {
+                    //cout << *(I_target +i*(x-box_h) + j) << endl;
+                    img_window[i][j] = *(I_target +i*box_w + j);
+                }
+            extract_hog(box_h, box_w, W, I, &img_window[0][0], &img_HOG[0]);
+            
+            img_HOG_mean = mean_subtract(hog_len, &img_HOG[0]);
+            //cout << setprecision(20) << endl;
+            //cout << "img_HOG_mean: "<< img_HOG_mean << endl;
+            for(int l = 0; l < hog_len; ++l) 
+                img_HOG[l] -= img_HOG_mean;
+                
+            img_HOG_norm = array_norm(hog_len, &img_HOG[0]);
+            
+            score = float(array_dot(hog_len, &img_HOG[0], &template_HOG[0])/ (template_HOG_norm * img_HOG_norm));
+            //cout << "score: " << score*100 << "%" << endl;
+        }
+    y = 0;
+    }
+}
+
 int sc_main(int, char*[]) {
     // TODO: implement filters to be also bit width dependant 
     FILE * rach;
@@ -254,7 +339,20 @@ int sc_main(int, char*[]) {
     }
     fclose(rach);
 
-    int W = 64;
+    int box_height = 150;
+    int box_width = 150;
+    float I_template[box_height][box_width];
+    a = 0;
+    rach = fopen("gray.txt", "rb");
+    for (int i=0; i<box_height; ++i){
+        for (int j=0; j<box_width; ++j){
+            fscanf(rach, "%f", &a);
+            I_template[i][j] = a;
+        }
+    }
+    fclose(rach);
+
+    int W = 50;
     const int I = 3;
     
     // loop to find minimal bitwidth
@@ -263,19 +361,21 @@ int sc_main(int, char*[]) {
         cout << "Width W: " << W << endl;
         cout << "Fixed point: " << I << endl;
         
-        int height = rows/CELL_SIZE;
-        int width = cols/CELL_SIZE;
-        float hog[(height-(BLOCK_SIZE-1)) * (width-(BLOCK_SIZE-1)) * (nBINS*BLOCK_SIZE*BLOCK_SIZE)];
-        extract_hog(rows, cols, W, I, &gray[0][0], &hog[0]);
+        face_recognition(ROWS, COLS, ROWS, COLS, W, I, &gray[0][0], &I_template[0][0]);
+
+        //int height = rows/CELL_SIZE;
+        //int width = cols/CELL_SIZE;
+        //float hog[(height-(BLOCK_SIZE-1)) * (width-(BLOCK_SIZE-1)) * (nBINS*BLOCK_SIZE*BLOCK_SIZE)];
+        //extract_hog(rows, cols, W, I, &gray[0][0], &hog[0]);
         
-        for (int i=0; i<(height-(BLOCK_SIZE-1)) * (width-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE); ++i){
+        //for (int i=0; i<(height-(BLOCK_SIZE-1)) * (width-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE); ++i){
             //cout << hog[i] << endl;             
-        }
-        cout << std::setprecision(20);
-        cout << "hog[0]: " << hog[0] << endl;
+        //}
+        //cout << std::setprecision(20);
+        //cout << "hog[0]: " << hog[0] << endl;
         W--;
     }
-    while (W > 20);
+    while (W > 49);
   
     sc_start();
     return 0;
