@@ -25,13 +25,13 @@ using namespace sc_dt;
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)
 
-const float filter_x[9] = {1,0,-1, 2,0,-2, 1,0,-1};  //Dx = filter_x conv D
-const float filter_y[9] = {1,2,1, 0,0,0, -1,-2,-1};    //Dy = filter_y conv D
+const double filter_x[9] = {1,0,-1, 2,0,-2, 1,0,-1};  //Dx = filter_x conv D
+const double filter_y[9] = {1,2,1, 0,0,0, -1,-2,-1};    //Dy = filter_y conv D
 
 typedef sc_dt::sc_fix num_t;
 typedef std::deque<num_t> array_t;
 typedef std::deque<array_t> matrix_t;
-typedef std::vector<std::vector<float>> orig_array_t;
+typedef std::vector<std::vector<double>> orig_array_t;
 
 //int ROWS = 150;
 //int COLS = 150;
@@ -40,37 +40,34 @@ typedef std::vector<std::vector<float>> orig_array_t;
 //assume the size of our picture is fixed and already determined
 //getting the amplitude and phase matrix of the filtered image
 
-float mean_subtract(int len, float *array) {
-    float mean = 0;
-    //cout << "inside: " << *array << endl;
-    //cout << "len: " << len << endl;
+double mean_subtract(int len, double *array) {
+    double mean = 0;
+
     for(int i = 0; i < len; ++i) {
         mean += *(array + i);
-        //cout << *(array + i) << endl;
     }
-    //cout << *(array + 6935)<< endl;
-    //cout << "mean: " << mean << endl;
-    //cout << mean/len << endl;
     return (mean/len);
 }
 
-float array_norm(int len, float *array) {
-    float norm = 0;
+double array_norm(int len, double *array) {
+    double norm = 0;
+
     for(int i = 0; i < len; ++i)
         norm += ((*(array + i)) * (*(array + i)));
     return sqrt(norm);
 }
 
-float array_dot(int len, float *array1, float *array2) {
-    float dot = 0;
+double array_dot(int len, double *array1, double *array2) {
+    double dot = 0;
+
     for(int i = 0; i < len; ++i) 
         dot += (*(array1 + i)) * (*(array2 + i));
     return dot;
 }
 
-void cast_to_fix(matrix_t& dest, orig_array_t& src, int W, int I) {
-    for(int i = 0; i != ROWS; ++i) {
-        for (int j = 0; j != COLS; ++j) {
+void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int W, int I) {
+    for(int i = 0; i != rows; ++i) {
+        for (int j = 0; j != cols; ++j) {
             num_t d(W, I);
             d = src[i][j];
             if(d.overflow_flag())
@@ -80,9 +77,27 @@ void cast_to_fix(matrix_t& dest, orig_array_t& src, int W, int I) {
     }
 }
 
-void get_gradient(int rows, int cols, float *im_dx, float *im_dy, float *grad_mag, float *grad_angle){
+void find_max(int rows, int cols, double *matrix) {
+    // TODO: implement faster algorithm
+    double tmp_max = *matrix;
+    int row, col;
 
-    float dX, dY;
+    for(int i = 0; i < rows; ++i)
+        for(int j = 0; j < cols; ++j) {
+            if(*(matrix + i*cols + j) >= tmp_max) {
+                tmp_max = *(matrix+i*cols + j);
+                row = i;
+                col = j;
+            }
+        }
+
+     cout << "max: "<< tmp_max << endl;
+     cout << "x = " << row *3 << " y= " << col*3 << endl;
+}
+
+void get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad_mag, double *grad_angle){
+
+    double dX, dY;
     
     for(int i=0; i<rows; ++i){
         for(int j=0; j<cols; ++j){
@@ -104,19 +119,18 @@ void get_gradient(int rows, int cols, float *im_dx, float *im_dy, float *grad_ma
     }
 }
 
-void build_histogram(int rows, int cols, float *grad_mag, float *grad_angle, float *ori_histo){
+void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, double *ori_histo){
 
     //define REGION of INTEREST, our new chunks
     int cell_pow2 = CELL_SIZE*CELL_SIZE;
-    float magROI[cell_pow2], angleROI[cell_pow2];
-    float angleInDeg;
-
+    double magROI[cell_pow2], angleROI[cell_pow2];
+    double angleInDeg;
     for(int i = CELL_SIZE; i <= rows; i+=CELL_SIZE){
         for(int j = CELL_SIZE; j <= cols; j+=CELL_SIZE){
-            float hist[nBINS]={0, 0, 0, 0, 0, 0};
+            double hist[nBINS]={0, 0, 0, 0, 0, 0};
 
             for(int k=0; k<cell_pow2; ++k){
-               // magROI[k]=grad_mag[i-CELL_SIZE+(int)(k/CELL_SIZE)][j-CELL_SIZE+(k%CELL_SIZE)];
+                //magROI[k]=grad_mag[i-CELL_SIZE+(int)(k/CELL_SIZE)][j-CELL_SIZE+(k%CELL_SIZE)];
                 magROI[k]= *(grad_mag + (i-CELL_SIZE+(int)(k/CELL_SIZE))*cols + j-CELL_SIZE+(k%CELL_SIZE));
                 //angleROI[k]=grad_angle[i-CELL_SIZE+(int)(k/CELL_SIZE)][j-CELL_SIZE+(k%CELL_SIZE)];
                 angleROI[k]= *(grad_angle + (i-CELL_SIZE+(int)(k/CELL_SIZE))*cols + j-CELL_SIZE+(k%CELL_SIZE));
@@ -135,23 +149,25 @@ void build_histogram(int rows, int cols, float *grad_mag, float *grad_angle, flo
                 }else{
                     hist[5] += magROI[k];
                 }  
-            }
+            } 
 
-            //ori_histo[int(x_corner/cell_size),int(y_corner/cell_size),:] = hist
-            for(int k=0; k<nBINS; ++k) //ori_histo[(int)(i-CELL_SIZE)/CELL_SIZE][(int)(j-CELL_SIZE)/CELL_SIZE][k] = hist[k];
-                                       *(ori_histo + ((int)(i-CELL_SIZE)/CELL_SIZE) * nBINS * (int)(cols/CELL_SIZE) + ((int)(j-CELL_SIZE)/CELL_SIZE)*nBINS + k) = hist[k];
+            for(int k=0; k<nBINS; ++k) //ori_histo[(int)(i-CELL_SIZE)/CELL_SIZE][(int)(j-CELL_SIZE)/CELL_SIZE][k] = hist[k]; 
+                                       {
+                                       *(ori_histo + ((int)(i-CELL_SIZE)/CELL_SIZE) * nBINS * (int)(cols/CELL_SIZE) + ((int)(j-CELL_SIZE)/CELL_SIZE)*nBINS + k) = hist[k]; 
+                                       }
         }
-    }
+    } 
 }
 
-void get_block_descriptor(int rows, int cols, float *ori_histo, float *ori_histo_normalized){
+
+void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_histo_normalized){
     int height = rows/CELL_SIZE;
     int width = cols/CELL_SIZE;
     for(int i = BLOCK_SIZE; i <= height; i+=BLOCK_SIZE){
         for(int j = BLOCK_SIZE; j <= width; j+=BLOCK_SIZE){
-            float concatednatedHist[HIST_SIZE];
-            float concatednatedHist2[HIST_SIZE];
-            float histNorm = 0.0;
+            double concatednatedHist[HIST_SIZE];
+            double concatednatedHist2[HIST_SIZE];
+            double histNorm = 0.0;
 
             for(int k=0; k<HIST_SIZE; ++k) {
                 concatednatedHist[k] = *(ori_histo + (i-BLOCK_SIZE+(int)k/12)*nBINS*((int)cols/CELL_SIZE) + (j-BLOCK_SIZE+((int)k/6)%2)*nBINS + (k%6));
@@ -168,10 +184,10 @@ void get_block_descriptor(int rows, int cols, float *ori_histo, float *ori_histo
     }
 }
 //changed so it accepts both filtered by x and y filter
-void extract_hog(int rows, int cols, int W, int I, float *im, float *hog) { 
+void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) { 
     //TODO: check why it fails again to have correct values
-    float im_min = *(im + 0)/255.00000000;
-    float im_max = *(im + 0)/255.00000000;
+    double im_min = *(im + 0)/255.00000000;
+    double im_max = *(im + 0)/255.00000000;
 
     for(int i = 0; i < rows; ++i){
         for(int j = 0; j < cols; ++j){
@@ -187,22 +203,22 @@ void extract_hog(int rows, int cols, int W, int I, float *im, float *hog) {
         }
     }
     // Hardware part of the code:
-    orig_array_t orig_gray(rows, vector<float>(cols));
-    //cout << *im << endl;
+    orig_array_t orig_gray(rows, vector<double>(cols));
+    
     for (int i=0; i<rows; ++i){
         for (int j=0; j<cols; ++j){
             orig_gray[i][j] = *(im + i*cols + j);
         }
     }
-
+    
     matrix_t matrix_gray(rows, array_t(cols, num_t(W, I, Q, O)));
     matrix_t matrix_im_filtered_y(rows, array_t(cols, num_t(W,I,Q,O)));
     matrix_t matrix_im_filtered_x(rows, array_t(cols, num_t(W,I,Q,O)));
     matrix_t padded_img(rows+2, array_t(cols+2, num_t(W,I,Q, O)));
-    cast_to_fix(matrix_gray, orig_gray, W, I);
-            
+    cast_to_fix(rows, cols, matrix_gray, orig_gray, W, I);
+    
     //pad the image on the outer edges with zeros:
-    for(int i=0; i<ROWS+2; ++i) {
+    for(int i=0; i<rows+2; ++i) {
         padded_img[i][0]=0;
         padded_img[i][cols+1]=0;
     }
@@ -223,8 +239,8 @@ void extract_hog(int rows, int cols, int W, int I, float *im, float *hog) {
     //filter image:
     array_t imROI(9, num_t(W,I, Q, O));
     
-    float dx[rows][cols]; //
-    float dy[rows][cols]; //
+    double dx[rows][cols]; //
+    double dy[rows][cols]; //
     for (int i=0; i<rows; ++i){
         for (int j=0; j<cols; ++j){
             for(int k=0; k<9; ++k){
@@ -234,24 +250,21 @@ void extract_hog(int rows, int cols, int W, int I, float *im, float *hog) {
             }
             dx[i][j] = matrix_im_filtered_x[i][j];
             dy[i][j] = matrix_im_filtered_y[i][j];
-            //cout << std::setprecision(50);
-            //cout << "dx: "<< dy[i][j] << endl;
-            //cout << "matrix_im_filtered_x: " << matrix_im_filtered_x[i][j] << endl;
         }
     }
 
 
     int height = rows/CELL_SIZE;
     int width = cols/CELL_SIZE;
-    float grad_mag[rows][cols];
-    float grad_angle[rows][cols];
+    double grad_mag[rows][cols];
+    double grad_angle[rows][cols];
     get_gradient(rows, cols, &dx[0][0], &dy[0][0], &grad_mag[0][0], &grad_angle[0][0]);
     
-    float ori_histo[(int)rows/CELL_SIZE][(int)cols/CELL_SIZE][nBINS]; // TODO: check to replace ROWS/CELL_SIZE with HEIGHT
+    double ori_histo[(int)rows/CELL_SIZE][(int)cols/CELL_SIZE][nBINS]; // TODO: check to replace ROWS/CELL_SIZE with HEIGHT
     build_histogram(rows, cols, &grad_mag[0][0], &grad_angle[0][0], &ori_histo[0][0][0]);
     
     // TODO: Make makro to replace underneath
-    float ori_histo_normalized[height-(BLOCK_SIZE-1)][width-(BLOCK_SIZE-1)][nBINS*(BLOCK_SIZE*BLOCK_SIZE)];        
+    double ori_histo_normalized[height-(BLOCK_SIZE-1)][width-(BLOCK_SIZE-1)][nBINS*(BLOCK_SIZE*BLOCK_SIZE)];        
     get_block_descriptor(rows, cols, &ori_histo[0][0][0], &ori_histo_normalized[0][0][0]);
     
     int HOG_LEN = (height-1) * (width-1) * (nBINS*BLOCK_SIZE*BLOCK_SIZE);
@@ -262,25 +275,15 @@ void extract_hog(int rows, int cols, int W, int I, float *im, float *hog) {
     }  
 }
 
-void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, float *I_target, float *I_template) {
+void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, double *I_target, double *I_template) {
     
-    int hog_len = ((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24;
-    
-    for(int i = 0; i < box_h; ++i)
-        for(int j = 0; j < box_w; ++j);
-        
-    float template_HOG[((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24];
-    
+    int hog_len = ((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24;    
+    double template_HOG[((int)(box_h/8)-1)*((int)(box_w/8)-1)*24];
     extract_hog(box_h, box_w, W, I, &(I_template[0]), template_HOG);
-    
-    //for(int i = 0; i < hog_len; ++i);
-        //cout << *(template_HOG + i) << endl;
 
-    float template_HOG_norm = 0;
-    float template_HOG_mean = 0;
-    //cout << "template_HOG 0: " << template_HOG[0] << endl;
+    double template_HOG_norm = 0;
+    double template_HOG_mean = 0;
     template_HOG_mean = mean_subtract(hog_len, &template_HOG[0]);
-    //cout << "template_HOG_mean: " << template_HOG_mean << endl;
     
         for(int l = 0; l < hog_len; ++l) 
         template_HOG[l] -= template_HOG_mean;
@@ -290,34 +293,40 @@ void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, 
     int x = 0;
     int y = 0;
 
-    float img_HOG[((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24];
-    float img_window[box_h][box_w];
-    float score = 0;
-    float img_HOG_norm = 0;
-    float img_HOG_mean = 0;
+    double img_HOG[((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24];
+    double img_window[box_h][box_w];
+    double score = 0;
+    double img_HOG_norm = 0;
+    double img_HOG_mean = 0;
     int bb = 0;
+    double all_bounding_boxes[(img_h-box_h)/3][(img_w-box_w)/3];
     for (x = x+box_h; x <= img_h; x+=3){
         for(y = y+box_w; y <= img_w; y+=3) {
             for(int i = 0; i < box_h; ++i)
                 for(int j = 0; j < box_w; ++j) {
-                    //cout << *(I_target +i*(x-box_h) + j) << endl;
-                    img_window[i][j] = *(I_target +i*box_w + j);
-                }
-            extract_hog(box_h, box_w, W, I, &img_window[0][0], &img_HOG[0]);
-            
+                    img_window[i][j] = *(I_target +(i+x-box_h)*y + (j+y-box_w));
+
+            extract_hog(box_h, box_w, W, I, &img_window[0][0], &img_HOG[0]);    
             img_HOG_mean = mean_subtract(hog_len, &img_HOG[0]);
-            //cout << setprecision(20) << endl;
-            //cout << "img_HOG_mean: "<< img_HOG_mean << endl;
+        
             for(int l = 0; l < hog_len; ++l) 
                 img_HOG[l] -= img_HOG_mean;
                 
             img_HOG_norm = array_norm(hog_len, &img_HOG[0]);
             
-            score = float(array_dot(hog_len, &img_HOG[0], &template_HOG[0])/ (template_HOG_norm * img_HOG_norm));
+            score = double(array_dot(hog_len, &img_HOG[0], &template_HOG[0])/ (template_HOG_norm * img_HOG_norm));
+            all_bounding_boxes[(x-box_h)/3][(y-box_w)/3] = score*100;
             //cout << "score: " << score*100 << "%" << endl;
         }
     y = 0;
     }
+    //find_max((img_h-box_h)/3, (img_w-box_w)/3, &all_bounding_boxes[0][0]);
+    
+    for(int i = 0; i < (img_h-box_h)/3; ++i)
+        for(int j = 0; j < (img_w-box_w)/3; ++j) {
+            cout << "box: x=" << i*3 << " y=" << j*3 << endl;
+            cout << "score = " << all_bounding_boxes[i][j] << endl;
+        }
 }
 
 int sc_main(int, char*[]) {
@@ -325,34 +334,36 @@ int sc_main(int, char*[]) {
     FILE * rach;
     rach = fopen("gray.txt", "rb");
 
-    float gray[ROWS][COLS];
-    float a;
+    double gray[ROWS][COLS];
+    double a;
 
     int rows = ROWS;
     int cols = COLS;
 
     for (int i=0; i<ROWS; ++i){
         for (int j=0; j<COLS; ++j){
-            fscanf(rach, "%f", &a);
+            fscanf(rach, "%lf", &a);
             gray[i][j] = a;
         }
     }
     fclose(rach);
 
-    int box_height = 150;
-    int box_width = 150;
-    float I_template[box_height][box_width];
+    int box_height = 100;
+    int box_width = 100;
+    double I_template[box_height][box_width];
+    
     a = 0;
-    rach = fopen("gray.txt", "rb");
+    rach = fopen("gray_template.txt", "rb");
     for (int i=0; i<box_height; ++i){
         for (int j=0; j<box_width; ++j){
-            fscanf(rach, "%f", &a);
+            fscanf(rach, "%lf", &a);
             I_template[i][j] = a;
         }
     }
+
     fclose(rach);
 
-    int W = 50;
+    int W = 64;
     const int I = 3;
     
     // loop to find minimal bitwidth
@@ -361,21 +372,10 @@ int sc_main(int, char*[]) {
         cout << "Width W: " << W << endl;
         cout << "Fixed point: " << I << endl;
         
-        face_recognition(ROWS, COLS, ROWS, COLS, W, I, &gray[0][0], &I_template[0][0]);
-
-        //int height = rows/CELL_SIZE;
-        //int width = cols/CELL_SIZE;
-        //float hog[(height-(BLOCK_SIZE-1)) * (width-(BLOCK_SIZE-1)) * (nBINS*BLOCK_SIZE*BLOCK_SIZE)];
-        //extract_hog(rows, cols, W, I, &gray[0][0], &hog[0]);
-        
-        //for (int i=0; i<(height-(BLOCK_SIZE-1)) * (width-(BLOCK_SIZE-1)) * (6*BLOCK_SIZE*BLOCK_SIZE); ++i){
-            //cout << hog[i] << endl;             
-        //}
-        //cout << std::setprecision(20);
-        //cout << "hog[0]: " << hog[0] << endl;
+        face_recognition(ROWS, COLS, box_height, box_width, W, I, &gray[0][0], &I_template[0][0]);
         W--;
     }
-    while (W > 49);
+    while (W > 63);
   
     sc_start();
     return 0;
