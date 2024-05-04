@@ -303,7 +303,7 @@ void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, 
     for (x = x+box_h; x <= img_h; x+=3){
         for(y = y+box_w; y <= img_w; y+=3) {
             for(int i = 0; i < box_h; ++i)
-                for(int j = 0; j < box_w; ++j) {
+                for(int j = 0; j < box_w; ++j) 
                     img_window[i][j] = *(I_target +(i+x-box_h)*y + (j+y-box_w));
 
             extract_hog(box_h, box_w, W, I, &img_window[0][0], &img_HOG[0]);    
@@ -320,50 +320,18 @@ void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, 
         }
     y = 0;
     }
-    //find_max((img_h-box_h)/3, (img_w-box_w)/3, &all_bounding_boxes[0][0]);
+    find_max((img_h-box_h)/3, (img_w-box_w)/3, &all_bounding_boxes[0][0]);
     
-    for(int i = 0; i < (img_h-box_h)/3; ++i)
+    /*for(int i = 0; i < (img_h-box_h)/3; ++i)
         for(int j = 0; j < (img_w-box_w)/3; ++j) {
             cout << "box: x=" << i*3 << " y=" << j*3 << endl;
             cout << "score = " << all_bounding_boxes[i][j] << endl;
-        }
+        } */
 }
 
 int sc_main(int, char*[]) {
     // TODO: implement filters to be also bit width dependant 
-    FILE * rach;
-    rach = fopen("gray.txt", "rb");
-
-    double gray[ROWS][COLS];
-    double a;
-
-    int rows = ROWS;
-    int cols = COLS;
-
-    for (int i=0; i<ROWS; ++i){
-        for (int j=0; j<COLS; ++j){
-            fscanf(rach, "%lf", &a);
-            gray[i][j] = a;
-        }
-    }
-    fclose(rach);
-
-    int box_height = 100;
-    int box_width = 100;
-    double I_template[box_height][box_width];
-    
-    a = 0;
-    rach = fopen("gray_template.txt", "rb");
-    for (int i=0; i<box_height; ++i){
-        for (int j=0; j<box_width; ++j){
-            fscanf(rach, "%lf", &a);
-            I_template[i][j] = a;
-        }
-    }
-
-    fclose(rach);
-
-    int W = 64;
+    int W = 10;
     const int I = 3;
     
     // loop to find minimal bitwidth
@@ -372,10 +340,42 @@ int sc_main(int, char*[]) {
         cout << "Width W: " << W << endl;
         cout << "Fixed point: " << I << endl;
         
+        FILE * rach;
+        rach = fopen("gray.txt", "rb");
+
+        double gray[ROWS][COLS];
+        double a;
+
+        int rows = ROWS;
+        int cols = COLS;
+
+        for (int i=0; i<ROWS; ++i){
+            for (int j=0; j<COLS; ++j){
+                fscanf(rach, "%lf", &a);
+                gray[i][j] = a;
+            }
+        }
+        fclose(rach);
+
+        int box_height = 100;
+        int box_width = 100;
+        double I_template[box_height][box_width];
+        
+        a = 0;
+        rach = fopen("gray_template.txt", "rb");
+        for (int i=0; i<box_height; ++i){
+            for (int j=0; j<box_width; ++j){
+                fscanf(rach, "%lf", &a);
+                I_template[i][j] = a;
+            }
+        }
+
+        fclose(rach);
+
         face_recognition(ROWS, COLS, box_height, box_width, W, I, &gray[0][0], &I_template[0][0]);
-        W--;
+        W -= 1;
     }
-    while (W > 63);
+    while (W > 20);
   
     sc_start();
     return 0;
