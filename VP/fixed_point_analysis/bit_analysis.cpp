@@ -20,8 +20,8 @@ using namespace sc_dt;
 #define HIST_SIZE nBINS*BLOCK_SIZE*BLOCK_SIZE
 #define Q sc_dt::SC_RND
 #define O sc_dt::SC_SAT
-#define ROWS 150
-#define COLS 150
+#define ROWS 100
+#define COLS 100
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)
 
@@ -284,17 +284,17 @@ void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, 
     double template_HOG_norm = 0;
     double template_HOG_mean = 0;
     template_HOG_mean = mean_subtract(hog_len, &template_HOG[0]);
-    
+    cout << "mean " << template_HOG_mean << endl;  
         for(int l = 0; l < hog_len; ++l) 
         template_HOG[l] -= template_HOG_mean;
       
     template_HOG_norm = array_norm(hog_len, &template_HOG[0]); 
-
+    cout << "norm: " << template_HOG_norm << endl;
     int x = 0;
     int y = 0;
 
-    double img_HOG[((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24];
-    double img_window[box_h][box_w];
+    double img_HOG[((int)(150/8) - 1)*((int)(150/8)-1)*24];
+    double img_window[100][100];
     double score = 0;
     double img_HOG_norm = 0;
     double img_HOG_mean = 0;
@@ -313,7 +313,7 @@ void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, 
                 img_HOG[l] -= img_HOG_mean;
                 
             img_HOG_norm = array_norm(hog_len, &img_HOG[0]);
-            
+            cout << "img_norm: " << img_HOG_norm << endl;
             score = double(array_dot(hog_len, &img_HOG[0], &template_HOG[0])/ (template_HOG_norm * img_HOG_norm));
             all_bounding_boxes[(x-box_h)/3][(y-box_w)/3] = score*100;
             //cout << "score: " << score*100 << "%" << endl;
@@ -331,7 +331,7 @@ void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, 
 
 int sc_main(int, char*[]) {
     // TODO: implement filters to be also bit width dependant 
-    int W = 10;
+    int W = 64;
     const int I = 3;
     
     // loop to find minimal bitwidth
@@ -375,7 +375,7 @@ int sc_main(int, char*[]) {
         face_recognition(ROWS, COLS, box_height, box_width, W, I, &gray[0][0], &I_template[0][0]);
         W -= 1;
     }
-    while (W > 20);
+    while (W > 5);
   
     sc_start();
     return 0;
