@@ -15,13 +15,16 @@ using namespace sc_dt;
 
 #define BLOCK_SIZE 2
 #define CELL_SIZE 8
+#define CELL_POW (CELL_SIZE*CELL_SIZE)
 #define nBINS 6
 #define PI 3.14159265358979323846
 #define HIST_SIZE nBINS*BLOCK_SIZE*BLOCK_SIZE
 #define Q sc_dt::SC_RND
 #define O sc_dt::SC_SAT
-#define ROWS 100
-#define COLS 100
+#define ROWS 150
+#define COLS 150
+#define TROWS 100
+#define TCOLS 100
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)
 
@@ -32,13 +35,6 @@ typedef sc_dt::sc_fix num_t;
 typedef std::deque<num_t> array_t;
 typedef std::deque<array_t> matrix_t;
 typedef std::vector<std::vector<double>> orig_array_t;
-
-//int ROWS = 150;
-//int COLS = 150;
-
-//typedef sc_dt::sc_fixed <64, 32, sc_dt::SC_RND, sc_dt::SC_SAT> num_t;
-//assume the size of our picture is fixed and already determined
-//getting the amplitude and phase matrix of the filtered image
 
 double mean_subtract(int len, double *array) {
     double mean = 0;
@@ -90,7 +86,6 @@ void find_max(int rows, int cols, double *matrix) {
                 col = j;
             }
         }
-
      cout << "max: "<< tmp_max << endl;
      cout << "x = " << row *3 << " y= " << col*3 << endl;
 }
@@ -103,7 +98,7 @@ void get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad
         for(int j=0; j<cols; ++j){
             dX = *(im_dx + i*cols + j);
             dY = *(im_dy + i*cols + j);
-
+            
             //determining the amplitude matrix:
             *(grad_mag + i*cols + j) = sqrt(pow(dX,2)+pow(dY,2));
 
@@ -121,21 +116,21 @@ void get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad
 
 void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, double *ori_histo){
 
-    //define REGION of INTEREST, our new chunks
-    int cell_pow2 = CELL_SIZE*CELL_SIZE;
-    double magROI[cell_pow2], angleROI[cell_pow2];
+    double magROI[CELL_POW], angleROI[CELL_POW];
     double angleInDeg;
     for(int i = CELL_SIZE; i <= rows; i+=CELL_SIZE){
         for(int j = CELL_SIZE; j <= cols; j+=CELL_SIZE){
             double hist[nBINS]={0, 0, 0, 0, 0, 0};
 
-            for(int k=0; k<cell_pow2; ++k){
+            for(int k = 0; k < CELL_POW; ++k){
                 //magROI[k]=grad_mag[i-CELL_SIZE+(int)(k/CELL_SIZE)][j-CELL_SIZE+(k%CELL_SIZE)];
                 magROI[k]= *(grad_mag + (i-CELL_SIZE+(int)(k/CELL_SIZE))*cols + j-CELL_SIZE+(k%CELL_SIZE));
+                if(magROI[k] != magROI[k]) cout << "NAN! -> " << k << " = " << magROI[k] << endl;
+
                 //angleROI[k]=grad_angle[i-CELL_SIZE+(int)(k/CELL_SIZE)][j-CELL_SIZE+(k%CELL_SIZE)];
                 angleROI[k]= *(grad_angle + (i-CELL_SIZE+(int)(k/CELL_SIZE))*cols + j-CELL_SIZE+(k%CELL_SIZE));
                 angleInDeg = angleROI[k]*(180.0 / PI);
-
+                if(angleInDeg != angleInDeg) cout << "NAN angleInDeg!" << endl;
                 if(angleInDeg >=0.0 && angleInDeg < 30.0){
                     hist[0] += magROI[k];
                 }else if(angleInDeg >=30.0 && angleInDeg < 60.0){
@@ -152,9 +147,8 @@ void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, d
             } 
 
             for(int k=0; k<nBINS; ++k) //ori_histo[(int)(i-CELL_SIZE)/CELL_SIZE][(int)(j-CELL_SIZE)/CELL_SIZE][k] = hist[k]; 
-                                       {
                                        *(ori_histo + ((int)(i-CELL_SIZE)/CELL_SIZE) * nBINS * (int)(cols/CELL_SIZE) + ((int)(j-CELL_SIZE)/CELL_SIZE)*nBINS + k) = hist[k]; 
-                                       }
+
         }
     } 
 }
@@ -163,6 +157,10 @@ void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, d
 void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_histo_normalized){
     int height = rows/CELL_SIZE;
     int width = cols/CELL_SIZE;
+    
+    for(int i = 0; i < ((rows/CELL_SIZE-(BLOCK_SIZE-1)) * (cols/CELL_SIZE-(BLOCK_SIZE-1)) * nBINS*(BLOCK_SIZE*BLOCK_SIZE)); ++i)
+        ori_histo_normalized[i] = 0;
+
     for(int i = BLOCK_SIZE; i <= height; i+=BLOCK_SIZE){
         for(int j = BLOCK_SIZE; j <= width; j+=BLOCK_SIZE){
             double concatednatedHist[HIST_SIZE];
@@ -174,12 +172,16 @@ void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_his
                 concatednatedHist2[k]=concatednatedHist[k]*concatednatedHist[k];
                 histNorm+=concatednatedHist2[k];
             }
-
+           
             histNorm+=0.001;
             histNorm = sqrt(histNorm);
+            
+            #ifdef DEBUG
+            if(histNorm != histNorm) cout << "NAN hist Norm" << endl;
+            #endif
 
             for(int k = 0; k < HIST_SIZE; ++k) *(ori_histo_normalized + (i-BLOCK_SIZE)*((cols/CELL_SIZE)-(BLOCK_SIZE-1))*nBINS*BLOCK_SIZE*BLOCK_SIZE 
-                                                + (j-BLOCK_SIZE)*nBINS*BLOCK_SIZE*BLOCK_SIZE + k )= concatednatedHist[k] / histNorm;
+                                               + (j-BLOCK_SIZE)*nBINS*BLOCK_SIZE*BLOCK_SIZE + k )= concatednatedHist[k] / histNorm;  
         }
     }
 }
@@ -188,18 +190,21 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
     //TODO: check why it fails again to have correct values
     double im_min = *(im + 0)/255.00000000;
     double im_max = *(im + 0)/255.00000000;
+    
+    double *im_c = new double[rows*cols];
 
     for(int i = 0; i < rows; ++i){
         for(int j = 0; j < cols; ++j){
-            *(im + i*cols + j) = *(im + i*cols + j)/255.0; // converting to double format
-            if(im_min > *(im + i*cols + j)) im_min = *(im + i*cols + j); // find min im
-            if(im_max < *(im + i*cols + j)) im_max = *(im + i*cols + j); // find max im
+            *(im_c + i*cols + j) = *(im + i*cols +j);
+            *(im_c + i*cols + j) = *(im_c + i*cols + j)/255.0; // converting to double format
+            if(im_min > *(im_c + i*cols + j)) im_min = *(im_c + i*cols + j); // find min im
+            if(im_max < *(im_c + i*cols + j)) im_max = *(im_c + i*cols + j); // find max im
         }
     }
 
     for(int i = 0; i < rows; ++i){
         for(int j = 0; j < cols; ++j){
-            *(im + i*cols + j) = (*(im + i*cols + j) - im_min) / im_max; // Normalize image to [0, 1]
+            *(im_c + i*cols + j) = (*(im_c + i*cols + j) - im_min) / im_max; // Normalize image to [0, 1]
         }
     }
     // Hardware part of the code:
@@ -207,9 +212,11 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
     
     for (int i=0; i<rows; ++i){
         for (int j=0; j<cols; ++j){
-            orig_gray[i][j] = *(im + i*cols + j);
+            orig_gray[i][j] = *(im_c + i*cols + j);
         }
     }
+
+    delete [] im_c;
     
     matrix_t matrix_gray(rows, array_t(cols, num_t(W, I, Q, O)));
     matrix_t matrix_im_filtered_y(rows, array_t(cols, num_t(W,I,Q,O)));
@@ -237,103 +244,153 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
     }
 
     //filter image:
-    array_t imROI(9, num_t(W,I, Q, O));
+    array_t imROI(9, num_t(W, I, Q, O));
     
-    double dx[rows][cols]; //
-    double dy[rows][cols]; //
+    double *dx = new double[rows * cols]; 
+    double *dy = new double[rows * cols]; 
+
     for (int i=0; i<rows; ++i){
         for (int j=0; j<cols; ++j){
             for(int k=0; k<9; ++k){
-                imROI[k]=padded_img[i+(int)(k/3)][j+(k%3)];
-                matrix_im_filtered_y[i][j]+=imROI[k]*filter_y[k];
-                matrix_im_filtered_x[i][j]+=imROI[k]*filter_x[k];
+                imROI[k] = padded_img [i+(int)(k/3)] [j+(k%3)];
+                matrix_im_filtered_y[i][j] += imROI[k] * filter_y[k];
+                matrix_im_filtered_x[i][j] += imROI[k] * filter_x[k];
             }
-            dx[i][j] = matrix_im_filtered_x[i][j];
-            dy[i][j] = matrix_im_filtered_y[i][j];
+            dx[i * cols + j] = matrix_im_filtered_x[i][j];
+            dy[i * cols + j] = matrix_im_filtered_y[i][j];
         }
     }
 
 
     int height = rows/CELL_SIZE;
     int width = cols/CELL_SIZE;
-    double grad_mag[rows][cols];
-    double grad_angle[rows][cols];
-    get_gradient(rows, cols, &dx[0][0], &dy[0][0], &grad_mag[0][0], &grad_angle[0][0]);
+
+    double *grad_mag = new double[rows * cols];
+    double *grad_angle = new double[rows * cols];
     
-    double ori_histo[(int)rows/CELL_SIZE][(int)cols/CELL_SIZE][nBINS]; // TODO: check to replace ROWS/CELL_SIZE with HEIGHT
-    build_histogram(rows, cols, &grad_mag[0][0], &grad_angle[0][0], &ori_histo[0][0][0]);
+    get_gradient(rows, cols, &dx[0], &dy[0], &grad_mag[0], &grad_angle[0]);
+    
+    double *ori_histo = new double[(int)height * (int)width * nBINS];
+
+    build_histogram(rows, cols, &grad_mag[0], &grad_angle[0], &ori_histo[0]);
     
     // TODO: Make makro to replace underneath
-    double ori_histo_normalized[height-(BLOCK_SIZE-1)][width-(BLOCK_SIZE-1)][nBINS*(BLOCK_SIZE*BLOCK_SIZE)];        
-    get_block_descriptor(rows, cols, &ori_histo[0][0][0], &ori_histo_normalized[0][0][0]);
+    double *ori_histo_normalized = new double[(height-(BLOCK_SIZE-1)) * (width-(BLOCK_SIZE-1)) * nBINS*(BLOCK_SIZE*BLOCK_SIZE)];   
+
+    get_block_descriptor(rows, cols, &ori_histo[0], &ori_histo_normalized[0]);
     
     int HOG_LEN = (height-1) * (width-1) * (nBINS*BLOCK_SIZE*BLOCK_SIZE);
     int i = nBINS*BLOCK_SIZE*BLOCK_SIZE*(width-1);
 
-    for(int l=0; l < HOG_LEN; ++l){
-        hog[l] = ori_histo_normalized[(int)(l/i)][(int)((l/24)%(width-1))][l%24];
-    }  
+    for(int l = 0; l < HOG_LEN; ++l){
+        hog[l] = ori_histo_normalized[(int)(l/i)*(width-(BLOCK_SIZE-1))*nBINS*(BLOCK_SIZE*BLOCK_SIZE) + (int)((l/24)%(width-1))*nBINS*(BLOCK_SIZE*BLOCK_SIZE) + l%24];
+        #ifdef DEBUG
+        if(hog[l] != hog[l]) cout << "hogl NAN" << endl;
+        #endif
+    }
+
+    // deallocate allocated
+    delete [] dx;
+    delete [] dy;
+    delete [] grad_mag;
+    delete [] grad_angle;
+    delete [] ori_histo;
+    delete [] ori_histo_normalized;
 }
 
 void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, double *I_target, double *I_template) {
     
     int hog_len = ((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24;    
-    double template_HOG[((int)(box_h/8)-1)*((int)(box_w/8)-1)*24];
+    double *template_HOG = new double[((int)(box_h/8)-1)*((int)(box_w/8)-1)*24];
+
     extract_hog(box_h, box_w, W, I, &(I_template[0]), template_HOG);
 
     double template_HOG_norm = 0;
     double template_HOG_mean = 0;
+    
     template_HOG_mean = mean_subtract(hog_len, &template_HOG[0]);
-    cout << "mean " << template_HOG_mean << endl;  
-        for(int l = 0; l < hog_len; ++l) 
+
+    for(int l = 0; l < hog_len; ++l) 
         template_HOG[l] -= template_HOG_mean;
-      
+    
     template_HOG_norm = array_norm(hog_len, &template_HOG[0]); 
-    cout << "norm: " << template_HOG_norm << endl;
+    
+    #ifdef DEBUG
+        cout << "Template Mean: " << template_HOG_mean << endl;  
+        cout << "Template Norm: " << template_HOG_norm << endl;   
+    #endif
+   
     int x = 0;
     int y = 0;
+        
+    #ifdef DEBUG
+        cout << "Calculating HOG for parts of image: " << endl;
+    #endif
 
-    double img_HOG[((int)(150/8) - 1)*((int)(150/8)-1)*24];
-    double img_window[100][100];
+    double *img_window = new double[box_h * box_w];
     double score = 0;
     double img_HOG_norm = 0;
-    double img_HOG_mean = 0;
-    int bb = 0;
-    double all_bounding_boxes[(img_h-box_h)/3][(img_w-box_w)/3];
+    double img_HOG_mean = 0;              
+    double *all_bounding_boxes = new double[((img_h-box_h)/3 + 1) * ((img_w-box_w)/3 + 1)];
+      
     for (x = x+box_h; x <= img_h; x+=3){
         for(y = y+box_w; y <= img_w; y+=3) {
+            int ll = 0;
             for(int i = 0; i < box_h; ++i)
-                for(int j = 0; j < box_w; ++j) 
-                    img_window[i][j] = *(I_target +(i+x-box_h)*y + (j+y-box_w));
+                for(int j = 0; j < box_w; ++j)
+                    img_window[i * box_w + j] = *(I_target +(i+x-box_h)*y + (j+y-box_w));
+            
+            double *img_HOG = new double[((int)(box_h/8) - 1)*((int)(box_w/8) - 1)*24];
 
-            extract_hog(box_h, box_w, W, I, &img_window[0][0], &img_HOG[0]);    
+            extract_hog(box_h, box_w, W, I, &img_window[0], &img_HOG[0]);    
             img_HOG_mean = mean_subtract(hog_len, &img_HOG[0]);
         
             for(int l = 0; l < hog_len; ++l) 
                 img_HOG[l] -= img_HOG_mean;
                 
             img_HOG_norm = array_norm(hog_len, &img_HOG[0]);
-            cout << "img_norm: " << img_HOG_norm << endl;
-            score = double(array_dot(hog_len, &img_HOG[0], &template_HOG[0])/ (template_HOG_norm * img_HOG_norm));
-            all_bounding_boxes[(x-box_h)/3][(y-box_w)/3] = score*100;
-            //cout << "score: " << score*100 << "%" << endl;
+
+            #ifdef DEBUG
+                cout << "image_norm: " << img_HOG_norm << endl;
+            #endif
+
+            score = double(array_dot(hog_len, &img_HOG[0], &template_HOG[0])/ (template_HOG_norm * img_HOG_norm)); 
+            all_bounding_boxes[((x-box_h)/3)*((img_w-box_w)/3 + 1) + (y-box_w)/3] = score*100;
+            
+            //deallocate img_HOG
+            delete [] img_HOG;
         }
     y = 0;
     }
-    find_max((img_h-box_h)/3, (img_w-box_w)/3, &all_bounding_boxes[0][0]);
+
+    find_max((img_h-box_h)/3 + 1, (img_w-box_w)/3 + 1, &all_bounding_boxes[0]);
     
-    /*for(int i = 0; i < (img_h-box_h)/3; ++i)
-        for(int j = 0; j < (img_w-box_w)/3; ++j) {
-            cout << "box: x=" << i*3 << " y=" << j*3 << endl;
-            cout << "score = " << all_bounding_boxes[i][j] << endl;
-        } */
+    #ifdef DEBUG
+        for(int i = 0; i <= (img_h-box_h)/3; ++i)
+            for(int j = 0; j <= (img_w-box_w)/3; ++j) {
+                cout << "box dim: x=" << i*3 << " y=" << j*3 << endl;
+                cout << "score = " << all_bounding_boxes[i * ((img_w-box_w)/3) + j] << endl;
+            } 
+    #endif
+
+    // deallocate everything!
+    delete [] template_HOG;
+    delete [] img_window;
+    delete [] all_bounding_boxes;
 }
 
 int sc_main(int, char*[]) {
     // TODO: implement filters to be also bit width dependant 
+
     int W = 64;
     const int I = 3;
     
+    #ifdef DEBUG
+        cout << "      NOTE: DEBUG preprocessor directive is on!" << endl;
+    #else
+        cout << "      NOTE: Compiled program without DEBUG!" << endl << "      To use it, compile with -DDEBUG" << endl << endl;
+    #endif
+
     // loop to find minimal bitwidth
     do {
         
@@ -342,37 +399,45 @@ int sc_main(int, char*[]) {
         
         FILE * rach;
         rach = fopen("gray.txt", "rb");
+        if(rach == NULL) {
+            cout << "ERROR! could not open file!" << endl;
+            return 101;
+        }
 
-        double gray[ROWS][COLS];
-        double a;
+        double *gray = new double[ROWS * COLS];
+        double val;
 
-        int rows = ROWS;
-        int cols = COLS;
-
-        for (int i=0; i<ROWS; ++i){
-            for (int j=0; j<COLS; ++j){
-                fscanf(rach, "%lf", &a);
-                gray[i][j] = a;
+        for (int i = 0; i < ROWS; ++i){
+            for (int j = 0; j < COLS; ++j){
+                fscanf(rach, "%lf", &val);
+                gray[i * COLS + j] = val;
             }
         }
         fclose(rach);
 
-        int box_height = 100;
-        int box_width = 100;
-        double I_template[box_height][box_width];
-        
-        a = 0;
         rach = fopen("gray_template.txt", "rb");
-        for (int i=0; i<box_height; ++i){
-            for (int j=0; j<box_width; ++j){
-                fscanf(rach, "%lf", &a);
-                I_template[i][j] = a;
+        if(rach == NULL) {
+            cout << "ERROR! could not open file!" << endl;
+            return 101;
+        }
+
+        double *I_template = new double[TROWS * TCOLS];
+        val = 0;
+
+        for (int i = 0; i < TROWS; ++i){
+            for (int j = 0; j < TCOLS; ++j){
+                fscanf(rach, "%lf", &val);
+                I_template[i * TCOLS + j] = val;
             }
         }
 
         fclose(rach);
 
-        face_recognition(ROWS, COLS, box_height, box_width, W, I, &gray[0][0], &I_template[0][0]);
+        face_recognition(ROWS, COLS, TROWS, TCOLS, W, I, &gray[0], &I_template[0]);
+        
+        delete [] gray; // deallocates whole array in memory
+        delete [] I_template;
+    
         W -= 1;
     }
     while (W > 5);
