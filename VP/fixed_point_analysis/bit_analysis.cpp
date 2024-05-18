@@ -25,6 +25,10 @@ using namespace sc_dt;
 #define COLS 150
 #define TROWS 100
 #define TCOLS 100
+#define UPPER_BOUNDARY ROWS > COLS ? ROWS : COLS
+#define LOWER_BOUNDARY 50
+#define THRESHOLD 0.5 // TODO: CHANGE AS NEEDED!
+#define SUPPRESSION 0.5 // TODO: CHANGE AS NEEDED!
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)
 
@@ -35,6 +39,105 @@ typedef sc_dt::sc_fix num_t;
 typedef std::deque<num_t> array_t;
 typedef std::deque<array_t> matrix_t;
 typedef std::vector<std::vector<double>> orig_array_t;
+
+double mean_subtract(int len, double *array);
+
+double array_norm(int len, double *array); 
+
+double array_dot(int len, double *array1, double *array2);
+
+void sort(int x, int y, int z, double *array);
+
+void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int W, int I);
+
+void find_max(int rows, int cols, double *matrix);
+
+double min(double num1, double num2);
+
+double max(double num1, double num2);
+
+double box_iou(double box1_x, double box1_y, double box2_x, double box2_y, double boxSize);
+
+void get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad_mag, double *grad_angle);
+
+void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, double *ori_histo);
+
+void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_histo_normalized);
+
+void extract_hog(int rows, int cols, int W, int I, double *im, double *hog);
+
+double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, double *I_target, double *I_template);
+
+void face_recognition_range(int W, int I, double *I_target, int step); 
+
+int sc_main(int, char*[]) {
+    // TODO: implement filters to be also bit width dependant 
+
+    int W = 64;
+    const int I = 3;
+    
+    #ifdef DEBUG
+        cout << endl << "        NOTE: DEBUG preprocessor directive is on!" << endl << endl;
+    #else
+        cout << endl << "        NOTE: Compiled program without DEBUG!" << endl << "        To use it, compile with -DDEBUG" << endl << endl;
+    #endif 
+
+    // loop to find minimal bitwidth
+    do {
+        
+        cout << "Width W: " << W << endl;
+        cout << "Fixed point: " << I << endl;
+        
+        FILE * rach;
+        rach = fopen("gray.txt", "rb");
+        if(rach == NULL) {
+            cout << "ERROR! could not open file!" << endl;
+            return 101;
+        }
+
+        double *gray = new double[ROWS * COLS];
+        double val;
+
+        for (int i = 0; i < ROWS; ++i){
+            for (int j = 0; j < COLS; ++j){
+                fscanf(rach, "%lf", &val);
+                gray[i * COLS + j] = val;
+            }
+        }
+        fclose(rach);
+        /*
+        rach = fopen("gray_template.txt", "rb");
+        if(rach == NULL) {
+            cout << "ERROR! could not open file!" << endl;
+            return 101;
+        }
+
+        double *I_template = new double[TROWS * TCOLS];
+        val = 0;
+
+        for (int i = 0; i < TROWS; ++i){
+            for (int j = 0; j < TCOLS; ++j){
+                fscanf(rach, "%lf", &val);
+                I_template[i * TCOLS + j] = val;
+            }
+        }
+
+        fclose(rach);
+        */
+        face_recognition_range(W, I, &gray[0], 10);
+
+        //face_recognition(ROWS, COLS, TROWS, TCOLS, W, I, &gray[0], &I_template[0]);
+
+        delete [] gray; // deallocates whole array in memory
+        //delete [] I_template;
+    
+        W -= 1;
+    }
+    while (W > 5);
+  
+    sc_start();
+    return 0;
+}
 
 double mean_subtract(int len, double *array) {
     double mean = 0;
@@ -59,6 +162,69 @@ double array_dot(int len, double *array1, double *array2) {
     for(int i = 0; i < len; ++i) 
         dot += (*(array1 + i)) * (*(array2 + i));
     return dot;
+}
+
+//free(): corrupted unsorted chunks TODO: FIX THIS!
+void sort_bounded_boxes(int x, int y, int z, double *array) {
+    double tmp[3] = {0};
+
+    #ifdef DEBUG
+        cout << "array is being sorted..." << endl;
+    #endif
+
+    for(int i = 0; i < x; ++i){
+        for(int j = 0; j < y; ++j){
+            for(int ii = 0; ii < x; ++ii)
+                for(int jj = 0; jj < y; ++jj) {
+                    if(*(array + i*y*z + j*z + 2) > *(array + ii*y*z + jj*z + 2)) {
+                        tmp[0] = *(array + ii*y*z + jj*z + 0);
+                        tmp[1] = *(array + ii*y*z + jj*z + 1);
+                        tmp[2] = *(array + ii*y*z + jj*z + 2);
+
+                        *(array + ii*y*z + jj*z + 0) = *(array + i*y*z + j*z + 0);
+                        *(array + ii*y*z + jj*z + 1) = *(array + i*y*z + j*z + 1);
+                        *(array + ii*y*z + jj*z + 2) = *(array + i*y*z + j*z + 2);
+                        
+                        *(array + i*y*z + j*z + 0) = tmp[0];
+                        *(array + i*y*z + j*z + 1) = tmp[1];
+                        *(array + i*y*z + j*z + 2) = tmp[2];
+                   }
+                }
+        }
+    }
+
+    #ifdef DEBUG
+        cout << "array is sorted..." << endl;
+        for(int i = x-1; i >= 0; --i){
+            for(int j = y-1; j >= 0; --j){
+                cout << "x: " << *(array + i*y*z + j*z + 0);
+                cout << " y: " << *(array + i*y*z + j*z + 1);
+                cout << " score: " << *(array + i*y*z + j*z + 2);
+                cout << endl;
+            }
+            cout << endl;
+        }
+        cout << endl;
+    #endif
+   
+}
+
+double min(double num1, double num2) {
+    return (num1 < num2 ? num1 : num2);
+}
+
+double max(double num1, double num2) {
+    return (num1 > num2 ? num1 : num2);
+}
+                    //42                //3             //42          //0         // 100
+double box_iou(double box1_x, double box1_y, double box2_x, double box2_y, double boxSize) {
+    double sumOfAreas = 2*(boxSize*boxSize);// 20000
+    double box_1[4] = {box1_x, box1_y, box1_x+boxSize, box1_y+boxSize}; 
+    double box_2[4] = {box2_x, box2_y, box2_x+boxSize, box2_y+boxSize};
+                                          //142                      //42                      //100                     //42
+    double intersectionArea = ((min(box_1[2], box_2[2]) - max(box_1[0], box_2[0])) * (min(box_1[3], box_2[3]) - max(box_1[1], box_2[1]))); //10000 100*58
+
+    return (intersectionArea / (sumOfAreas - intersectionArea)); // 10000/(20000 - 10000) = 1
 }
 
 void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int W, int I) {
@@ -298,7 +464,7 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
     delete [] ori_histo_normalized;
 }
 
-void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, double *I_target, double *I_template) {
+double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, double *I_target, double *I_template) {
     
     int hog_len = ((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24;    
     double *template_HOG = new double[((int)(box_h/8)-1)*((int)(box_w/8)-1)*24];
@@ -331,7 +497,7 @@ void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, 
     double score = 0;
     double img_HOG_norm = 0;
     double img_HOG_mean = 0;              
-    double *all_bounding_boxes = new double[((img_h-box_h)/3 + 1) * ((img_w-box_w)/3 + 1)];
+    double *all_scores = new double[((img_h-box_h)/3 + 1) * ((img_w-box_w)/3 + 1)];
       
     for (x = x+box_h; x <= img_h; x+=3){
         for(y = y+box_w; y <= img_w; y+=3) {
@@ -355,73 +521,122 @@ void face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, 
             #endif
 
             score = double(array_dot(hog_len, &img_HOG[0], &template_HOG[0])/ (template_HOG_norm * img_HOG_norm)); 
-            all_bounding_boxes[((x-box_h)/3)*((img_w-box_w)/3 + 1) + (y-box_w)/3] = score*100;
-            
+            all_scores[((x-box_h)/3)*((img_w-box_w)/3 + 1) + (y-box_w)/3] = score*100;
+            //cout << "score: " << score*100 << endl;
             //deallocate img_HOG
             delete [] img_HOG;
         }
-    y = 0;
+        y = 0;
+    }
+    
+    // go through whole array and pick the boxes that have some percentage accuracy 
+    // use these arrays 
+    //
+    
+    double *all_bounding_boxes = new double[((img_h-box_h)/3 + 1) * ((img_w-box_w)/3 + 1) * 3]; // 3 for: x, y and score
+
+    for(int i = 0; i <= (img_h-box_h)/3; ++i) {
+        for(int j = 0; j <= (img_w - box_w)/3; ++j){
+            all_bounding_boxes[(i * ((img_w-box_w)/3 + 1) * 3) + (j * 3) + 0] = i*3;
+            all_bounding_boxes[(i * ((img_w-box_w)/3 + 1) * 3) + (j * 3) + 1] = j*3;
+            all_bounding_boxes[(i * ((img_w-box_w)/3 + 1) * 3) + (j * 3) + 2] = all_scores[(i * ((img_w-box_w)/3 + 1)) + j];
+        }
     }
 
-    find_max((img_h-box_h)/3 + 1, (img_w-box_w)/3 + 1, &all_bounding_boxes[0]);
+    #ifdef DEBUG
+        for(int i = 0; i <= (img_h-box_h)/3; ++i) {
+            for(int j = 0; j <= (img_w - box_w)/3; ++j){
+                cout << "x: "<< all_bounding_boxes[(i * ((img_w-box_w)/3 + 1) * 3) + (j * 3) + 0];
+                cout << " y: " << all_bounding_boxes[(i * ((img_w-box_w)/3 + 1) * 3) + (j * 3) + 1];
+                cout << " score: " << all_bounding_boxes[(i * ((img_w-box_w)/3 + 1) * 3) + (j * 3) + 2];
+                cout << endl;
+            }
+            cout << endl;
+        }
+    #endif
+     
+    // sorting array [Bubble Sort(slower version)]
+    sort_bounded_boxes((img_h-box_h)/3 + 1, (img_w-box_w)/3 + 1, 3, all_bounding_boxes);
+    
+    int num_thresholded = 0;
+    for(int i = ((img_h-box_h)/3 + 1) - 1; i >= 0; --i){
+        for(int j = ((img_w-box_w)/3 + 1) - 1; j >= 0; --j){
+            if(*(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 2) > THRESHOLD*100) {
+                num_thresholded++;
+            }
+        }
+    }
+    
+    double *thresholded_boxes = new double[num_thresholded*3];
+
+    int tb = 0; // thresholded_box
+    for(int i = ((img_h-box_h)/3 + 1) - 1; i >= 0; --i) {
+        for(int j = ((img_w-box_w)/3 + 1) - 1; j >= 0; --j) {
+            if(*(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 2) > THRESHOLD*100){
+                thresholded_boxes[tb*3 + 0] = *(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 0); 
+                thresholded_boxes[tb*3 + 1] = *(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 1); 
+                thresholded_boxes[tb*3 + 2] = *(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 2);
+                tb++;
+            }
+        }
+    }
+
+    //cout << "ok: " << box_iou(thresholded_boxes[0 + 0], thresholded_boxes[0 + 1], thresholded_boxes[0 + 0], thresholded_boxes[0 + 1], box_w); 
     
     #ifdef DEBUG
-        for(int i = 0; i <= (img_h-box_h)/3; ++i)
-            for(int j = 0; j <= (img_w-box_w)/3; ++j) {
-                cout << "box dim: x=" << i*3 << " y=" << j*3 << endl;
-                cout << "score = " << all_bounding_boxes[i * ((img_w-box_w)/3) + j] << endl;
-            } 
+        cout << "Number of thresholded boxes with score > " << THRESHOLD*100 << " is: " << num_thresholded << endl << endl;
+        for(int i = 0; i < num_thresholded; ++i) {
+            cout << "x: " << thresholded_boxes[i*3 + 0] << " y: " << thresholded_boxes[i*3 + 1] << " score: " << thresholded_boxes[i*3 + 2] << endl;
+        }
+    #endif
+
+    double *bounding_boxes = new double[num_thresholded * 3];
+
+    tb = 0;
+    int kk = 0;
+    for(int i = 0; i < num_thresholded; ++i) {
+        if(thresholded_boxes[i*3 + 2] <= 100) {
+            cout << "scr: " << thresholded_boxes[i*3 + 2] << endl;
+            double currBox[3] = {thresholded_boxes[i*3 + 0], thresholded_boxes[i*3 + 1], thresholded_boxes[i*3 + 2]};
+            bounding_boxes[kk*3 + 0] = currBox[0];
+            bounding_boxes[kk*3 + 1] = currBox[1];
+            bounding_boxes[kk*3 + 2] = currBox[2];
+            kk++;
+            double nextBox[3];
+            for(int j = 0; j < num_thresholded; ++j) {
+                if(thresholded_boxes[j*3 + 2] <= 100) {
+                    nextBox[0] = thresholded_boxes[j*3 + 0];
+                    nextBox[1] = thresholded_boxes[j*3 + 1];
+                    nextBox[2] = thresholded_boxes[j*3 + 2];
+                    if(box_iou(currBox[0], currBox[1], nextBox[0], nextBox[1], box_w) >= 0.5) {
+                        thresholded_boxes[j*3 + 2] = 404; // any number >100 just to make if statements false when iterating
+                    }
+                }
+            }
+        }
+    }
+    
+    #ifdef DEBUG
+        for(int i = 0; i < kk; ++i) {
+            cout << "x: " << bounding_boxes[i*3 + 0] << " y: " << bounding_boxes[i*3 + 1] << " score: " << bounding_boxes[i*3 + 2] << endl;
+        }
+
+        cout << endl << "face_recognition finished..." << endl << endl;
     #endif
 
     // deallocate everything!
     delete [] template_HOG;
     delete [] img_window;
+    delete [] all_scores;
     delete [] all_bounding_boxes;
+    delete [] thresholded_boxes;
+
+    return bounding_boxes;
 }
 
-int sc_main(int, char*[]) {
-    // TODO: implement filters to be also bit width dependant 
-
-    int W = 64;
-    const int I = 3;
-    
-    #ifdef DEBUG
-        cout << "      NOTE: DEBUG preprocessor directive is on!" << endl;
-    #else
-        cout << "      NOTE: Compiled program without DEBUG!" << endl << "      To use it, compile with -DDEBUG" << endl << endl;
-    #endif
-
-    // loop to find minimal bitwidth
-    do {
-        
-        cout << "Width W: " << W << endl;
-        cout << "Fixed point: " << I << endl;
-        
-        FILE * rach;
-        rach = fopen("gray.txt", "rb");
-        if(rach == NULL) {
-            cout << "ERROR! could not open file!" << endl;
-            return 101;
-        }
-
-        double *gray = new double[ROWS * COLS];
-        double val;
-
-        for (int i = 0; i < ROWS; ++i){
-            for (int j = 0; j < COLS; ++j){
-                fscanf(rach, "%lf", &val);
-                gray[i * COLS + j] = val;
-            }
-        }
-        fclose(rach);
-
-        rach = fopen("gray_template.txt", "rb");
-        if(rach == NULL) {
-            cout << "ERROR! could not open file!" << endl;
-            return 101;
-        }
-
-        double *I_template = new double[TROWS * TCOLS];
+void face_recognition_range(int W, int I, double *I_target, int step) {
+   
+    /*double *I_template = new double[TROWS * TCOLS];
         val = 0;
 
         for (int i = 0; i < TROWS; ++i){
@@ -430,18 +645,31 @@ int sc_main(int, char*[]) {
                 I_template[i * TCOLS + j] = val;
             }
         }
-
-        fclose(rach);
-
-        face_recognition(ROWS, COLS, TROWS, TCOLS, W, I, &gray[0], &I_template[0]);
+    */
+    for(int width = UPPER_BOUNDARY; width >= LOWER_BOUNDARY; width -= step) {
+        char gray_template[20] = "gray_template_";
+        char size_gray[4];
+        snprintf(size_gray, sizeof(size_gray), "%d", width);
+        strcat(gray_template, size_gray);
+        strcat(gray_template, ".txt");
         
-        delete [] gray; // deallocates whole array in memory
+        double *I_template = new double[width * width];
+
+        FILE * rach = fopen(gray_template, "rb");
+        double val = 0;
+
+        for (int i = 0; i < width; ++i){
+            for (int j = 0; j < width; ++j){
+                fscanf(rach, "%lf", &val);
+                I_template[i * width + j] = val;
+            }
+        }
+        
+        double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, double *I_target, double *I_template);
+        double *found_boxes = face_recognition(ROWS, COLS, width, width, W, I, I_target, I_template);
+        
+        delete [] found_boxes;
         delete [] I_template;
-    
-        W -= 1;
+
     }
-    while (W > 5);
-  
-    sc_start();
-    return 0;
 }
