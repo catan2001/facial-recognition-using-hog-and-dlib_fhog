@@ -36,6 +36,7 @@ const double filter_x[9] = {1,0,-1, 2,0,-2, 1,0,-1};  //Dx = filter_x conv D
 const double filter_y[9] = {1,2,1, 0,0,0, -1,-2,-1};    //Dy = filter_y conv D
 
 int num_thresholded = 0;
+int num_faces = 0;
 
 typedef sc_dt::sc_fix num_t;
 typedef std::deque<num_t> array_t;
@@ -75,7 +76,7 @@ void face_recognition_range(int W, int I, double *I_target, int step);
 int sc_main(int, char*[]) {
     // TODO: implement filters to be also bit width dependant 
 
-    int W = 64;
+    int W = 10;
     const int I = 3;
     
     #ifdef DEBUG
@@ -166,7 +167,6 @@ double array_dot(int len, double *array1, double *array2) {
     return dot;
 }
 
-//free(): corrupted unsorted chunks TODO: FIX THIS!
 void sort_bounded_boxes(int x, int y, int z, double *array) {
     double tmp[3] = {0};
 
@@ -455,6 +455,7 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
         #ifdef DEBUG
             if(hog[l] != hog[l]) cout << "hogl NAN" << endl;
         #endif
+        //printf("%lf ", hog[l]);    
     }
 
     // deallocate allocated
@@ -468,6 +469,13 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
 
 double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, double *I_target, double *I_template) {
     
+    for(int i = 0; i < img_h; ++i) {
+        for(int j = 0; j < img_w; ++j) {
+            cout << " " << I_target[i*img_w + j];
+        }
+        cout << endl;
+    }
+
     int hog_len = ((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24;    
     double *template_HOG = new double[((int)(box_h/8)-1)*((int)(box_w/8)-1)*24];
 
@@ -500,7 +508,8 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int 
     double img_HOG_norm = 0;
     double img_HOG_mean = 0;              
     double *all_scores = new double[((img_h-box_h)/3 + 1) * ((img_w-box_w)/3 + 1)];
-      
+    double *all_bounding_boxes = new double[((img_h-box_h)/3 + 1) * ((img_w-box_w)/3 + 1) * 3]; // 3 for: x, y and score  
+    
     for (x = x+box_h; x <= img_h; x+=3){
         for(y = y+box_w; y <= img_w; y+=3) {
             int ll = 0;
@@ -523,8 +532,16 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int 
             #endif
 
             score = double(array_dot(hog_len, &img_HOG[0], &template_HOG[0])/ (template_HOG_norm * img_HOG_norm)); 
-            all_scores[((x-box_h)/3)*((img_w-box_w)/3 + 1) + (y-box_w)/3] = score*100;
+            //all_scores[((x-box_h)/3)*((img_w-box_w)/3 + 1) + (y-box_w)/3] = score*100;
            
+
+            //for(int i = 0; i <= (img_h-box_h)/3; ++i) {
+            //    for(int j = 0; j <= (img_w - box_w)/3; ++j){
+            all_bounding_boxes[((x-box_h)/3 * ((img_w-box_w)/3 + 1) * 3) + ((y-box_w)/3 * 3) + 0] = x-box_h;
+            all_bounding_boxes[((x-box_h)/3 * ((img_w-box_w)/3 + 1) * 3) + ((y-box_w)/3 * 3) + 1] = y-box_w;
+            all_bounding_boxes[((x-box_h)/3 * ((img_w-box_w)/3 + 1) * 3) + ((y-box_w)/3 * 3) + 2] = score*100;
+        //}
+    //}
             //deallocate img_HOG
             delete [] img_HOG;
         }
@@ -534,16 +551,14 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int 
     // go through whole array and pick the boxes that have some percentage accuracy 
     // use these arrays 
     //
-    
-    double *all_bounding_boxes = new double[((img_h-box_h)/3 + 1) * ((img_w-box_w)/3 + 1) * 3]; // 3 for: x, y and score
-
+    /*
     for(int i = 0; i <= (img_h-box_h)/3; ++i) {
         for(int j = 0; j <= (img_w - box_w)/3; ++j){
             all_bounding_boxes[(i * ((img_w-box_w)/3 + 1) * 3) + (j * 3) + 0] = i*3;
             all_bounding_boxes[(i * ((img_w-box_w)/3 + 1) * 3) + (j * 3) + 1] = j*3;
             all_bounding_boxes[(i * ((img_w-box_w)/3 + 1) * 3) + (j * 3) + 2] = all_scores[(i * ((img_w-box_w)/3 + 1)) + j];
         }
-    }
+    }*/
 
     #ifdef DEBUG
         for(int i = 0; i <= (img_h-box_h)/3; ++i) {
@@ -636,16 +651,8 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int 
 
 void face_recognition_range(int W, int I, double *I_target, int step) {
    
-    /*double *I_template = new double[TROWS * TCOLS];
-        val = 0;
+    double *found_faces = (double *) malloc(sizeof(double)*3);
 
-        for (int i = 0; i < TROWS; ++i){
-            for (int j = 0; j < TCOLS; ++j){
-                fscanf(rach, "%lf", &val);
-                I_template[i * TCOLS + j] = val;
-            }
-        }
-    */
     for(int width = UPPER_BOUNDARY; width >= LOWER_BOUNDARY; width -= step) {
         char gray_template[20] = "gray_template_";
         char size_gray[4];
@@ -665,17 +672,31 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
             }
         }
         
-        //double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, double *I_target, double *I_template);
         double *found_boxes = face_recognition(ROWS, COLS, width, width, W, I, I_target, I_template);
-        
-        cout << "number_thresholded: " << num_thresholded << endl;
+        num_faces += num_thresholded;   
+        found_faces = (double *) realloc(found_faces, sizeof(double)*num_faces*3);
 
+        cout << "number_thresholded: " << num_thresholded << endl;
+        cout << "number_faces: " << num_faces << endl;
+        
         for(int i = 0; i < num_thresholded; i++) {
             cout << "x: " << found_boxes[i*3 + 0] << " y: " << found_boxes[i*3 + 1] << " score: " << found_boxes[i*3 + 2] << endl;
+
+            found_faces[(i+(num_faces-num_thresholded))*3 + 0] = found_boxes[i*3 + 0];
+            found_faces[(i+(num_faces-num_thresholded))*3 + 1] = found_boxes[i*3 + 1];
+            found_faces[(i+(num_faces-num_thresholded))*3 + 2] = found_boxes[i*3 + 2];
+
+            cout << "x_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 0] << " y_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 1] << " score_ff: " <<  found_faces[(i+(num_faces-num_thresholded))*3 + 2] << endl;  
         }
+        //num_faces += num_thresholded;
+        
+        //sort_bounded_boxes((img_h-box_h)/3 + 1, (img_w-box_w)/3 + 1, 3, all_bounding_boxes);
+     
 
         delete [] found_boxes;
         delete [] I_template;
 
     }
+    
+    free(found_faces);
 }
