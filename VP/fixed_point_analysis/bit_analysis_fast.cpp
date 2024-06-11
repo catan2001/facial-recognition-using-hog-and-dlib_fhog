@@ -76,7 +76,7 @@ void face_recognition_range(int W, int I, double *I_target, int step);
 int sc_main(int, char*[]) {
     // TODO: implement filters to be also bit width dependant 
 
-    int W = 23;
+    int W = 8;
     const int I = 3;
     
     #ifdef DEBUG
@@ -112,7 +112,7 @@ int sc_main(int, char*[]) {
 
         delete [] gray; // deallocates whole array in memory
     
-        W -= 2;
+        W -= 1;
     }
     while (W > 8);
   
@@ -128,7 +128,7 @@ void write_txt(double* found_faces, int len, char *name_txt){
 
     	for(int i=0; i<len; ++i){
 	       	fprintf(fp, "x: %.0lf y: %.0lf score: %.4lf \n", found_faces[i*3], found_faces[3*i+1], found_faces[3*i+2]);
-    		printf("x: %.2lf y: %.2lf score: %.4lf \n", found_faces[i*3], found_faces[3*i+1], found_faces[3*i+2]);
+    	//	printf("x: %.2lf y: %.2lf score: %.4lf \n", found_faces[i*3], found_faces[3*i+1], found_faces[3*i+2]);
 	}
 	fclose(fp);
 
@@ -468,44 +468,6 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
         }
     }
 
-   /* num_t dX(W, I, Q, O);
-    num_t dY(W, I, Q, O);
-
-    matrix_t grad_mag_t(rows, array_t(cols, num_t(W, I, Q, O)));
-    matrix_t grad_angle_t(rows, array_t(cols, num_t(W, I, Q, O)));
-    
-    double *grad_mag = new double[rows * cols];
-    double *grad_angle = new double[rows * cols];
-    
-    num_t phase_const(W,I,Q,O);
-    num_t pi_const(W,I,Q,O);
-    phase_const = 0.00001;
-    pi_const = PI;
-    //cout << "phase_const: "<< phase_const << endl;
-
-    for(int i=0; i<rows; ++i){
-        for(int j=0; j<cols; ++j){
-            dX = dx[i][j];
-            dY = dy[i][j];
-            
-            //determining the amplitude matrix:
-            grad_mag_t[i][j] = sqrt(pow(dX,2)+pow(dY,2));
-
-            //determining the phase matrix:
-            if(fabs(dX)>phase_const){
-                grad_angle_t[i][j] = atan(dY/dX) + pi_const/2;
-            }else if(dY<0 && dX<0){
-                grad_angle_t[i][j] = 0;
-            }else{
-                grad_angle_t[i][j] = pi_const;
-            }
-
-	        *(grad_mag + i*cols + j) = grad_mag_t[i][j];
-	        *(grad_angle + i*cols + j) = grad_angle_t[i][j];
-        }
-    }*/
-
-
     int height = rows/CELL_SIZE;
     int width = cols/CELL_SIZE;
     
@@ -662,7 +624,7 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int 
                 thresholded_boxes[tb*3 + 1] = *(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 1); 
                 thresholded_boxes[tb*3 + 2] = *(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 2);
           
-		        cout << "x: " << thresholded_boxes[tb*3 + 0] << " y: " << thresholded_boxes[tb*3 + 1] << " score: " << thresholded_boxes[tb*3 + 2] << endl;
+		 //       cout << "x: " << thresholded_boxes[tb*3 + 0] << " y: " << thresholded_boxes[tb*3 + 1] << " score: " << thresholded_boxes[tb*3 + 2] << endl;
 		        tb++;
             }
         }
@@ -726,7 +688,7 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
     num_faces = 0;
 
     for(int width = UPPER_BOUNDARY; width >= LOWER_BOUNDARY; width -= step) {
-     	cout << "current template: " << width << endl;
+     	//cout << "current template: " << width << endl;
         
         char gray_template[20] = "template_";
         char size_gray[4];
@@ -734,7 +696,7 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
         strcat(gray_template, size_gray);
         strcat(gray_template, ".txt");
 
-        cout << gray_template << endl;
+       // cout << gray_template << endl;
             
         double *I_template = new double[width * width];
 
@@ -752,8 +714,8 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
         num_faces += num_thresholded;   
         found_faces = (double *) realloc(found_faces, sizeof(double)*num_faces*3);
 
-        cout << "number_thresholded: " << num_thresholded << " at " << width << endl;
-        cout << "number_faces: " << num_faces << endl;
+   //     cout << "number_thresholded: " << num_thresholded << " at " << width << endl;
+     //   cout << "number_faces: " << num_faces << endl;
         
         for(int i = 0; i < num_thresholded; i++) {
             found_faces[(i+(num_faces-num_thresholded))*3 + 0] = found_boxes[i*3 + 0];
@@ -761,7 +723,7 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
             found_faces[(i+(num_faces-num_thresholded))*3 + 2] = found_boxes[i*3 + 2];
 
 
-           cout << "x_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 0] << " y_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 1] << " score_ff: " <<  found_faces[(i+(num_faces-num_thresholded))*3 + 2] <<  endl;  
+        //   cout << "x_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 0] << " y_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 1] << " score_ff: " <<  found_faces[(i+(num_faces-num_thresholded))*3 + 2] <<  endl;  
         }
 
         delete [] found_boxes;
@@ -769,7 +731,7 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
 
     }
 
-	char faces_width[20] = "faces_";
+    char faces_width[20] = "faces_";
     char width[4];
     snprintf(width, sizeof(width), "%d", W);
     strcat(faces_width, width);
