@@ -25,11 +25,12 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 #define ADDR_CMD 0x18
 #define ADDR_STATUS 0x1c
 
-#define MAX_SIZE 200
-#define ROWS 200
-#define COLS 200
+//#define MAX_SIZE 200
+#define ROWS 150
+#define COLS 150
 #define nBINS 6
 #define CELL_SIZE 8
+#define CELL_POW (CELL_SIZE*CELL_SIZE)
 #define BLOCK_SIZE 2
 
 #define HEIGHT (ROWS/CELL_SIZE)
