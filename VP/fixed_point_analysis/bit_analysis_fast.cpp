@@ -21,11 +21,11 @@ using namespace sc_dt;
 #define HIST_SIZE nBINS*BLOCK_SIZE*BLOCK_SIZE
 #define Q sc_dt::SC_RND
 #define O sc_dt::SC_SAT
-#define ROWS 150
+#define ROWS 90
 #define COLS 150
 #define TROWS 100
 #define TCOLS 100
-#define UPPER_BOUNDARY ROWS > COLS ? ROWS : COLS
+#define UPPER_BOUNDARY ROWS > COLS ? COLS : ROWS
 #define LOWER_BOUNDARY 50
 #define THRESHOLD 0.6 // TODO: CHANGE AS NEEDED!
 #define SUPPRESSION 0.5 // TODO: CHANGE AS NEEDED!
@@ -76,7 +76,7 @@ void face_recognition_range(int W, int I, double *I_target, int step);
 int sc_main(int, char*[]) {
     // TODO: implement filters to be also bit width dependant 
 
-    int W = 8;
+    int W = 32;
     const int I = 3;
     
     #ifdef DEBUG
@@ -92,7 +92,7 @@ int sc_main(int, char*[]) {
         cout << "Fixed point: " << I << endl;
         
         FILE * rach;
-        rach = fopen("template/gray.txt", "rb");
+        rach = fopen("gray.txt", "rb");
         if(rach == NULL) {
             cout << "ERROR! could not open file!" << endl;
             return 101;
@@ -104,10 +104,12 @@ int sc_main(int, char*[]) {
         for (int i = 0; i < ROWS; ++i){
             for (int j = 0; j < COLS; ++j){
                 fscanf(rach, "%lf", &val);
+		
                 gray[i * COLS + j] = val;
             }
         }
         fclose(rach);
+
         face_recognition_range(W, I, &gray[0], 10);
 
         delete [] gray; // deallocates whole array in memory
@@ -249,6 +251,22 @@ void find_max(int rows, int cols, double *matrix) {
      cout << "x = " << row *3 << " y= " << col*3 << endl;
 }
 
+void filter_image_t(int rows, int cols, int W, int I, matrix_t& matrix_im_filtered_x, matrix_t& matrix_im_filtered_y, const double *filter_x, const double *filter_y, matrix_t& padded_img){
+
+ array_t imROI(9, num_t(W, I, Q, O));
+
+    for (int i=0; i<rows; ++i){
+        for (int j=0; j<cols; ++j){
+            for(int k=0; k<9; ++k){
+                imROI[k] = padded_img [i+(int)(k/3)] [j+(k%3)];
+                matrix_im_filtered_y[i][j] += imROI[k] * filter_y[k];
+                matrix_im_filtered_x[i][j] += imROI[k] * filter_x[k];
+            }
+        }
+    }
+
+}
+
 void get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad_mag, double *grad_angle){
 
     double dX, dY;
@@ -384,7 +402,7 @@ void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_his
 }
 //changed so it accepts both filtered by x and y filter
 void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) { 
-    //TODO: check why it fails again to have correct values
+    
     double im_min = *(im + 0)/255.00000000;
     double im_max = *(im + 0)/255.00000000;
     
@@ -404,7 +422,10 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
             *(im_c + i*cols + j) = (*(im_c + i*cols + j) - im_min) / im_max; // Normalize image to [0, 1]
         }
     }
-    // Hardware part of the code:
+
+
+    //HARDWARE PART OF CODE:
+    //Pad image:
     orig_array_t orig_gray(rows, vector<double>(cols));
     
     for (int i=0; i<rows; ++i){
@@ -420,11 +441,6 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
     matrix_t matrix_im_filtered_x(rows, array_t(cols, num_t(W,I,Q,O)));
     matrix_t padded_img(rows+2, array_t(cols+2, num_t(W,I,Q, O)));
     cast_to_fix(rows, cols, matrix_gray, orig_gray, W, I);
-
-   /* double padded_img[rows+2][cols+2];
-    double matrix_im_filtered_y[rows][cols];
-    double matrix_im_filtered_x[rows][cols];
-   */
 
     
     //pad the image on the outer edges with zeros:
@@ -443,41 +459,20 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
             matrix_im_filtered_y[i][j] = 0;
             matrix_im_filtered_x[i][j] = 0;
             padded_img[i+1][j+1]=matrix_gray[i][j];
-	    //padded_img[i+1][j+1]=orig_gray[i][j];
-
         }
     }
 
-    //filter image:
-    array_t imROI(9, num_t(W, I, Q, O));
-    //double imROI[9] = {0};
+    //Filter image:
+    filter_image_t(rows, cols, W, I, matrix_im_filtered_x, matrix_im_filtered_y, &filter_x[0], &filter_y[0], padded_img);
 
-    matrix_t dx(rows, array_t(cols, num_t(W, I, Q, O)));
-    matrix_t dy(rows, array_t(cols, num_t(W, I, Q, O)));
-    //double *dx = new double[rows * cols]; 
-    //double *dy = new double[rows * cols]; 
-    for (int i=0; i<rows; ++i){
-        for (int j=0; j<cols; ++j){
-            for(int k=0; k<9; ++k){
-                imROI[k] = padded_img [i+(int)(k/3)] [j+(k%3)];
-                matrix_im_filtered_y[i][j] += imROI[k] * filter_y[k];
-                matrix_im_filtered_x[i][j] += imROI[k] * filter_x[k];
-            }
-            dx[i][j] = matrix_im_filtered_x[i][j];
-            dy[i][j] = matrix_im_filtered_y[i][j];
-        }
-    }
-
-    int height = rows/CELL_SIZE;
-    int width = cols/CELL_SIZE;
-    
+   //Get_gradient:  
     matrix_t grad_mag_t(rows, array_t(cols, num_t(W, I, Q, O)));
     matrix_t grad_angle_t(rows, array_t(cols, num_t(W, I, Q, O)));
     
     double *grad_mag = new double[rows * cols];
     double *grad_angle = new double[rows * cols];
     
-    get_gradient_t(rows, cols, W, I, dx, dy, grad_mag_t, grad_angle_t, &grad_mag[0], &grad_angle[0]);
+    get_gradient_t(rows, cols, W, I, matrix_im_filtered_x, matrix_im_filtered_y, grad_mag_t, grad_angle_t, &grad_mag[0], &grad_angle[0]);
 
    for(int i=0; i<rows; ++i){
    	for(int j=0; j<cols; ++j){
@@ -486,7 +481,11 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
 	}
    }
 
-
+   //END OF HARDWARE PART
+   
+    int height = rows/CELL_SIZE;
+    int width = cols/CELL_SIZE;
+ 
     double *ori_histo = new double[(int)height * (int)width * nBINS];
 
     build_histogram(rows, cols, &grad_mag[0], &grad_angle[0], &ori_histo[0]);
@@ -503,13 +502,10 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
         hog[l] = ori_histo_normalized[(int)(l/i)*(width-(BLOCK_SIZE-1))*nBINS*(BLOCK_SIZE*BLOCK_SIZE) + (int)((l/24)%(width-1))*nBINS*(BLOCK_SIZE*BLOCK_SIZE) + l%24];
         #ifdef DEBUG
             if(hog[l] != hog[l]) cout << "hogl NAN" << endl;
-        #endif
-        //printf("%lf ", hog[l]);    
+        #endif   
     }
 
     // deallocate allocated
-    //delete [] dx;
-    //delete [] dy;
     delete [] grad_mag;
     delete [] grad_angle;
     delete [] ori_histo;
@@ -688,7 +684,7 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
     num_faces = 0;
 
     for(int width = UPPER_BOUNDARY; width >= LOWER_BOUNDARY; width -= step) {
-     	//cout << "current template: " << width << endl;
+     	cout << "current template: " << width << endl;
         
         char gray_template[20] = "template_";
         char size_gray[4];
@@ -696,7 +692,7 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
         strcat(gray_template, size_gray);
         strcat(gray_template, ".txt");
 
-       // cout << gray_template << endl;
+        cout << gray_template << endl;
             
         double *I_template = new double[width * width];
 
@@ -731,7 +727,7 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
 
     }
 
-    char faces_width[20] = "faces_";
+    char faces_width[20] = "orig_";
     char width[4];
     snprintf(width, sizeof(width), "%d", W);
     strcat(faces_width, width);
