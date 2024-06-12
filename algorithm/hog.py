@@ -167,10 +167,12 @@ def face_recognition(I_target, I_template):
     template_HOG = extract_hog(I_template)
     template_HOG = template_HOG - np.mean(template_HOG) # Normalize
     template_HOG_norm = np.linalg.norm(template_HOG)
+
     img_h, img_w = I_target.shape
     box_h, box_w = I_template.shape
     x = 0
     y = 0
+
     ## FIND ALL BOUNDING BOXES ##
     all_bounding_boxes = []
     while x + box_h <= img_h:
@@ -179,7 +181,10 @@ def face_recognition(I_target, I_template):
             img_HOG = extract_hog(img_window)
             img_HOG = img_HOG - np.mean(img_HOG) # Normalize
             img_HOG_norm = np.linalg.norm(img_HOG)
+
             score = float(np.dot(template_HOG, img_HOG) / (template_HOG_norm*img_HOG_norm))
+
+
             all_bounding_boxes.append([y,x,score])
             y += 3 # A stride of 3 is enough to produce a good result for the target. Change as needed
         x += 3
@@ -211,19 +216,23 @@ def face_recognition(I_target, I_template):
 
 
 
-def visualize_face_detection(I_target,bounding_boxes):
+def visualize_face_detection(I_target,bounding_boxes, max_resize):
 
+    max_dim = max(I_target.shape[0], I_target.shape[1])
     hh,ww,cc=I_target.shape
 
     fimg=I_target.copy()
     for ii in range(bounding_boxes.shape[0]):
 
-        #print("\n BOX dimenzije: ", bounding_boxes[ii])
-
         x1 = bounding_boxes[ii,0]
         x2 = bounding_boxes[ii, 2]
         y1 = bounding_boxes[ii, 1]
         y2 = bounding_boxes[ii, 3]
+
+        x1 = (max_dim/max_resize)*x1
+        x2 = (max_dim/max_resize)*x2
+        y1 = (max_dim/max_resize)*y1
+        y2 = (max_dim/max_resize)*y2
 
         if x1<0:
             x1=0
@@ -246,7 +255,7 @@ def visualize_face_detection(I_target,bounding_boxes):
         cv2.putText(fimg, "%.2f"%bounding_boxes[ii,0], (int(x1)+1, int(y1)-5), cv2.FONT_HERSHEY_SIMPLEX , 0.2, (0, 0, 0), 1, cv2.LINE_AA)
         cv2.putText(fimg, "%.2f"%bounding_boxes[ii,1], (int(x1)+20, int(y1)-5), cv2.FONT_HERSHEY_SIMPLEX , 0.2, (0, 0, 0), 1, cv2.LINE_AA)
 
-    fimg = cv2.cvtColor(fimg, cv2.COLOR_BGR2RGB)
+    #fimg = cv2.cvtColor(fimg, cv2.COLOR_BGR2RGB)
 
     return fimg
 
@@ -261,15 +270,20 @@ def face_recognition_range(I_target, step):
     x2=[]
     y2=[]
 
-    I_template = cv2.imread('C:/Users/User/Documents/ml_projekat/HOG_FACE_DET/radni_folder/template.png', 0)
+    I_template = cv2.imread('/home/koshek/Desktop/ml_projekat/data/template.png', 0)
+    #I_template = cv2.imread('/home/koshek/Desktop/ml_projekat/data/new.png', 0)
     I_template = resize(I_template, 1) 
     I_resized = I_template
 
     lower_boundary = I_template.shape[0] #TEMPLATE is a square so no need for min
-    #print("\n lower_boundary = ", lower_boundary)
+    print("\n lower_boundary = ", lower_boundary)
+
+    I_target = cv2.cvtColor(I_target, cv2.COLOR_BGR2GRAY)
+    max_dim = max(I_target.shape[0], I_target.shape[1])
+    I_target = resize(I_target, 150/max_dim) #resize so the max dimension is 200
 
     upper_boundary = min(I_target.shape[0], I_target.shape[1])
-    #print("\n upper_boundary = ", upper_boundary)
+    print("\n upper_boundary = ", upper_boundary)
 
     for ii in range(upper_boundary, lower_boundary-1, -step):
 
@@ -298,7 +312,7 @@ def face_recognition_range(I_target, step):
     else:
         real_face.append([found_faces[0][0], found_faces[0][1], found_faces[0][2], found_faces[0][3]])
 
-    return found_faces, real_face
+    return np.array(found_faces), np.int32(real_face)
 
 
 def resize(img, scale_percent):
