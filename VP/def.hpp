@@ -5,17 +5,21 @@
 #include <systemc>
 #include <tlm>
 
-#define W 32 // DATA_WIDTH
-#define I 16 // FIXED_POINT_WIDTH
-#define Q sc_dt::SC_TRN // quantization methods
-#define O sc_dt::SC_WRAP // overflow methods
+#define W 23 // DATA_WIDTH
+#define I 3 // FIXED_POINT_WIDTH
+#define Q sc_dt::SC_RND // quantization methods
+#define O sc_dt::SC_SAT // overflow methods
 
-typedef sc_dt::sc_fixed_fast <W, I, Q, O> num_t;
+typedef sc_dt::sc_fix_fast num_t;
+typedef std::deque<num_t> array_t;
+typedef std::deque<array_t> matrix_t;
+typedef std::vector<std::vector<double>> orig_array_t;
+
 typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 
 #define BRAM_BASE_ADDR 0x01000000
 #define BRAM_LOW_ADDR 0x01000000
-#define BRAM_HIGH_ADDR 0x01100000
+#define BRAM_HIGH_ADDR 0x01087600 //554496
 #define HARD_BASE_ADDR 0x02000000
 #define HARD_LOW_ADDR 0x02000008
 #define HARD_HIGH_ADDR 0x0200001c

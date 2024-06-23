@@ -15,7 +15,7 @@ SW::SW(sc_core::sc_module_name name)
 }
 
 SW::~SW()
-{   matrix_picture_file.close();
+{   //matrix_picture_file.close();
     SC_REPORT_INFO("Soft", "Destroyed.");
 }
 
@@ -26,101 +26,84 @@ void SW::process_img(){
     int height = rows/CELL_SIZE;
     int width = cols/CELL_SIZE;
     
+    double *gray = new double[rows*cols];
     
-    double *grad_mag = new double[rows * cols];
-    double *grad_angle = new double[rows * cols];
-    double *ori_histo = new double[(int)height * (int)width * nBINS];
-    double *ori_histo_normalized = new double[(height-(BLOCK_SIZE-1)) * (width-(BLOCK_SIZE-1)) * nBINS*(BLOCK_SIZE*BLOCK_SIZE)];  
-    double *hog = new double[((int)height-1) * ((int)width-1) * (nBINS*BLOCK_SIZE*BLOCK_SIZE)];
-  
-  
-  
-    FILE * grad_mag_f = fopen("grad_mag_norm.txt", "rb");
-    double tmp_mag;
+    FILE * gray_f = fopen("gray.txt", "rb");
+    double tmp_gray;
       for (int i = 0; i < ROWS; ++i){
           for (int j = 0; j < COLS; ++j){
-              fscanf(grad_mag_f, "%lf", &tmp_mag);
-              grad_mag[i * COLS + j] = tmp_mag;
+              fscanf(gray_f, "%lf", &tmp_gray);
+              gray[i * COLS + j] = tmp_gray;
           }
       }
-    fclose(grad_mag_f);
+    fclose(gray_f);
     
-    FILE * grad_angle_f = fopen("grad_angle_norm.txt", "rb");
-    double tmp_angle;
-      for (int i = 0; i < ROWS; ++i){
-          for (int j = 0; j < COLS; ++j){
-              fscanf(grad_angle_f, "%lf", &tmp_angle);
-              grad_angle[i * COLS + j] = tmp_angle;
-          }
+    double im_min = *(gray + 0)/255.00000000;
+    double im_max = *(gray + 0)/255.00000000;
+    
+    double *im_c = new double[rows*cols];
+    
+    for(int i = 0; i < rows; ++i){
+      for(int j = 0; j < cols; ++j){
+          *(im_c + i*cols + j) = *(gray + i*cols +j);
+          *(im_c + i*cols + j) = *(im_c + i*cols + j)/255.0; // converting to double format
+          if(im_min > *(im_c + i*cols + j)) im_min = *(im_c + i*cols + j); // find min im
+          if(im_max < *(im_c + i*cols + j)) im_max = *(im_c + i*cols + j); // find max im
       }
-    fclose(grad_angle_f);
-  
+    }
     
-    build_histogram(rows, cols, &grad_mag[0], &grad_angle[0], &ori_histo[0]);
-    get_block_descriptor(rows, cols, &ori_histo[0], &ori_histo_normalized[0]);
-    
-    int HOG_LEN = (height-1) * (width-1) * (nBINS*BLOCK_SIZE*BLOCK_SIZE);
-    int i = nBINS*BLOCK_SIZE*BLOCK_SIZE*(width-1);
+    delete [] gray;
 
-    for(int l = 0; l < HOG_LEN; ++l)
-        hog[l] = ori_histo_normalized[(int)(l/i)*(width-(BLOCK_SIZE-1))*nBINS*(BLOCK_SIZE*BLOCK_SIZE) + (int)((l/24)%(width-1))*nBINS*(BLOCK_SIZE*BLOCK_SIZE) + l%24]; 
-    
-    delete [] grad_mag;
-    delete [] grad_angle;
-    delete [] ori_histo;
-    delete [] ori_histo_normalized;
-    delete [] hog;
-
- //matrix_picture_file >> img_height >> img_width;
-    //num_t write_value, read_value;
-    //num_t img[ROWS][COLS];
-    //num_t img_min, img_max;
-    //num_t filtered_img_x[ROWS][COLS], filtered_img_y[ROWS][COLS];
-
-    //write image into bram
-
-    //for (int i = 0; i < img_height; ++i) {
-        //for (int j = 0; j < img_width; ++j) {
-            //matrix_picture_file >> write_value;
-            //write_bram(i * img_width + j, write_value);
-        //}
-    //}
-
-    //write dimesions of img into hard
-    // 
-    //write_hard(ADDR_WIDTH, img_width);
-    //write_hard(ADDR_HEIGHT, img_height);
-
-    //img_min = img[0][0] / 255.0;
-    //img_max = img[0][0] / 255.0;
-
-    //for (int i = 0; i < img_height; ++i) {
-        //for (int j = 0; j < img_width; ++j) {
-            //img[i][j] = img[i][j] / 255.0;
-            //if (img_min > img[i][j]) img_min = img[i][j];
-            //if (img_max < img[i][j]) img_max = img[i][j];
-        //}
-    //}
-
-    /*for (int i = 0; i < img_height; ++i) {
-        for (int j = 0; j < img_width; ++j) {
-            img[i][j] = (img[i][j] - img_min) / img_max;
+    for(int i = 0; i < rows; ++i){
+        for(int j = 0; j < cols; ++j){
+            *(im_c + i*cols + j) = (*(im_c + i*cols + j) - im_min) / im_max; // Normalize image to [0, 1]
         }
-    }*/
-
-    //filter image in hw
-    //write_hard(ADDR_CMD, 1);
-
-    /*for (int i = 0; i < img_height; ++i) { //zavisi kako cemo upisati filtriranu sliku u mem
-        for (int j = 0; j < img_width; ++j)
-        {
-            read_bram(i * img_width + j, filtered_img_x[i][j]);
-            //dodaj i za y
-
+    }
+    
+    orig_array_t orig_gray(rows, vector<double>(cols));
+    
+    for (int i=0; i<rows; ++i){
+        for (int j=0; j<cols; ++j){
+            orig_gray[i][j] = *(im_c + i*cols + j);
         }
-    }*/
+    }
 
+    delete [] im_c;
+    
+    matrix_t matrix_gray(rows, array_t(cols, num_t(W, I, Q, O)));
+    matrix_t matrix_im_filtered_y(rows, array_t(cols, num_t(W,I,Q,O)));
+    matrix_t matrix_im_filtered_x(rows, array_t(cols, num_t(W,I,Q,O)));
+    matrix_t padded_img(rows+2, array_t(cols+2, num_t(W,I,Q, O)));
+    cast_to_fix(rows, cols, matrix_gray, orig_gray, W, I);
 
+    
+    //pad the image on the outer edges with zeros:
+    for(int i=0; i<rows+2; ++i) {
+        padded_img[i][0]=0;
+        padded_img[i][cols+1]=0;
+    }
+
+    for(int i=0; i<cols+2; ++i) {
+        padded_img[0][i]=0;
+        padded_img[rows+1][i]=0;
+    }
+    
+    for (int i=0; i<rows; ++i){
+        for (int j=0; j<cols; ++j){
+            matrix_im_filtered_y[i][j] = 0;
+            matrix_im_filtered_x[i][j] = 0;
+            padded_img[i+1][j+1]=matrix_gray[i][j];
+        }
+    }
+    
+    for(int i=0; i<rows+2; ++i){
+      for(int j=0; j<cols+2; ++j){
+        write_bram(i*cols+j,padded_img[i][j]);
+      }
+    }
+   int k;
+   while(k < 1000000000) k++;
+     
 }
 
 
@@ -140,9 +123,10 @@ void SW::read_bram(sc_dt::uint64 addr, num_t& val)
 void SW::write_bram(sc_dt::uint64 addr, num_t val)
 {
     pl_t pl;
-    unsigned char buf[4];
-    pl.set_address((addr * 4) | BRAM_BASE_ADDR);
-    pl.set_data_length(4);
+    unsigned char buf[3];
+    to_uchar(buf, val);
+    pl.set_address((addr * 3) | BRAM_BASE_ADDR);
+    pl.set_data_length(3);
     pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_WRITE_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);

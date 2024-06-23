@@ -18,7 +18,7 @@ void Bram::b_transport(pl_t& pl, sc_core::sc_time& offset)
 {
     sc_dt::uint64 addr = pl.get_address(); 
     tlm::tlm_command cmd = pl.get_command(); 
-    unsigned char* data = pl.get_data_ptr(); 
+    unsigned char *data = pl.get_data_ptr(); 
     unsigned int len = pl.get_data_length();
 
     switch (cmd)

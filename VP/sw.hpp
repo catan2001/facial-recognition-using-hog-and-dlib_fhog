@@ -7,7 +7,7 @@
 #include <tlm_utils/simple_initiator_socket.h>
 #include "def.hpp"
 #include "utils.hpp"
-
+#include "hw.hpp"
 
 class SW : public sc_core::sc_module
 {
@@ -19,9 +19,6 @@ public:
 protected:
 	pl_t pl;
 	sc_core::sc_time offset;
-	std::ifstream matrix_picture_file;
-	std::ifstream grad_mag;
-	std::ifstream grad_angle;
 	int img_width, img_height;
 	void process_img();
 	void read_bram(sc_dt::uint64 addr, num_t& val);

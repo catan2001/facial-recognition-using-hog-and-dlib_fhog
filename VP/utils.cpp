@@ -10,6 +10,104 @@ int to_int (unsigned char *buf)
   return sum;
 }
 
+char flip(char c) {return (c == '0')? '1': '0';}
+
+string twos_complement(string bin)
+{
+  int n = bin.length();
+  int i;
+
+  string ones, twos;
+  ones = twos = "";
+
+  //  for ones complement flip every bit
+  for (i = 0; i < n; i++)
+    ones += flip(bin[i]);
+
+  //  for two's complement go from right to left in
+  //  ones complement and if we get 1 make, we make
+  //  them 0 and keep going left when we get first
+  //  0, make that 1 and go out of loop
+  twos = ones;
+  for (i = n - 1; i >= 0; i--)
+    {
+      if (ones[i] == '1')
+        twos[i] = '0';
+      else
+        {
+          twos[i] = '1';
+          break;
+        }
+    }
+
+  // If No break : all are 1  as in 111  or  11111;
+  // in such case, add extra 1 at beginning
+  if (i == -1)
+    twos = '1' + twos;
+
+  return twos;
+}
+
+double to_fixed (unsigned char *buf)
+{
+  string concated = "";
+  for (int i = 0; i<CHARS_AMOUNT; ++i) // concatenate char array into eg. "10101101000"
+    concated += bitset<CHAR_LEN>((int)buf[i]).to_string();
+  // cout << "concated = " << concated << endl;
+  double multiplier = 1;
+  if (concated[0] == '1')
+    {
+      concated = twos_complement(concated);
+      multiplier = -1;
+    }
+  // cout << "concated = " << concated << endl;
+  double sum = 0;
+  int tmp = 0;
+  
+  for (int i = 0; i<DATA_WIDTH; ++i)
+    {
+      // cout << "[" << i << "] sum = " << sum << endl;
+      if(i < 3)
+        tmp = DATA_WIDTH - i -1;
+      else
+        tmp = -(DATA_WIDTH - i - 1);
+        
+      sum += (concated[i]-'0') * pow(2.0, tmp);
+    }
+  // cout << "sum = " << sum << endl;
+  return sum*multiplier;
+}
+
+void to_char (unsigned char *buf, string s)
+{
+  s.erase(0,2); // remove "0b"
+  s.erase(DATA_WIDTH-FIXED_POINT_WIDTH, 1); // remove the dot
+  char single_char[CHAR_LEN];
+  for (int i = 0; i<CHARS_AMOUNT; ++i)
+    {
+      s.copy(single_char,CHAR_LEN,i*CHAR_LEN); // copy 8 letters (0s and 1s) to char array
+      int char_int = stoi(single_char, nullptr, 2); // binary string -> int
+      buf[i] = (unsigned char) char_int;
+    }
+}
+
+void to_uchar(unsigned char *c, num_t d)
+{
+  to_char(c,d.to_bin());
+}
+
+void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int width, int integer) {
+    for(int i = 0; i != rows; ++i) {
+        for (int j = 0; j != cols; ++j) {
+            num_t d(width, integer);
+            d = src[i][j];
+            if(d.overflow_flag())
+                std::cout << "Overflow!" << endl;
+            dest[i][j] = d;
+        }
+    }
+}
+
 void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, double *ori_histo){
 
     double magROI[CELL_POW], angleROI[CELL_POW];
