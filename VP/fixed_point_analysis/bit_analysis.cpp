@@ -21,7 +21,7 @@ using namespace sc_dt;
 #define HIST_SIZE nBINS*BLOCK_SIZE*BLOCK_SIZE
 #define Q sc_dt::SC_RND
 #define O sc_dt::SC_SAT
-#define ROWS 90
+#define ROWS 150
 #define COLS 150
 #define TROWS 100
 #define TCOLS 100
@@ -466,7 +466,7 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
     filter_image_t(rows, cols, W, I, matrix_im_filtered_x, matrix_im_filtered_y, &filter_x[0], &filter_y[0], padded_img);
 
    //Get_gradient:  
-    matrix_t grad_mag_t(rows, array_t(cols, num_t(W, I, Q, O)));
+   /* matrix_t grad_mag_t(rows, array_t(cols, num_t(W, I, Q, O)));
     matrix_t grad_angle_t(rows, array_t(cols, num_t(W, I, Q, O)));
     
     double *grad_mag = new double[rows * cols];
@@ -479,10 +479,25 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
 		*(grad_mag + i*cols + j) = grad_mag_t[i][j];
 	        *(grad_angle + i*cols + j) = grad_angle_t[i][j];	
 	}
-   }
+   }*/
 
    //END OF HARDWARE PART
+
+    double *im_dx = new double[rows * cols];
+    double *im_dy = new double[rows * cols];
+    double *grad_mag = new double[rows * cols];
+    double *grad_angle = new double[rows * cols];
    
+ 
+   for(int i=0; i<rows; ++i){
+   	for(int j=0; j<cols; ++j){
+		*(im_dx + i*cols + j) = matrix_im_filtered_x[i][j];
+	        *(im_dy + i*cols + j) = matrix_im_filtered_y[i][j];	
+	}
+    }
+ 
+    get_gradient(rows, cols, &im_dx[0], &im_dy[0], &grad_mag[0], &grad_angle[0]);
+
     int height = rows/CELL_SIZE;
     int width = cols/CELL_SIZE;
  
@@ -506,6 +521,8 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
     }
 
     // deallocate allocated
+    delete [] im_dx;
+    delete [] im_dy;
     delete [] grad_mag;
     delete [] grad_angle;
     delete [] ori_histo;
@@ -719,7 +736,7 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
             found_faces[(i+(num_faces-num_thresholded))*3 + 2] = found_boxes[i*3 + 2];
 
 
-        //   cout << "x_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 0] << " y_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 1] << " score_ff: " <<  found_faces[(i+(num_faces-num_thresholded))*3 + 2] <<  endl;  
+           cout << "x_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 0] << " y_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 1] << " score_ff: " <<  found_faces[(i+(num_faces-num_thresholded))*3 + 2] <<  endl;  
         }
 
         delete [] found_boxes;
