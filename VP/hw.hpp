@@ -10,19 +10,20 @@
 class HW : public sc_core::sc_module
 {
 public:
-	SC_HAS_PROCESS(HW);
+	//SC_HAS_PROCESS(HW);
 	HW(sc_core::sc_module_name name);
 	~HW();
 	tlm_utils::simple_initiator_socket<HW> bram_socket;
 	tlm_utils::simple_target_socket<HW> interconnect_socket;
-	void filter_image_t(void);
+	//void filter_image_t(void);
 protected:
 	pl_t pl;
 	sc_core::sc_time offset;
+	int start, ready;
 	void b_transport(pl_t& pl, sc_core::sc_time& offset);
-	//void filter_image_t(void);
+	void filter_image_t(void);
 	//void debug_read();
-	num_t read_bram(int addr, char value);
+	num_t read_bram(int addr);
 	//void write_bram(int addr, num_t val, char c);
 };
 

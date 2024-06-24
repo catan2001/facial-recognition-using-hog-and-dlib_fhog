@@ -6,16 +6,12 @@ SW::SW(sc_core::sc_module_name name)
     : sc_module(name)
     , offset(sc_core::SC_ZERO_TIME)
 {
-    //matrix_picture_file.open("matrix_picture_file.txt");
-    //if (!matrix_picture_file.is_open())
-        //SC_REPORT_ERROR("Soft", "Cannot open file.");
-
     SC_THREAD(process_img);
     SC_REPORT_INFO("Soft", "Constructed.");
 }
 
 SW::~SW()
-{   //matrix_picture_file.close();
+{   
     SC_REPORT_INFO("Soft", "Destroyed.");
 }
 
@@ -98,26 +94,40 @@ void SW::process_img(){
     
     for(int i=0; i<rows+2; ++i){
       for(int j=0; j<cols+2; ++j){
-        write_bram(i*cols+j,padded_img[i][j]);
+        //cout<<padded_img[i][j]<<" ";
+        write_bram(i*(cols+2)+j,padded_img[i][j]);
       }
     }
-   int k;
-   while(k < 1000000000) k++;
+    write_hard(ADDR_WIDTH, ROWS);
+    write_hard(ADDR_HEIGHT, COLS);
+    write_hard(ADDR_CMD, 1);
+    
+    int ready = 1;
+    while (ready)
+    {
+      ready = read_hard(ADDR_STATUS);
+    }
+    write_hard(ADDR_CMD, 0);
+    while (!ready)
+    {
+      ready = read_hard(ADDR_STATUS);
+    }
+
+    cout<<"SLIKA JE FILTRIRANA"<<endl;
      
 }
-
 
 void SW::read_bram(sc_dt::uint64 addr, num_t& val)
 {
     pl_t pl;
-    unsigned char buf[4];
-    pl.set_address((addr * 4) | BRAM_BASE_ADDR);
-    pl.set_data_length(4);
+    unsigned char buf[3];
+    pl.set_address((addr * 3) | BRAM_BASE_ADDR);
+    pl.set_data_length(3);
     pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_READ_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     interconnect_socket->b_transport(pl, offset);
-
+    //definisi vrijednost koju citas iz brama
 }
 
 void SW::write_bram(sc_dt::uint64 addr, num_t val)
@@ -125,6 +135,9 @@ void SW::write_bram(sc_dt::uint64 addr, num_t val)
     pl_t pl;
     unsigned char buf[3];
     to_uchar(buf, val);
+    //cout<<buf[0]<<" ";
+    //cout<<buf[1]<<" ";
+    //cout<<buf[2]<<" ";
     pl.set_address((addr * 3) | BRAM_BASE_ADDR);
     pl.set_data_length(3);
     pl.set_data_ptr(buf);
@@ -136,9 +149,9 @@ void SW::write_bram(sc_dt::uint64 addr, num_t val)
 int SW::read_hard(sc_dt::uint64 addr)
 {
     pl_t pl;
-    unsigned char buf[4];
+    unsigned char buf[3];
     pl.set_address(addr | HARD_BASE_ADDR);
-    pl.set_data_length(4);
+    pl.set_data_length(3);
     pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_READ_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
@@ -151,9 +164,9 @@ int SW::read_hard(sc_dt::uint64 addr)
 void SW::write_hard(sc_dt::uint64 addr, int val)
 {
     pl_t pl;
-    unsigned char buf[4];
+    unsigned char buf[3];
     pl.set_address(addr | HARD_BASE_ADDR);
-    pl.set_data_length(4);
+    pl.set_data_length(3);
     pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_WRITE_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);

@@ -21,13 +21,13 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 #define BRAM_LOW_ADDR 0x01000000
 #define BRAM_HIGH_ADDR 0x01087600 //554496
 #define HARD_BASE_ADDR 0x02000000
-#define HARD_LOW_ADDR 0x02000008
-#define HARD_HIGH_ADDR 0x0200001c
+#define HARD_LOW_ADDR 0x02000000
+#define HARD_HIGH_ADDR 0x0200000c
 
-#define ADDR_WIDTH 0x08
-#define ADDR_HEIGHT 0x10
-#define ADDR_CMD 0x18
-#define ADDR_STATUS 0x1c
+#define ADDR_WIDTH 0x00
+#define ADDR_HEIGHT 0x04
+#define ADDR_CMD 0x08
+#define ADDR_STATUS 0x0c
 
 //#define MAX_SIZE 200
 #define ROWS 150
@@ -44,6 +44,6 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 
 #define PI 3.14159265358979323846
 
-#define RESERVED_MEM 100000
+#define RESERVED_MEM 87600//100000
 
 #endif
