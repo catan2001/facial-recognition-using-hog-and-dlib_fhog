@@ -23,7 +23,7 @@ protected:
 	void b_transport(pl_t& pl, sc_core::sc_time& offset);
 	void filter_image_t(void);
 	//void debug_read();
-	num_t read_bram(int addr);
+	num_t2 read_bram(int addr);
 	//void write_bram(int addr, num_t val, char c);
 };
 

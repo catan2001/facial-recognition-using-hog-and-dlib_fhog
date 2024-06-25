@@ -18,30 +18,59 @@ HW::~HW()
 }
 //TODO: change for implementing in HW
 void HW::filter_image_t(void){
-  SC_REPORT_INFO("Hard","ja sam konj");
   array_t imROI(9, num_t(W, I, Q, O));
   matrix_t padded_img(ROWS+2, array_t(COLS+2, num_t(W,I,Q, O)));
+  matrix_t matrix_im_filtered_y(ROWS, array_t(COLS, num_t(W,I,Q,O)));
+  matrix_t matrix_im_filtered_x(ROWS, array_t(COLS, num_t(W,I,Q,O)));
   //test
-  SC_REPORT_INFO("Hard","ja sam konj2");
     for(int i=0; i<ROWS+2; ++i){
       for(int j=0; j<COLS+2; ++j){
-      SC_REPORT_INFO("Hard","ja sam konj3");
         padded_img[i][j] = read_bram(i*(COLS+2)+j);
-        cout << "Padded image inside HW::filter: " << padded_img[i][j];
       }
-      cout << endl;
     }
-    /*
+
     for (int i=0; i<ROWS; ++i){ // prone to changes
         for (int j=0; j<COLS; ++j){
-            for(int k=0; k<9; ++k){
-                imROI[k] = padded_img [i+(int)(k/3)] [j+(k%3)];
-                matrix_im_filtered_y[i][j] += imROI[k] * filter_y[k];
-                matrix_im_filtered_x[i][j] += imROI[k] * filter_x[k];
-            }
+            //unrolled
+            imROI[0] = padded_img [i+0] [j+0];
+            matrix_im_filtered_y[i][j] += imROI[0];
+            matrix_im_filtered_x[i][j] += imROI[0];
+            
+            imROI[1] = padded_img [i+0] [j+1];
+            matrix_im_filtered_y[i][j] += imROI[1] * 2;
+            //matrix_im_filtered_x[i][j] += 0;
+            
+            imROI[2] = padded_img [i+0] [j+2];
+            matrix_im_filtered_y[i][j] += imROI[2];
+            matrix_im_filtered_x[i][j] += imROI[2] * (-1);
+            
+            imROI[3] = padded_img [i+1] [j+0];
+            //matrix_im_filtered_y[i][j] += 0;
+            matrix_im_filtered_x[i][j] += imROI[3] * 2;
+            
+            imROI[4] = padded_img [i+1] [j+1];
+            //matrix_im_filtered_y[i][j] += 0;
+            //matrix_im_filtered_x[i][j] += 0;
+            
+            imROI[5] = padded_img [i+1] [j+2];
+            //matrix_im_filtered_y[i][j] += 0;
+            matrix_im_filtered_x[i][j] += imROI[5] * (-2);
+            
+            imROI[6] = padded_img [i+2] [j+0];
+            matrix_im_filtered_y[i][j] += imROI[6] * (-1);
+            matrix_im_filtered_x[i][j] += imROI[6];
+            
+            imROI[7] = padded_img [i+2] [j+1];
+            matrix_im_filtered_y[i][j] += imROI[7] * (-2);
+            //matrix_im_filtered_x[i][j] += 0;
+            
+            imROI[8] = padded_img [i+2] [j+2];
+            matrix_im_filtered_y[i][j] += imROI[8] * (-1);
+            matrix_im_filtered_x[i][j] += imROI[8] * (-1);
+            
+            cout<<matrix_im_filtered_x[i][j] <<" ";
         }
-    }
-  */
+    }  
 }
 
 void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
@@ -75,8 +104,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
       switch(addr)
         {
         case ADDR_STATUS:
-          to_uchar(buf,pom);
-          cout<<pom<<" ";
+          to_uchar(buf,ready);
           break;
         default:
           pl.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE );
@@ -90,19 +118,15 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
     offset += sc_core::sc_time(10, sc_core::SC_NS);
 }
 
-num_t HW::read_bram(int addr){
+num_t2 HW::read_bram(int addr){
     pl_t pl;
     unsigned char buf[3];
-    cout<<"konj4"<<endl;
-    //addr =& BASE
-    pl.set_address((addr * 3)); //  | BRAM_BASE_ADDR
+    pl.set_address(addr * 3); 
     pl.set_data_length(3);
     pl.set_data_ptr(buf);
-    cout<<"konj5"<<endl;
     pl.set_command(tlm::TLM_READ_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-    cout<<"konj6"<<endl;
+    sc_core::sc_time offset = sc_core::SC_ZERO_TIME;
     bram_socket->b_transport(pl, offset);
-    cout<<"konj7"<<endl;
     return to_fixed(buf); 
 }

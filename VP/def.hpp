@@ -5,12 +5,13 @@
 #include <systemc>
 #include <tlm>
 
-#define W 23 // DATA_WIDTH
+#define W 24 // DATA_WIDTH
 #define I 3 // FIXED_POINT_WIDTH
 #define Q sc_dt::SC_RND // quantization methods
 #define O sc_dt::SC_SAT // overflow methods
 
 typedef sc_dt::sc_fix_fast num_t;
+typedef sc_dt::sc_fixed_fast <W, I ,Q ,O> num_t2;
 typedef std::deque<num_t> array_t;
 typedef std::deque<array_t> matrix_t;
 typedef std::vector<std::vector<double>> orig_array_t;

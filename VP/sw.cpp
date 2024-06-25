@@ -135,9 +135,6 @@ void SW::write_bram(sc_dt::uint64 addr, num_t val)
     pl_t pl;
     unsigned char buf[3];
     to_uchar(buf, val);
-    //cout<<buf[0]<<" ";
-    //cout<<buf[1]<<" ";
-    //cout<<buf[2]<<" ";
     pl.set_address((addr * 3) | BRAM_BASE_ADDR);
     pl.set_data_length(3);
     pl.set_data_ptr(buf);
