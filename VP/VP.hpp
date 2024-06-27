@@ -18,7 +18,9 @@ public:
 
 protected:
 	Interconnect interconnect;
-	Bram bram;
+	Dram dram;
+	DramCtrl dram_ctrl;
+	MemIC mem_ic;
 	SW soft;
 	HW hard;
 };
