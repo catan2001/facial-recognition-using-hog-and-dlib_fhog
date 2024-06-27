@@ -1,31 +1,32 @@
 #include "dram_ctrl.hpp"
 
 DramCtrl::DramCtrl(sc_core::sc_module_name name) : sc_module(name) {
-    
+    interconnect_socket.register_b_transport(this, &DramCtrl::b_transport);  
+    mem_interconnect_socket_s1.register_b_transport(this, &DramCtrl::b_transport);  
+    mem_interconnect_socket_s2.register_b_transport(this, &DramCtrl::b_transport);  
+    SC_REPORT_INFO("DRAM Controller", "Constructed.");
 }
 
-/*
-void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
+DramCtrl::~DramCtrl(){
+     SC_REPORT_INFO("DRAM Controller", "Destroyed.");
+}
+
+void DramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 {
   tlm::tlm_command cmd = pl.get_command();
   sc_dt::uint64 addr = pl.get_address();
   unsigned int len = pl.get_data_length();
   unsigned char *buf = pl.get_data_ptr();
 
-  pl_re.set_command(cmd);
-  pl_re.set_address(addr);
-  pl_re.set_data_length(4);
-  pl_re.set_data_ptr(buf);
-  pl_re.set_response_status( tlm::TLM_INCOMPLETE_RESPONSE );
+  pl_dram.set_command(cmd);
+  pl_dram.set_address(addr);
+  pl_dram.set_data_length(len);
+  pl_dram.set_data_ptr(buf);
+  pl_dram.set_response_status( tlm::TLM_INCOMPLETE_RESPONSE );
 
-  pl_im.set_command(cmd);
-  pl_im.set_address(addr);
-  pl_im.set_data_length(4);
-  pl_im.set_data_ptr(buf+4);
-  pl_im.set_response_status( tlm::TLM_INCOMPLETE_RESPONSE );
-
-  bram_re_socket->b_transport(pl_re,offset);
+  dram_ctrl_socket_s1->b_transport(pl_dram, offset);
   if (pl_re.is_response_error()) SC_REPORT_ERROR("Bram_RE",pl_re.get_response_string().c_str());
 
-  bram_im_socket->b_transport(pl_im,offset);
-  if (pl_re.is_response_error()) SC_REPORT_ERROR("Bram_IM",pl_re.get_response_string().c_str()); */
+  //TODO: we don't need to have second socket, it can be represented as just one
+  dram_ctrl_socket_s2->b_transport(pl_dram,offset);
+  if (pl_re.is_response_error()) SC_REPORT_ERROR("Bram_IM",pl_re.get_response_string().c_str()); 

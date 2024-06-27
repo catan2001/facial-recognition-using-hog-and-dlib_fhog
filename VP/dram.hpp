@@ -8,25 +8,18 @@
 
 //TODO: define DRAM interface
 
-#define DMEM 1024*1024*512
+#define DMEM_SIZE 1024*1024*1024 // 1GB DRAM
 
 class DRAM : public sc_core::sc_module {
     public:
-        DRAM (sc_core::sc_module_name name) {
-            FILE *fp = fopen("dram.txt", "w+");
-            if(fp == NULL) {
-                cout << "ERROR:<dram.hpp> could not open file!" << endl;
-                return -1;
-            }
-            for(int i = 0; i < DMEM)
-                fprintf(fp, "%d ", 0); 
-            fclose(fp);
-        };
-        ~DRAM ();
-        tlm_utils::simple_target_socket<DRAM> dram_socket_s1, dram_socket_s2, dram_socket_s3; // s1->PS , s2 && s3 -> PL
+        DRAM(sc_core::sc_module_name name);
+        ~DRAM();
+        tlm_utils::simple_target_socket<DRAM> dram_socket_s1;
+        tlm_utils::simple_target_socket<DRAM> dram_socket_s2; 
     protected:
-        num_t2 dmem_val;
-}
+        void b_transport(pl_t &, sc_core::sc_time &);
+        std::vector<unsigned char> dmem;
+};
 
 #endif //DRAM_HPP_
 
