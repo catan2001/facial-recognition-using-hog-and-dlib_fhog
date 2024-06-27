@@ -92,37 +92,57 @@ void SW::process_img(){
         }
     }
     
+    //write image to DRAM
     for(int i=0; i<rows+2; ++i){
       for(int j=0; j<cols+2; ++j){
         //cout<<padded_img[i][j]<<" ";
-        write_bram(i*(cols+2)+j,padded_img[i][j]);
+        write_dram(i*(cols+2)+j,padded_img[i][j]);
       }
     }
+
+    //config BRAM_CTRL AND MEM IC for init:
+    int init = 1;
+
+    write_mem_ic(INIT);
+    write_bram(ADDR_WIDTH, ROWS);
+    write_bram(ADDR_HEIGHT, COLS);
+    write_bram(ADDR_CMD, init);
+
+    /*while (init)
+    {
+      init = read_bram(ADDR_STATUS);
+    }
+    init = 0;
+    write_bram(ADDR_CMD, ready);
+
+    ready = 1;
     write_hard(ADDR_WIDTH, ROWS);
     write_hard(ADDR_HEIGHT, COLS);
-    write_hard(ADDR_CMD, 1);
+    write_hard(ADDR_CMD, ready);
     
-    int ready = 1;
     while (ready)
     {
       ready = read_hard(ADDR_STATUS);
     }
-    write_hard(ADDR_CMD, 0);
+
+    ready = 0;
+    write_hard(ADDR_CMD, ready);
+
     while (!ready)
     {
       ready = read_hard(ADDR_STATUS);
-    }
+    }*/
 
     cout<<"SLIKA JE FILTRIRANA"<<endl;
      
 }
 
-void SW::read_bram(sc_dt::uint64 addr, num_t& val)
+void SW::read_dram(sc_dt::uint64 addr, num_t& val)
 {
     pl_t pl;
-    unsigned char buf[3];
-    pl.set_address((addr * 3) | BRAM_BASE_ADDR);
-    pl.set_data_length(3);
+    unsigned char buf[LEN_IN_BYTES];
+    pl.set_address((addr * LEN_IN_BYTES) | DRAM_BASE_ADDR);
+    pl.set_data_length(LEN_IN_BYTES);
     pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_READ_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
@@ -130,13 +150,14 @@ void SW::read_bram(sc_dt::uint64 addr, num_t& val)
     //definisi vrijednost koju citas iz brama
 }
 
-void SW::write_bram(sc_dt::uint64 addr, num_t val)
+void SW::write_dram(sc_dt::uint64 addr, num_t val)
 {
     pl_t pl;
-    unsigned char buf[3];
+    unsigned char buf[LEN_IN_BYTES];
     to_uchar(buf, val);
-    pl.set_address((addr * 3) | BRAM_BASE_ADDR);
-    pl.set_data_length(3);
+    
+    pl.set_address((addr * LEN_IN_BYTES) | DRAM_BASE_ADDR);
+    pl.set_data_length(LEN_IN_BYTES);
     pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_WRITE_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
@@ -146,9 +167,9 @@ void SW::write_bram(sc_dt::uint64 addr, num_t val)
 int SW::read_hard(sc_dt::uint64 addr)
 {
     pl_t pl;
-    unsigned char buf[3];
+    unsigned char buf[LEN_IN_BYTES];
     pl.set_address(addr | HARD_BASE_ADDR);
-    pl.set_data_length(3);
+    pl.set_data_length(LEN_IN_BYTES);
     pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_READ_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
@@ -161,12 +182,38 @@ int SW::read_hard(sc_dt::uint64 addr)
 void SW::write_hard(sc_dt::uint64 addr, int val)
 {
     pl_t pl;
-    unsigned char buf[3];
+    unsigned char buf[LEN_IN_BYTES];
     pl.set_address(addr | HARD_BASE_ADDR);
-    pl.set_data_length(3);
+    pl.set_data_length(LEN_IN_BYTES);
     pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_WRITE_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     interconnect_socket->b_transport(pl, offset);
 }
 
+int SW::read_bram(sc_dt::uint64 addr)
+{
+    pl_t pl;
+    unsigned char buf[LEN_IN_BYTES];
+    pl.set_address(addr | BRAM_BASE_ADDR);
+    pl.set_data_length(LEN_IN_BYTES);
+    pl.set_data_ptr(buf);
+    pl.set_command(tlm::TLM_READ_COMMAND);
+    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    sc_core::sc_time offset = sc_core::SC_ZERO_TIME;
+    interconnect_socket->b_transport(pl, offset);
+    
+    return to_int(buf);
+}
+
+void SW::write_bram(sc_dt::uint64 addr, int val)
+{
+    pl_t pl;
+    unsigned char buf[LEN_IN_BYTES];
+    pl.set_address(addr | BRAM_BASE_ADDR);
+    pl.set_data_length(LEN_IN_BYTES);
+    pl.set_data_ptr(buf);
+    pl.set_command(tlm::TLM_WRITE_COMMAND);
+    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    interconnect_socket->b_transport(pl, offset);
+}

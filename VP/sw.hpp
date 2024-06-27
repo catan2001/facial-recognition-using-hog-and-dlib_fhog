@@ -21,8 +21,8 @@ protected:
 	sc_core::sc_time offset;
 	int img_width, img_height;
 	void process_img();
-	void read_bram(sc_dt::uint64 addr, num_t& val);
-	void write_bram(sc_dt::uint64 addr, num_t val);
+	void read_dram(sc_dt::uint64 addr, num_t& val);
+	void write_dram(sc_dt::uint64 addr, num_t val);
 	int read_hard(sc_dt::uint64 addr);
 	void write_hard(sc_dt::uint64 addr, int val);
 };
