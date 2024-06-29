@@ -40,7 +40,7 @@ void to_char (unsigned char *buf, string s)
     } 
 }
 
-void to_uchar(unsigned char *c, num_t d)
+void to_uchar(unsigned char *c, num_t2 d)
 {
   to_char(c,d.to_bin());
 }

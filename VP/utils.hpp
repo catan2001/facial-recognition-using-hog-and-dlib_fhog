@@ -12,13 +12,13 @@
 using namespace std;
 using namespace sc_dt;
 
-static const int DATA_WIDTH = 24;
-static const int FIXED_POINT_WIDTH = 3;
+static const int DATA_WIDTH = W;
+static const int FIXED_POINT_WIDTH = LEN_IN_BYTES;
 static const int CHAR_LEN = 8;
 static const int CHARS_AMOUNT = DATA_WIDTH / CHAR_LEN;
 
 void to_char (unsigned char *, string);
-void to_uchar (unsigned char *buf, num_t d);
+void to_uchar (unsigned char *buf, num_t2 d);
 double to_fixed (unsigned char *buf);
 
 int to_int (unsigned char *);
