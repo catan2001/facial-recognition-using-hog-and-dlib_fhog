@@ -1,11 +1,12 @@
 #ifndef DEF_HPP
 #define DEF_HPP
-#include </home/andjela/systemc-2.3.3/include/sysc/datatypes/fx/sc_fixed.h>
+#include </usr/local/systemc-2.3.4/include/sysc/datatypes/fx/sc_fixed.h>
 #define SC_INCLUDE_FX
 #include <systemc>
 #include <tlm>
 
-#define W 24 // DATA_WIDTH
+#define LEN_IN_BYTES 2
+#define W 16 // DATA_WIDTH
 #define I 3 // FIXED_POINT_WIDTH
 #define Q sc_dt::SC_RND // quantization methods
 #define O sc_dt::SC_SAT // overflow methods
@@ -18,12 +19,18 @@ typedef std::vector<std::vector<double>> orig_array_t;
 
 typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 
-#define BRAM_BASE_ADDR 0x01000000
-#define BRAM_LOW_ADDR 0x01000000
-#define BRAM_HIGH_ADDR 0x01087600 //554496
-#define HARD_BASE_ADDR 0x02000000
-#define HARD_LOW_ADDR 0x02000000
-#define HARD_HIGH_ADDR 0x0200000c
+//BRAM & BRAM_CTRL
+#define BRAM_BASE_ADDR 0x40000000 // PL AXI Slave port 0 starts at 0x40000000   
+#define BRAM_LOW_ADDR 0x40000000
+#define BRAM_HIGH_ADDR 0x41087600 //554496 TODO: check value
+//HARD
+#define HARD_BASE_ADDR 0x42000000
+#define HARD_LOW_ADDR 0x42000000
+#define HARD_HIGH_ADDR 0x4200000c
+//DRAM & DRAM_CTRL
+#define DRAM_BASE_ADDR 0x00000000 // Start Address of DRAM
+#define DRAM_LOW_ADDR 0x00000000
+#define DRAM_HIGH_ADDR 0x3fffffff // End Address of DRAM
 
 #define ADDR_WIDTH 0x00
 #define ADDR_HEIGHT 0x04
