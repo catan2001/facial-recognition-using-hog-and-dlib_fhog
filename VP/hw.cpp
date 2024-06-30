@@ -127,6 +127,6 @@ num_t2 HW::read_bram(int addr){
     pl.set_command(tlm::TLM_READ_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     sc_core::sc_time offset = sc_core::SC_ZERO_TIME;
-    bram_socket->b_transport(pl, offset);
+    bram_ctrl_socket->b_transport(pl, offset);
     return to_fixed(buf); 
 }

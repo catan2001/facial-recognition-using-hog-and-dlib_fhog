@@ -7,8 +7,11 @@
 #include "def.hpp"
 #include "interconnect.hpp"
 #include "bram.hpp"
+#include "bram_ctrl.hpp"
 #include "sw.hpp"
 #include "hw.hpp"
+#include "dram.hpp"
+#include "dram_ctrl.hpp"
 
 class Vp : public sc_core::sc_module
 {
@@ -18,9 +21,10 @@ public:
 
 protected:
 	Interconnect interconnect;
-	Dram dram;
+	DRAM dram;
 	DramCtrl dram_ctrl;
-	MemIC mem_ic;
+    Bram bram;
+    BramCtrl bram_ctrl;
 	SW soft;
 	HW hard;
 };

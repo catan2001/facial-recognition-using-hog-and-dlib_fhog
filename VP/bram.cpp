@@ -2,8 +2,10 @@
 
 Bram::Bram(sc_core::sc_module_name name) : sc_module(name)
 {
-    interconnect_socket.register_b_transport(this, &Bram::b_transport);
-    hw_socket.register_b_transport(this, &Bram::b_transport);
+    bram_ctrl_socket_s1.register_b_transport(this, &Bram::b_transport);
+    bram_ctrl_socket_s2.register_b_transport(this, &Bram::b_transport);
+    bram_ctrl_socket_s3.register_b_transport(this, &Bram::b_transport);
+
     mem.reserve(RESERVED_MEM);
 
     SC_REPORT_INFO("BRAM", "Constructed.");
