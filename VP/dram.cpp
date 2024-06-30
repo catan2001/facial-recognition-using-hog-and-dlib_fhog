@@ -2,7 +2,7 @@
 #include <iomanip>
 
 DRAM::DRAM(sc_core::sc_module_name name) : sc_module(name) {
-    dram_ctrl_socket_s1.register_b_transport(this, &DRAM::b_transport);
+    dram_ctrl_socket.register_b_transport(this, &DRAM::b_transport);
     dmem.reserve(DMEM_SIZE);
     SC_REPORT_INFO("DRAM", "Constructed.");
 }

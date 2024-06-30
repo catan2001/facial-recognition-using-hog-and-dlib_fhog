@@ -2,12 +2,8 @@
 //SC_HAS_PROCESS(HW);
 
 HW::HW(sc_core::sc_module_name name)
-    : sc_module(name), 
-    offset(sc_core::SC_ZERO_TIME),
-    start(0),
-    ready(1)
+    : sc_module(name)
 {
-    interconnect_socket.register_b_transport(this, &HW::b_transport);
     SC_REPORT_INFO("Hard", "Constructed.");
     //SC_THREAD(filter_image_t);
 }

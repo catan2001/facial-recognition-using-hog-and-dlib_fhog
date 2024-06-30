@@ -13,8 +13,8 @@ public:
   DramCtrl(sc_core::sc_module_name name);
   ~DramCtrl();
   tlm_utils::simple_target_socket<DramCtrl> interconnect_socket;
-  tlm_utils::simple_target_socket<DramCtrl> bram_ctrl_socket_s1;
-  tlm_utils::simple_initiator_socket<DramCtrl> dram_socket_s1;
+  tlm_utils::simple_target_socket<DramCtrl> bram_ctrl_socket;
+  tlm_utils::simple_initiator_socket<DramCtrl> dram_socket;
 
 protected:
   void b_transport (pl_t &, sc_core::sc_time &);

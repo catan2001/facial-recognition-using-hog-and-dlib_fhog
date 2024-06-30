@@ -14,7 +14,6 @@ public:
     HW(sc_core::sc_module_name name);
 	~HW();
 	tlm_utils::simple_initiator_socket<HW> bram_ctrl_socket;
-	tlm_utils::simple_target_socket<HW> interconnect_socket;
 	//void filter_image_t(void);
 protected:
 	pl_t pl;

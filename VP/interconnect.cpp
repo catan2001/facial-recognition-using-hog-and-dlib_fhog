@@ -26,22 +26,10 @@ void Interconnect::b_transport(pl_t& pl, sc_core::sc_time& offset)
     }
     else if (addr >= HARD_LOW_ADDR && addr <= HARD_HIGH_ADDR)
     {
-        if (addr >= BRAM_LOW_ADDR && addr <= BRAM_HIGH_ADDR){
-            pl.set_address(taddr);
-            hw_socket->b_transport(pl, offset);
-            pl.set_address(addr);
-        }else{
-            SC_REPORT_ERROR("Interconnect", "Wrong address.");
-            pl.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
-
-        }
-    }
-/*    else if (addr == MEM_IC_BASE_ADDR)
-    {
         pl.set_address(taddr);
-        mem_ic_socket->b_transport(pl, offset);
+        hw_socket->b_transport(pl, offset);
         pl.set_address(addr);
-    } */
+    }
     else
     {
         SC_REPORT_ERROR("Interconnect", "Wrong address.");

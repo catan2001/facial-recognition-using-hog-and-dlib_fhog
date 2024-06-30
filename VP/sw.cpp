@@ -93,20 +93,36 @@ void SW::process_img(){
     }
    
     //test: 
-    for(int i=0; i<rows+2; ++i){
+    /*for(int i=0; i<rows+2; ++i){
       for(int j=0; j<cols+2; ++j){
         cout<<padded_img[i][j]<<" ";
         //padded_img[i][j];
       }
     } 
-    cout << endl << endl << endl;
+    cout << endl << endl << endl;*/
 
+    // 1 WRITE IMAGE TO DRAM:
     for(int i=0; i<rows+2; ++i){
       for(int j=0; j<cols+2; ++j){
         //cout<<padded_img[i][j]<<" ";
         write_dram(DRAM_LOW_ADDR | i*(cols+2)+j ,padded_img[i][j]);
       }
     }
+
+    // 2 CONFIGURE HW REGISTERS AND SEND START CMD:
+    write_hard(ADDR_WIDTH, ROWS);
+    write_hard(ADDR_HEIGHT, COLS);
+    write_hard(ADDR_CMD, 1);
+
+    // 3 WAIT FOR HW TO FINISH:
+    int ready = 1;
+    while (!ready)
+    {
+      ready = read_hard(ADDR_STATUS);
+    }
+    write_hard(ADDR_CMD, 0);
+
+    // 4 READ RESULTS FROM DRAM:
     
     num_t2 val;
     for(int i=0; i<rows+2; ++i){
@@ -184,6 +200,7 @@ void SW::write_hard(sc_dt::uint64 addr, int val)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];
+    to_uchar(buf, val);
     pl.set_address(addr | HARD_BASE_ADDR);
     pl.set_data_length(LEN_IN_BYTES);
     pl.set_data_ptr(buf);

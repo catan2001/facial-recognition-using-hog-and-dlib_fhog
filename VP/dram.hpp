@@ -14,7 +14,7 @@ class DRAM : public sc_core::sc_module {
     public:
         DRAM(sc_core::sc_module_name name);
         ~DRAM();
-        tlm_utils::simple_target_socket<DRAM> dram_ctrl_socket_s1;
+        tlm_utils::simple_target_socket<DRAM> dram_ctrl_socket;
     protected:
         void b_transport(pl_t &, sc_core::sc_time &);
         std::vector<unsigned char> dmem;
