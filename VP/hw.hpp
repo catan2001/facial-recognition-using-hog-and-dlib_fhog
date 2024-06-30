@@ -11,7 +11,7 @@ class HW : public sc_core::sc_module
 {
 public:
 	//SC_HAS_PROCESS(HW);
-	HW(sc_core::sc_module_name name);
+    HW(sc_core::sc_module_name name);
 	~HW();
 	tlm_utils::simple_initiator_socket<HW> bram_ctrl_socket;
 	tlm_utils::simple_target_socket<HW> interconnect_socket;

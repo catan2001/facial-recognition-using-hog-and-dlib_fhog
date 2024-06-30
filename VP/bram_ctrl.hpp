@@ -25,17 +25,17 @@ public:
                                                             // at some point HW will call BRAM_CTRL this could go in loop...
   // DRAM SOCKETS:
   tlm_utils::simple_initiator_socket<BramCtrl> dram_ctrl_socket_s1;
-  tlm_utils::simple_initiator_socket<BramCtrl> dram_ctrl_socket_s2; // do we need both sockets?
+  //tlm_utils::simple_initiator_socket<BramCtrl> dram_ctrl_socket_s2; // do we need both sockets?
 
   // BRAM SOCKETS:
   tlm_utils::simple_initiator_socket<BramCtrl> bram_socket_b1; // BRAM Block 1 // do we need all sockets?
-  tlm_utils::simple_initiator_socket<BramCtrl> bram_socket_b2; // BRAM Block 2
-  tlm_utils::simple_initiator_socket<BramCtrl> bram_socket_b3; // BRAM Block 3
+  //tlm_utils::simple_initiator_socket<BramCtrl> bram_socket_b2; // BRAM Block 2
+  //tlm_utils::simple_initiator_socket<BramCtrl> bram_socket_b3; // BRAM Block 3
 
 protected:
-  void b_transport_bram (pl_t &, sc_core::sc_time &); // socket1 b_transport
   void b_transport (pl_t &, sc_core::sc_time &); // socket1 b_transport
-  void b_transport2 (pl_t &, sc_core::sc_time &); // socket2 b_transport
+  //void b_transport (pl_t &, sc_core::sc_time &); // socket1 b_transport
+  //void b_transport2 (pl_t &, sc_core::sc_time &); // socket2 b_transport
 
   pl_t pl_bram;
 };

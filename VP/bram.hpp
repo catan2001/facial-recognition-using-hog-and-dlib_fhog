@@ -17,8 +17,8 @@ public:
 	Bram(sc_core::sc_module_name name);
 	~Bram();
 	tlm_utils::simple_target_socket<Bram> bram_ctrl_socket_s1;
-	tlm_utils::simple_target_socket<Bram> bram_ctrl_socket_s2;
-	tlm_utils::simple_target_socket<Bram> bram_ctrl_socket_s3;
+	//tlm_utils::simple_target_socket<Bram> bram_ctrl_socket_s2;
+	//tlm_utils::simple_target_socket<Bram> bram_ctrl_socket_s3;
 	//tlm_utils::simple_target_socket<Bram> hw_socket;
 protected:
 	void b_transport(pl_t&, sc_core::sc_time&);
