@@ -47,6 +47,8 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)
+#define BRAM_HEIGHT 128
+#define BRAM_WIDTH 1000
 
 #define HIST_SIZE nBINS*BLOCK_SIZE*BLOCK_SIZE
 

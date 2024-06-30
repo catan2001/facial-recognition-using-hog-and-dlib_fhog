@@ -27,6 +27,9 @@ public:
 
 protected:
   void b_transport (pl_t &, sc_core::sc_time &);
+  void dram_to_bram(sc_dt::uint64 addr);
+  void bram_to_reg36(sc_dt::uint64 addr_bram, sc_dt::uint64 addr_filter);
+
   int width, height, start, ready;
   pl_t pl_dram;
 };

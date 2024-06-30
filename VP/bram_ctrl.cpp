@@ -40,15 +40,11 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           start = to_int(buf);
 
           //TRANSFER FROM DRAM TO BRAM UNTIL BRAM IS FULL:
-
-          for(int i=0; i<width; ++i){
-            for(int j=0; j<height; ++j){
-              dram_to_bram(i*(cols+2)+j, val);
+          for(int i=0; i<BRAM_HEIGHT; ++i){
+            for(int j=0; j<width; ++j){
+              dram_to_bram(i*width + j, val);
             }
           }
-
-          //WRITE INTO BRAM:
-
 
           //WRITE INTO REG36:
 
@@ -99,18 +95,56 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
   if (pl_bram.is_response_error()) SC_REPORT_ERROR("Bram_Ctrl",pl_bram.get_response_string().c_str());
 }
 
-BramCtrl:: dram_to_bram(sc_dt::uint64 addr){
+void BramCtrl:: dram_to_bram(sc_dt::uint64 addr){
 
-  pl_t pl;
-  unsigned char buf[LEN_IN_BYTES];
-  pl.set_address((addr * LEN_IN_BYTES) | DRAM_BASE_ADDR);
-  pl.set_data_length(LEN_IN_BYTES);
-  pl.set_data_ptr(buf);
-  pl.set_command(tlm::TLM_READ_COMMAND);
-  pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-  interconnect_socket->b_transport(pl, offset);
+  //READ FROM DRAM:
+  pl_t pl_dram;
+  unsigned char buf_dram[LEN_IN_BYTES];
 
-  val = to_fixed(buf);
+  pl_dram.set_address(addr * LEN_IN_BYTES);
+  pl_dram.set_data_length(LEN_IN_BYTES);
+  pl_dram.set_data_ptr(buf_dram);
+  pl_dram.set_command(tlm::TLM_READ_COMMAND);
+  pl_dram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+  
+  dram_ctrl_socket->b_transport(pl_dram, offset);
 
+  //WRITE TO BRAM:
+  pl_t pl_bram;
+
+  pl_bram.set_address(addr * LEN_IN_BYTES);
+  pl_bram.set_data_length(LEN_IN_BYTES);
+  pl_bram.set_data_ptr(buf_dram);
+  pl_bram.set_command(tlm::TLM_WRITE_COMMAND);
+  pl_bram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+  
+  bram_socket -> b_transport(pl_bram, offset);
+
+}
+
+void BramCtrl:: bram_to_reg36(sc_dt::uint64 addr_bram, sc_dt::uint64 addr_filter){
+
+  //READ FROM BRAM:
+  pl_t pl_bram;
+  unsigned char buf_bram[LEN_IN_BYTES*3];
+
+  pl_dram.set_address(addr_bram * LEN_IN_BYTES);
+  pl_dram.set_data_length(LEN_IN_BYTES*3);
+  pl_dram.set_data_ptr(buf_bram);
+  pl_dram.set_command(tlm::TLM_READ_COMMAND);
+  pl_dram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+  
+  bram_socket->b_transport(pl_bram, offset);
+
+  //WRITE TO REG36:
+  pl_t pl_filter;
+
+  pl_filter.set_address(addr_filter * LEN_IN_BYTES);
+  pl_filter.set_data_length(LEN_IN_BYTES*3);
+  pl_filter.set_data_ptr(buf_bram);
+  pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
+  pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+  
+  filter_socket -> b_transport(pl_filter, offset);
 
 }
