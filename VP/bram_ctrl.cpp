@@ -3,6 +3,10 @@
 BramCtrl::BramCtrl(sc_core::sc_module_name name) : 
     sc_module(name), 
     offset(sc_core::SC_ZERO_TIME),
+    ii(0),
+    jj(0),
+    pixel_cnt(0),
+    moduo_points(0),
     width(0),
     height(0),
     start(0),
@@ -31,25 +35,65 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
       switch(addr)
         {
         case ADDR_WIDTH:
-          width = to_int(buf)+2;
+          width = to_int(buf);
+          moduo_points = (width - floor(width*0.1) + 1)*LEN_IN_BYTES;
           break;
         case ADDR_HEIGHT:
-          height = to_int(buf)+2;
+          height = to_int(buf);
           break;
         case ADDR_CMD:
           start = to_int(buf);
 
-          //TRANSFER FROM DRAM TO BRAM UNTIL BRAM IS FULL:
+          if(width > BRAM_WIDTH) cout << "ERROR" << endl;
+
+          //INIT:
+          //place as many rows of the picture into BRAM as you can:        
           for(int i=0; i<BRAM_HEIGHT; ++i){
             for(int j=0; j<width; ++j){
-              dram_to_bram(i*width + j, val);
+              dram_to_bram(i*width + j, offset);
             }
           }
 
-          //WRITE INTO REG36:
+          //START:
+          for(int i=0; i<height; ++i){
+            for(int j=0; j<floor(width*0.1)+2; ++j){
+
+            //PHASE I -> WRITE TO REG36:
+              if(i == BRAM_HEIGHT-2){ //processing the row before the last one
+                //processing a single row:
+                if(j==floor(width*0.1)+1){ //if we're at the last pixels of a row
+                  bram_to_reg(moduo_points, i, i+1, 0, 0, offset);
+                }else{                     //if we're not at the end of a row
+                  bram_to_reg(NUM_PARALLEL_POINTS, i, i+1, 0, 0, offset);
+                }
+
+              }else if(i == BRAM_HEIGHT-1){ //processing the last row
+                //processing a single row:
+                if(j==floor(width*0.1)+1){ //if we're at the last pixels of a row
+                  bram_to_reg(moduo_points, i, 0, 1, 0, offset);
+                }else{                     //if we're not at the end of a row
+                  bram_to_reg(NUM_PARALLEL_POINTS, i, 0, 1, 0, offset);
+                }
+
+              }else{                       //processing all other rows
+                //processing a single row:
+                if(j==floor(width*0.1)+1){ //if we're at the last pixels of a row
+                  bram_to_reg(moduo_points, i, i+1, i+2, 0, offset);
+                }else{                     //if we're not at the end of a row
+                  bram_to_reg(NUM_PARALLEL_POINTS, i, i+1, i+2, 0, offset);
+                }
+              }
+
+            //PHASE II -> FILTER REG36 INTO REG10:
+            
 
 
-          //CALL FILTER:
+            //PHASE III -> WRITE REG10 INTO DRAM:
+
+           //PHASE IV -> READ FROM DRAM AND WRITE INTO BRAM:
+
+            }
+          }
 
           break;
         default:
@@ -85,17 +129,17 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
   pl_bram.set_response_status( tlm::TLM_INCOMPLETE_RESPONSE );
 
   // IF COMMAND FOR  READ DO THIS:
-  bram_socket_b1->b_transport(pl_bram, offset); // TODO: change naming scheme, it's weird myb?
+  bram_socket0->b_transport(pl_bram, offset); // TODO: change naming scheme, it's weird myb?
   //bram_socket_b2->b_transport(pl_bram, offset); // TODO: do we need all 3???
   //bram_socket_b3->b_transport(pl_bram, offset);   
 
   // IF BRAM IS EMPTY, LOAD FROM DRAM:
-  dram_ctrl_socket_s1->b_transport(pl_bram,offset);
+  dram_ctrl_socket->b_transport(pl_bram,offset);
 
   if (pl_bram.is_response_error()) SC_REPORT_ERROR("Bram_Ctrl",pl_bram.get_response_string().c_str());
 }
 
-void BramCtrl:: dram_to_bram(sc_dt::uint64 addr){
+void BramCtrl:: dram_to_bram(sc_dt::uint64 addr, sc_core::sc_time &offset){
 
   //READ FROM DRAM:
   pl_t pl_dram;
@@ -118,29 +162,52 @@ void BramCtrl:: dram_to_bram(sc_dt::uint64 addr){
   pl_bram.set_command(tlm::TLM_WRITE_COMMAND);
   pl_bram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
   
-  bram_socket -> b_transport(pl_bram, offset);
+  bram_socket0 -> b_transport(pl_bram, offset);
 
 }
 
-void BramCtrl:: bram_to_reg36(sc_dt::uint64 addr_bram, sc_dt::uint64 addr_filter){
+void BramCtrl:: bram_to_reg(int num_parallel_pts, sc_dt::uint64 addr_bram0, sc_dt::uint64 addr_bram1, sc_dt::uint64 addr_bram2, sc_dt::uint64 addr_filter, sc_core::sc_time &offset){
 
   //READ FROM BRAM:
-  pl_t pl_bram;
-  unsigned char buf_bram[LEN_IN_BYTES*3];
+  pl_t pl_bram0, pl_bram1, pl_bram2;
+  unsigned char buf_bram[LEN_IN_BYTES*num_parallel_pts*3];
+  unsigned char buf_bram0[LEN_IN_BYTES*num_parallel_pts];
+  unsigned char buf_bram1[LEN_IN_BYTES*num_parallel_pts];
+  unsigned char buf_bram2[LEN_IN_BYTES*num_parallel_pts];
 
-  pl_dram.set_address(addr_bram * LEN_IN_BYTES);
-  pl_dram.set_data_length(LEN_IN_BYTES*3);
-  pl_dram.set_data_ptr(buf_bram);
-  pl_dram.set_command(tlm::TLM_READ_COMMAND);
-  pl_dram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+  pl_bram0.set_address(addr_bram0 * LEN_IN_BYTES);
+  pl_bram0.set_data_length(LEN_IN_BYTES*num_parallel_pts);
+  pl_bram0.set_data_ptr(buf_bram0);
+  pl_bram0.set_command(tlm::TLM_READ_COMMAND);
+  pl_bram0.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+
+  pl_bram1.set_address(addr_bram1 * LEN_IN_BYTES);
+  pl_bram1.set_data_length(LEN_IN_BYTES*num_parallel_pts);
+  pl_bram1.set_data_ptr(buf_bram1);
+  pl_bram1.set_command(tlm::TLM_READ_COMMAND);
+  pl_bram1.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+
+  pl_bram2.set_address(addr_bram2 * LEN_IN_BYTES);
+  pl_bram2.set_data_length(LEN_IN_BYTES*num_parallel_pts);
+  pl_bram2.set_data_ptr(buf_bram2);
+  pl_bram2.set_command(tlm::TLM_READ_COMMAND);
+  pl_bram2.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
   
-  bram_socket->b_transport(pl_bram, offset);
+  bram_socket0->b_transport(pl_bram0, offset);
+  bram_socket1->b_transport(pl_bram1, offset);
+  bram_socket2->b_transport(pl_bram2, offset);
+
+  for(int i=0; i<LEN_IN_BYTES*num_parallel_pts;++i){
+    buf_bram[i]   = buf_bram0[i];
+    buf_bram[i+1] = buf_bram1[i];
+    buf_bram[i+2] = buf_bram2[i];
+  }
 
   //WRITE TO REG36:
   pl_t pl_filter;
 
   pl_filter.set_address(addr_filter * LEN_IN_BYTES);
-  pl_filter.set_data_length(LEN_IN_BYTES*3);
+  pl_filter.set_data_length(LEN_IN_BYTES*num_parallel_pts*3);
   pl_filter.set_data_ptr(buf_bram);
   pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
   pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);

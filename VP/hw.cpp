@@ -12,6 +12,8 @@ HW::~HW()
 {
     SC_REPORT_INFO("Hard", "Destroyed.");
 }
+
+
 //TODO: change for implementing in HW
 void HW::filter_image_t(void){
   array_t imROI(9, num_t(W, I, Q, O));

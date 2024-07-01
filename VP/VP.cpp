@@ -21,7 +21,9 @@ Vp::Vp(sc_core::sc_module_name name)
     // Connecting BRAM_CTRL with DRAM_CTRL
     bram_ctrl.dram_ctrl_socket(dram_ctrl.bram_ctrl_socket);   
     // Connecting BRAM_CTRL with BRAM
-    bram_ctrl.bram_socket(bram.bram_ctrl_socket);   
+    bram_ctrl.bram_socket0(bram.bram_ctrl_socket0);
+	bram_ctrl.bram_socket1(bram.bram_ctrl_socket1);  
+	bram_ctrl.bram_socket2(bram.bram_ctrl_socket2);     
     
     // Connecting HW with BRAM_CTRL
 	hard.bram_ctrl_socket.bind(bram_ctrl.filter_socket);

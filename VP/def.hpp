@@ -1,7 +1,7 @@
 #ifndef DEF_HPP
 #define DEF_HPP
-#include </usr/local/systemc-2.3.4/include/sysc/datatypes/fx/sc_fixed.h>
-#define SC_INCLUDE_FX
+//#include </usr/local/systemc-2.3.4/include/sysc/datatypes/fx/sc_fixed.h>
+//#define SC_INCLUDE_FX
 #include <systemc>
 #include <tlm>
 
@@ -47,8 +47,12 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)
-#define BRAM_HEIGHT 128
+
+#define BRAM_HEIGHT (ROWS > 128)? 128 : ROWS
 #define BRAM_WIDTH 1000
+
+#define NUM_PARALLEL_POINTS (COLS > 10)? 10 : COLS
+#define KERNEL_SIZE 3
 
 #define HIST_SIZE nBINS*BLOCK_SIZE*BLOCK_SIZE
 
