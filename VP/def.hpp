@@ -13,6 +13,7 @@
 
 typedef sc_dt::sc_fix_fast num_t;
 typedef sc_dt::sc_fixed_fast <W, I ,Q ,O> num_t2;
+typedef std::vector<num_t> array_t2;
 typedef std::deque<num_t> array_t;
 typedef std::deque<array_t> matrix_t;
 typedef std::vector<std::vector<double>> orig_array_t;
@@ -36,6 +37,7 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 #define ADDR_HEIGHT 0x04
 #define ADDR_CMD 0x08
 #define ADDR_STATUS 0x0c
+#define ADDR_INPUT_REG 0x10
 
 //#define MAX_SIZE 200
 #define ROWS 150
@@ -53,6 +55,8 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 
 #define NUM_PARALLEL_POINTS (COLS > 10)? 10 : COLS
 #define KERNEL_SIZE 3
+
+#define REG36 36
 
 #define HIST_SIZE nBINS*BLOCK_SIZE*BLOCK_SIZE
 

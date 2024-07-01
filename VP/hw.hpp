@@ -14,16 +14,18 @@ public:
     HW(sc_core::sc_module_name name);
 	~HW();
 	tlm_utils::simple_initiator_socket<HW> bram_ctrl_socket;
-	//void filter_image_t(void);
+	
 protected:
 	pl_t pl;
 	sc_core::sc_time offset;
 	int start, ready;
 	void b_transport(pl_t& pl, sc_core::sc_time& offset);
 	void filter_image_t(void);
-	//void debug_read();
 	num_t2 read_bram(int addr);
-	//void write_bram(int addr, num_t val, char c);
+
+	std::vector<num_t2> mem36, mem10;
+	std::vector<num_t2> kernel, temp;
+	
 };
 
 #endif // HW_HPP_

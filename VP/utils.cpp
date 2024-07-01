@@ -10,6 +10,14 @@ int to_int (unsigned char *buf)
   return sum;
 }
 
+num_t2 concat (unsigned char buf_high, unsigned char buf_low)
+{
+  num_t2 sum = 0;
+  sum += ((num_t2)buf_high) << 8;
+  sum += ((num_t2)buf_low);
+  return sum;
+}
+
 double to_fixed (unsigned char *buf)
 {
   string concated = "";

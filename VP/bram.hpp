@@ -22,7 +22,7 @@ public:
 	
 protected:
 	void b_transport(pl_t&, sc_core::sc_time&);
-	vector <num_t> mem; //num_t
+	std::vector<unsigned char> mem; //num_t
 };
 
 #endif // BRAM_HPP
