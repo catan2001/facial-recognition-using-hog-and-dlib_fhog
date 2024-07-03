@@ -6,6 +6,7 @@ HW::HW(sc_core::sc_module_name name)
 {
     SC_REPORT_INFO("Hard", "Constructed.");
     //SC_THREAD(filter_image_t);
+    bram_ctrl_socket.register_b_transport(this, &HW::b_transport); // changed
     mem36.reserve(REG36);
     mem10.reserve(NUM_PARALLEL_POINTS*2);
     kernel.reserve(KERNEL_SIZE);
@@ -61,7 +62,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
         {
         case ADDR_INPUT_REG: //write pixels into the registers
           for (int i = 0; i < len/LEN_IN_BYTES; ++i){
-            mem36[addr++] = concat(buf[i*LEN_IN_BYTES], buf[i*LEN_IN_BYTES+1]);
+            mem36[addr++] = concat(buf[i*LEN_IN_BYTES], buf[i*LEN_IN_BYTES+1]); // TODO: change to_fixed
           }
           pl.set_response_status(tlm::TLM_OK_RESPONSE); 
           break;
@@ -94,7 +95,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
 
     offset += sc_core::sc_time(10, sc_core::SC_NS);
 }
-
+/*
 num_t2 HW::read_bram(int addr){
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];
@@ -106,4 +107,4 @@ num_t2 HW::read_bram(int addr){
     sc_core::sc_time offset = sc_core::SC_ZERO_TIME;
     bram_ctrl_socket->b_transport(pl, offset);
     return to_fixed(buf); 
-}
+} */

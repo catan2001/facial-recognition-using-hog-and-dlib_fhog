@@ -3,6 +3,7 @@
 
 #include <systemc>
 #include <math.h>
+#include <tlm>
 #include <tlm_utils/simple_initiator_socket.h>
 #include <tlm_utils/simple_target_socket.h>
 #include "utils.hpp"
@@ -13,7 +14,7 @@ public:
 	//SC_HAS_PROCESS(HW);
     HW(sc_core::sc_module_name name);
 	~HW();
-	tlm_utils::simple_initiator_socket<HW> bram_ctrl_socket;
+	tlm_utils::simple_target_socket<HW> bram_ctrl_socket;
 	
 protected:
 	pl_t pl;

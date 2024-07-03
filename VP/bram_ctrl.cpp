@@ -83,7 +83,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
                   bram_to_reg(NUM_PARALLEL_POINTS+2, i, i+1, i+2, ADDR_INPUT_REG, offset);
                 }
               }
-
+    
             //PHASE II -> FILTER REG36 INTO REG10:
               pl_t pl_filter;
 
@@ -200,7 +200,7 @@ void BramCtrl:: bram_to_reg(int num_parallel_pts, sc_dt::uint64 addr_bram0, sc_d
   pl_bram2.set_command(tlm::TLM_READ_COMMAND);
   pl_bram2.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
   
-  bram_socket0->b_transport(pl_bram0, offset);
+  //bram_socket0->b_transport(pl_bram0, offset);
   bram_socket1->b_transport(pl_bram1, offset);
   bram_socket2->b_transport(pl_bram2, offset);
 
