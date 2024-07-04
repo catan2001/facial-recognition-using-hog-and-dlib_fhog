@@ -200,7 +200,7 @@ void SW::write_hard(sc_dt::uint64 addr, int val)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];
-    to_uchar(buf, val);
+    int_to_uchar(buf, val); // NOTE: only for int...
     pl.set_address(addr | HARD_BASE_ADDR);
     pl.set_data_length(LEN_IN_BYTES);
     pl.set_data_ptr(buf);

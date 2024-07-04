@@ -50,7 +50,7 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)
 
-#define BRAM_HEIGHT (ROWS > 128)? 128 : ROWS
+#define BRAM_HEIGHT ((ROWS > 128)? 128 : ROWS)
 #define BRAM_WIDTH 1000
 
 #define NUM_PARALLEL_POINTS (COLS > 10)? 10 : COLS

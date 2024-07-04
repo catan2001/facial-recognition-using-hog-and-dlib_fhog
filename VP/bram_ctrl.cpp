@@ -37,9 +37,12 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
         case ADDR_WIDTH:
           width = to_int(buf);
           moduo_points = (width - floor(width*0.1) + 1)*LEN_IN_BYTES;
+          cout << "width: " << width <<endl;
+          cout << "len: " << len << endl;
           break;
         case ADDR_HEIGHT:
           height = to_int(buf);
+          cout << "height: " << height << endl;
           break;
         case ADDR_CMD:
           start = to_int(buf);
@@ -48,16 +51,19 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 
           //INIT:
           //place as many rows of the picture into BRAM as you can:        
+          cout << BRAM_HEIGHT << endl;
           for(int i=0; i<BRAM_HEIGHT; ++i){
             for(int j=0; j<width; ++j){
+        //      cout << "dram_to_bram" << endl;
               dram_to_bram(i*width + j, offset);
             }
           }
-
+        cout << "height : " << height << endl;
+        cout << "dram_to_bram" << endl;
           //START:
-          for(int i=0; i<height; ++i){
+          for(int i=0; i<BRAM_HEIGHT; ++i){ // da li ovjde umjesto height treba BRAM_HEIGHT
             for(int j=0; j<floor(width*0.1)+2; ++j){
-
+            cout << i << " , " << j << endl; 
             //PHASE I -> WRITE TO REG36:
               if(i == BRAM_HEIGHT-2){ //processing the row before the last one
                 //processing a single row:
@@ -85,14 +91,14 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
               }
     
             //PHASE II -> FILTER REG36 INTO REG10:
-              pl_t pl_filter;
+             x`pl_t pl_filter;
 
               pl_filter.set_address(ADDR_CMD);
               pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
               pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
               
               filter_socket -> b_transport(pl_filter, offset);
-
+            
             //PHASE III -> WRITE REG10 INTO DRAM:
 
 
@@ -101,7 +107,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 
             }
           }
-
+          cout << "finished " << endl;
           break;
         default:
           pl.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE);

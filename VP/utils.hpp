@@ -23,6 +23,8 @@ double to_fixed (unsigned char *buf);
 
 int to_int (unsigned char *);
 
+void int_to_uchar(unsigned char *buf, int num);
+
 void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int width, int integer);
 
 void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, double *ori_histo);

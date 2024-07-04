@@ -3,10 +3,10 @@
 int to_int (unsigned char *buf)
 {
   int sum = 0;
-  sum += ((int)buf[0]) << 24;
-  sum += ((int)buf[1]) << 16;
-  sum += ((int)buf[2]) << 8;
-  sum += ((int)buf[3]);
+//  sum += ((int)buf[0]) << 24;
+//  sum += ((int)buf[1]) << 16;
+  sum += ((int)buf[0]) << 8;
+  sum += ((int)buf[1]);
   return sum;
 }
 
@@ -51,6 +51,11 @@ void to_char (unsigned char *buf, string s)
 void to_uchar(unsigned char *c, num_t2 d)
 {
   to_char(c,d.to_bin());
+}
+
+void int_to_uchar(unsigned char *buf, int num) {
+    buf[0] = (num & 0xFF00) >> 8;
+    buf[1] = (num & 0x00FF);
 }
 
 void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int width, int integer) {
