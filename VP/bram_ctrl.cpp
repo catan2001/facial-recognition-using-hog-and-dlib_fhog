@@ -3,10 +3,9 @@
 BramCtrl::BramCtrl(sc_core::sc_module_name name) : 
     sc_module(name), 
     offset(sc_core::SC_ZERO_TIME),
-    ii(0),
-    jj(0),
     pixel_cnt(0),
     moduo_points(0),
+    h(0),
     width(0),
     height(0),
     start(0),
@@ -38,14 +37,16 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           width = to_int(buf);
           moduo_points = (width - floor(width*0.1) + 1)*LEN_IN_BYTES;
           //cout << "width: " << width <<endl;
-          //cout << "len: " << len << endl;
+          cout << "ADDR_WIDTH" << endl;
           break;
         case ADDR_HEIGHT:
           height = to_int(buf);
-          //cout << "height: " << height << endl;
+          cout << "ADDR_HEIGHT" << endl;
           break;
         case ADDR_CMD:
           start = to_int(buf);
+
+          cout << "ADDR_CMD" << endl;
 
           if(width > BRAM_WIDTH) cout << "ERROR" << endl;
 
@@ -63,13 +64,20 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           cout << endl << endl << endl << "START OF DRAM TO BRAM!!!!!!!!!!!" << endl << endl << endl;
           for(int i = 0; i < floor(BRAM_WIDTH/width); ++i) {
               for(int j = 0; j < BRAM_HEIGHT; ++j) {
+                  h++;
                   for(int k = 0; k < width; ++k) {
+                      
                       dram_to_bram(i, j, k, offset);
                   }
+                  if(h==height) { 
+                        cout << endl << endl << endl << "h = " << h << endl << endl << endl;
+                        goto label;
+                      }
               }
           }
-
+          label:
           cout << endl << endl << endl << "END OF DRAM TO BRAM!!!!!!!!!!!" << endl << endl << endl;
+
 
           
             /*
@@ -121,6 +129,10 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
             }
           }*/
           cout << "finished " << endl;
+          for(int i = 0; i < BRAM_HEIGHT; ++i)
+            for(int j = 0; j < BRAM_WIDTH; ++j)
+              read_bram(i*BRAM_WIDTH + j, offset);
+
           break;
         default:
           pl.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE);
@@ -148,7 +160,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 
 
 
-  pl_bram.set_command(cmd);
+ /* pl_bram.set_command(cmd);
   pl_bram.set_address(addr);
   pl_bram.set_data_length(len);
   pl_bram.set_data_ptr(buf);
@@ -162,7 +174,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
   // IF BRAM IS EMPTY, LOAD FROM DRAM:
   dram_ctrl_socket->b_transport(pl_bram,offset);
 
-  if (pl_bram.is_response_error()) SC_REPORT_ERROR("Bram_Ctrl",pl_bram.get_response_string().c_str());
+  if (pl_bram.is_response_error()) SC_REPORT_ERROR("Bram_Ctrl",pl_bram.get_response_string().c_str());*/
 }
 
 void BramCtrl:: dram_to_bram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, sc_core::sc_time &offset){
@@ -237,7 +249,6 @@ void BramCtrl:: bram_to_reg(int num_parallel_pts, sc_dt::uint64 addr_bram0, sc_d
   //WRITE TO REG36:
   pl_t pl_filter;
 
-  pl_filter.set_address(addr_filter);
   pl_filter.set_data_length(LEN_IN_BYTES*num_parallel_pts*3);
   pl_filter.set_data_ptr(buf_bram);
   pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
@@ -245,4 +256,21 @@ void BramCtrl:: bram_to_reg(int num_parallel_pts, sc_dt::uint64 addr_bram0, sc_d
   
   filter_socket -> b_transport(pl_filter, offset);
 
+}
+
+void BramCtrl::read_bram(sc_dt::uint64 addr_bram, sc_core::sc_time &offset) {
+
+  pl_t pl_filter;
+
+  unsigned char buf[LEN_IN_BYTES];
+
+  pl_filter.set_address(addr_bram);
+  pl_filter.set_data_length(LEN_IN_BYTES);
+  pl_filter.set_data_ptr(buf);
+  pl_filter.set_command(tlm::TLM_READ_COMMAND);
+  pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+  
+  bram_socket0 -> b_transport(pl_filter, offset); // TODO: change 0 
+
+  cout << to_fixed(buf) << " ";
 }

@@ -25,6 +25,7 @@ protected:
 	void write_dram(sc_dt::uint64 addr, num_t2 val);
 	int read_hard(sc_dt::uint64 addr);
 	void write_hard(sc_dt::uint64 addr, int val);
+	void mat_txt(const char * name_txt,  matrix_t * matrix, int rows, int cols);
 };
 
 #endif // SOFT_HPP_

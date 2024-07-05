@@ -69,7 +69,7 @@ void SW::process_img(){
     matrix_t matrix_gray(rows, array_t(cols, num_t(W, I, Q, O)));
     matrix_t matrix_im_filtered_y(rows, array_t(cols, num_t(W,I,Q,O)));
     matrix_t matrix_im_filtered_x(rows, array_t(cols, num_t(W,I,Q,O)));
-    matrix_t padded_img(rows+2, array_t(cols+2, num_t(W,I,Q, O)));
+    matrix_t padded_img(rows+2, array_t(cols+2));
     cast_to_fix(rows, cols, matrix_gray, orig_gray, W, I);
 
     
@@ -92,8 +92,14 @@ void SW::process_img(){
         }
     }
    
-    //test: 
-    for(int i=0; i<rows+2; ++i){
+    //test:
+
+    /*const char * name_txt = "padded_img.txt";
+
+    mat_txt(name_txt, &padded_img, rows+2, cols+2);*/
+
+
+      for(int i=0; i<rows+2; ++i){
       for(int j=0; j<cols+2; ++j){
         cout<<padded_img[i][j]<<" ";
         //padded_img[i][j];
@@ -112,17 +118,17 @@ void SW::process_img(){
     }
 
     // 2 CONFIGURE HW REGISTERS AND SEND START CMD:
-    write_hard(ADDR_WIDTH, ROWS);
-    write_hard(ADDR_HEIGHT, COLS);
+    write_hard(ADDR_WIDTH, ROWS+2);
+    write_hard(ADDR_HEIGHT, COLS+2);
     write_hard(ADDR_CMD, 1);
 
     // 3 WAIT FOR HW TO FINISH:
-    int ready = 1;
+    /*int ready = 1;
     while (!ready)
     {
       ready = read_hard(ADDR_STATUS);
     }
-    write_hard(ADDR_CMD, 0);
+    write_hard(ADDR_CMD, 0);*/
 
     // 4 READ RESULTS FROM DRAM:
     /*
@@ -175,7 +181,7 @@ void SW::write_dram(sc_dt::uint64 addr, num_t2 val)
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];
     to_uchar(buf, val);
-    pl.set_address((addr * LEN_IN_BYTES) | DRAM_BASE_ADDR);
+    pl.set_address(addr | DRAM_BASE_ADDR);
     pl.set_data_length(LEN_IN_BYTES);
     pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_WRITE_COMMAND);
@@ -211,3 +217,28 @@ void SW::write_hard(sc_dt::uint64 addr, int val)
     interconnect_socket->b_transport(pl, offset);
 }
 
+/*void SW::mat_txt(const char * name_txt, matrix_t * matrix, int rows, int cols){ 
+    //FILE * ptr;
+    //ptr = fopen(name_txt, "wb"); 
+
+    num_t2 temp = 0;
+    double zero;
+
+    std::ofstream out(name_txt);
+    std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
+    std::cout.rdbuf(out.rdbuf());
+ 
+    for (int i=0; i<rows; ++i){ 
+        for (int j=0; j<cols; ++j){ 
+            zero = matrix[i][j];
+            cout << zero << " ";
+            //fprintf(ptr, "%3.13f ", zero); 
+        } 
+        cout << endl;
+        //fprintf(ptr, "\n"); 
+
+    } 
+
+     std::cout.rdbuf(coutbuf);
+    //fclose(ptr); 
+} */

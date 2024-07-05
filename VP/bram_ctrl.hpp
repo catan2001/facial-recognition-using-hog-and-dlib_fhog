@@ -33,10 +33,11 @@ protected:
   void b_transport (pl_t &, sc_core::sc_time &);
   void dram_to_bram(sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &); // i, j, k, sim_time
   void bram_to_reg(int, sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &);
+  void read_bram(sc_dt::uint64, sc_core::sc_time &offset);
 
   sc_core::sc_time offset;
   int width, height, start, ready;
-  int ii, jj;
+  int h;
   int moduo_points; //the remainder of dividing width by NUM_PARALLEL_POINTS (=10)
   int pixel_cnt; //number of pixels in the picture
   pl_t pl_bram;

@@ -14,7 +14,7 @@
 typedef sc_dt::sc_fix_fast num_t;
 typedef sc_dt::sc_fixed_fast <W, I ,Q ,O> num_t2;
 typedef std::vector<num_t> array_t2;
-typedef std::deque<num_t> array_t;
+typedef std::deque<num_t2> array_t;
 typedef std::deque<array_t> matrix_t;
 typedef std::vector<std::vector<double>> orig_array_t;
 
@@ -62,6 +62,6 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 
 #define PI 3.14159265358979323846
 
-#define RESERVED_MEM 87600//100000
+#define RESERVED_MEM 2048*59//100000
 
 #endif

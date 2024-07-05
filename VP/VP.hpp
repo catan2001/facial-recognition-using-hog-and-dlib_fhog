@@ -22,12 +22,12 @@ public:
 protected:
 
 	SW soft;
-	DramCtrl dram_ctrl;
+	Interconnect interconnect;
+	HW hard;
     Bram bram;
     BramCtrl bram_ctrl;
-	HW hard;
-	Interconnect interconnect;
-    DRAM dram;
+	DramCtrl dram_ctrl;
+	DRAM dram;
 };
 
 #endif // VP_HPP_

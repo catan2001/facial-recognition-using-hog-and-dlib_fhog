@@ -8,7 +8,7 @@
 
 //TODO: define DRAM interface
 
-#define DMEM_SIZE 1024*1024 // 1GB DRAM
+#define DMEM_SIZE 1024*1024 // 1/2GB DRAM
 
 class DRAM : public sc_core::sc_module {
     public:
