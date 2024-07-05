@@ -31,7 +31,7 @@ public:
 
 protected:
   void b_transport (pl_t &, sc_core::sc_time &);
-  void dram_to_bram(sc_dt::uint64, sc_core::sc_time &);
+  void dram_to_bram(sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &); // i, j, k, sim_time
   void bram_to_reg(int, sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &);
 
   sc_core::sc_time offset;

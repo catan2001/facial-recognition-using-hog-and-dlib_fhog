@@ -8,7 +8,7 @@
 
 //TODO: define DRAM interface
 
-#define DMEM_SIZE 1024*1024*1024 // 1GB DRAM
+#define DMEM_SIZE 1024*1024 // 1GB DRAM
 
 class DRAM : public sc_core::sc_module {
     public:
@@ -17,7 +17,7 @@ class DRAM : public sc_core::sc_module {
         tlm_utils::simple_target_socket<DRAM> dram_ctrl_socket;
     protected:
         void b_transport(pl_t &, sc_core::sc_time &);
-        std::vector<unsigned char> dmem;
+        std::vector<num_t2> dmem;
 };
 
 #endif //DRAM_HPP_

@@ -2,12 +2,12 @@
 
 Vp::Vp(sc_core::sc_module_name name)
 	: sc_module(name),
+	soft("Soft"),
 	interconnect("Interconnect"),
-	dram("Dram"),
 	dram_ctrl("Dram_Ctrl"),
+	dram("Dram"),
     bram("Bram"),
     bram_ctrl("Bram_Ctrl"),
-	soft("Soft"),
 	hard("Hard")
 {
     

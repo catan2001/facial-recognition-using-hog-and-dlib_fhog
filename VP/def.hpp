@@ -50,8 +50,8 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)
 
-#define BRAM_HEIGHT ((ROWS > 128)? 128 : ROWS)
-#define BRAM_WIDTH 1000
+#define BRAM_HEIGHT 59 //60th BRAM is used for registers //((ROWS > 128)? 128 : ROWS)
+#define BRAM_WIDTH 2048 // depth of one BRAM_block
 
 #define NUM_PARALLEL_POINTS (COLS > 10)? 10 : COLS
 #define KERNEL_SIZE 3

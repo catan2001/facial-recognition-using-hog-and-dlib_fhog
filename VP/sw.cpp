@@ -93,13 +93,15 @@ void SW::process_img(){
     }
    
     //test: 
-    /*for(int i=0; i<rows+2; ++i){
+    for(int i=0; i<rows+2; ++i){
       for(int j=0; j<cols+2; ++j){
         cout<<padded_img[i][j]<<" ";
         //padded_img[i][j];
       }
+      cout << endl;
+      cout << "i: " << i << endl;
     } 
-    cout << endl << endl << endl;*/
+    cout << endl << endl << endl;
 
     // 1 WRITE IMAGE TO DRAM:
     for(int i=0; i<rows+2; ++i){
@@ -123,7 +125,7 @@ void SW::process_img(){
     write_hard(ADDR_CMD, 0);
 
     // 4 READ RESULTS FROM DRAM:
-    
+    /*
     num_t2 val;
     for(int i=0; i<rows+2; ++i){
       for(int j=0; j<cols+2; ++j){
@@ -132,7 +134,7 @@ void SW::process_img(){
         cout << val << " ";
       }
     }
-
+    */
     /*
     write_hard(ADDR_WIDTH, ROWS);
     write_hard(ADDR_HEIGHT, COLS);

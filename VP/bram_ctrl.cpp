@@ -37,12 +37,12 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
         case ADDR_WIDTH:
           width = to_int(buf);
           moduo_points = (width - floor(width*0.1) + 1)*LEN_IN_BYTES;
-          cout << "width: " << width <<endl;
-          cout << "len: " << len << endl;
+          //cout << "width: " << width <<endl;
+          //cout << "len: " << len << endl;
           break;
         case ADDR_HEIGHT:
           height = to_int(buf);
-          cout << "height: " << height << endl;
+          //cout << "height: " << height << endl;
           break;
         case ADDR_CMD:
           start = to_int(buf);
@@ -51,15 +51,28 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 
           //INIT:
           //place as many rows of the picture into BRAM as you can:        
-          cout << BRAM_HEIGHT << endl;
-          for(int i=0; i<BRAM_HEIGHT; ++i){
-            for(int j=0; j<width; ++j){
+          //cout << BRAM_HEIGHT << endl;
+          ///for(int i=0; i<BRAM_HEIGHT; ++i){
+          //  for(int j=0; j<(); ++j){
         //      cout << "dram_to_bram" << endl;
-              dram_to_bram(i*width + j, offset);
-            }
+          //    dram_to_bram(i*width + j, offset);
+          //  }
+          //}
+          //
+            
+          cout << endl << endl << endl << "START OF DRAM TO BRAM!!!!!!!!!!!" << endl << endl << endl;
+          for(int i = 0; i < floor(BRAM_WIDTH/width); ++i) {
+              for(int j = 0; j < BRAM_HEIGHT; ++j) {
+                  for(int k = 0; k < width; ++k) {
+                      dram_to_bram(i, j, k, offset);
+                  }
+              }
           }
-        cout << "height : " << height << endl;
-        cout << "dram_to_bram" << endl;
+
+          cout << endl << endl << endl << "END OF DRAM TO BRAM!!!!!!!!!!!" << endl << endl << endl;
+
+          
+            /*
           //START:
           for(int i=0; i<BRAM_HEIGHT; ++i){ // da li ovjde umjesto height treba BRAM_HEIGHT
             for(int j=0; j<floor(width*0.1)+2; ++j){
@@ -91,7 +104,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
               }
     
             //PHASE II -> FILTER REG36 INTO REG10:
-             x`pl_t pl_filter;
+              pl_t pl_filter;
 
               pl_filter.set_address(ADDR_CMD);
               pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
@@ -104,9 +117,9 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 
 
             //PHASE IV -> READ FROM DRAM AND WRITE INTO BRAM:
-
+            
             }
-          }
+          }*/
           cout << "finished " << endl;
           break;
         default:
@@ -152,13 +165,16 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
   if (pl_bram.is_response_error()) SC_REPORT_ERROR("Bram_Ctrl",pl_bram.get_response_string().c_str());
 }
 
-void BramCtrl:: dram_to_bram(sc_dt::uint64 addr, sc_core::sc_time &offset){
+void BramCtrl:: dram_to_bram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, sc_core::sc_time &offset){
 
   //READ FROM DRAM:
   pl_t pl_dram;
-  unsigned char buf_dram[LEN_IN_BYTES];
+  sc_dt::uint64 dram_addr = i*(BRAM_HEIGHT*(this->width)) + j*(this->width) + k;
+  sc_dt::uint64 bram_addr = i*(this->width) + j*BRAM_WIDTH + k;
 
-  pl_dram.set_address(addr * LEN_IN_BYTES);
+  unsigned char buf_dram[LEN_IN_BYTES];
+  // we don't need address of DRAM, it's connected directly BRAM_CTRL -> DRAM_CTRL
+  pl_dram.set_address(dram_addr);
   pl_dram.set_data_length(LEN_IN_BYTES);
   pl_dram.set_data_ptr(buf_dram);
   pl_dram.set_command(tlm::TLM_READ_COMMAND);
@@ -169,7 +185,7 @@ void BramCtrl:: dram_to_bram(sc_dt::uint64 addr, sc_core::sc_time &offset){
   //WRITE TO BRAM:
   pl_t pl_bram;
 
-  pl_bram.set_address(addr * LEN_IN_BYTES);
+  pl_bram.set_address(bram_addr);
   pl_bram.set_data_length(LEN_IN_BYTES);
   pl_bram.set_data_ptr(buf_dram);
   pl_bram.set_command(tlm::TLM_WRITE_COMMAND);

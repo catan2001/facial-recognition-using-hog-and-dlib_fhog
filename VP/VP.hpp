@@ -20,13 +20,14 @@ public:
 	~Vp();
 
 protected:
-	Interconnect interconnect;
-	DRAM dram;
+
+	SW soft;
 	DramCtrl dram_ctrl;
     Bram bram;
     BramCtrl bram_ctrl;
-	SW soft;
 	HW hard;
+	Interconnect interconnect;
+    DRAM dram;
 };
 
 #endif // VP_HPP_
