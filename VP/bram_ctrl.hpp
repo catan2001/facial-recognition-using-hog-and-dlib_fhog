@@ -32,7 +32,22 @@ public:
 protected:
   void b_transport (pl_t &, sc_core::sc_time &);
   void dram_to_bram(sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &); // i, j, k, sim_time
-  void bram_to_reg(int, sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &);
+  void bram_to_reg(sc_dt::uint64, // col
+                   sc_dt::uint64, // row[0]
+                   sc_dt::uint64, // row[1]
+                   sc_dt::uint64, // row[2]
+                   sc_dt::uint64, // row[3]
+                   sc_dt::uint64, // row[4]
+                   sc_dt::uint64, // row[5]
+                   sc_dt::uint64, // row[6]
+                   sc_dt::uint64, // row[7]
+                   sc_dt::uint64, // row[8]
+                   sc_dt::uint64, // row[9]  
+                   sc_dt::uint64, // row[10]
+                   sc_dt::uint64, // row[11]  
+                   sc_dt::uint64, // position of row inside of BRAM Block
+                   sc_dt::uint64, // ADDR_INPUT_REG
+                   sc_core::sc_time &); // offset
   void read_bram(sc_dt::uint64, sc_core::sc_time &offset);
 
   sc_core::sc_time offset;

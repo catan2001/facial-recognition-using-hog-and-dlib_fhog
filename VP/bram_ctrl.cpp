@@ -36,7 +36,6 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
         case ADDR_WIDTH:
           width = to_int(buf);
           moduo_points = (width - floor(width*0.1) + 1)*LEN_IN_BYTES;
-          //cout << "width: " << width <<endl;
           cout << "ADDR_WIDTH" << endl;
           break;
         case ADDR_HEIGHT:
@@ -45,89 +44,86 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           break;
         case ADDR_CMD:
           start = to_int(buf);
-
           cout << "ADDR_CMD" << endl;
+          if(width > BRAM_WIDTH) {
+              pl.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
+              cout << "ERROR: Width of image is larger than BRAM_WIDTH[" << BRAM_WIDTH << "]" << endl;
+              break;
+          }
 
-          if(width > BRAM_WIDTH) cout << "ERROR" << endl;
-
-          //INIT:
-          //place as many rows of the picture into BRAM as you can:        
-          //cout << BRAM_HEIGHT << endl;
-          ///for(int i=0; i<BRAM_HEIGHT; ++i){
-          //  for(int j=0; j<(); ++j){
-        //      cout << "dram_to_bram" << endl;
-          //    dram_to_bram(i*width + j, offset);
-          //  }
-          //}
-          //
-            
+          //INIT:           
           cout << endl << endl << endl << "START OF DRAM TO BRAM!!!!!!!!!!!" << endl << endl << endl;
+          //TODO: what if there are leftover rows in DRAM? all this should be inside of another for loop that would start initialization again...
           for(int i = 0; i < floor(BRAM_WIDTH/width); ++i) {
               for(int j = 0; j < BRAM_HEIGHT; ++j) {
-                  h++;
+                  h++; // increment counter of loaded rows
                   for(int k = 0; k < width; ++k) {
-                      
-                      dram_to_bram(i, j, k, offset);
+                      dram_to_bram(i, j, k, offset); // load from DRAM to BRAM
                   }
-                  if(h==height) { 
+
+                  if(h==height) { // check if loaded rows is equal to rows of an image and break from loop if TRUE
                         cout << endl << endl << endl << "h = " << h << endl << endl << endl;
                         goto label;
-                      }
+                  }
               }
           }
           label:
+
           cout << endl << endl << endl << "END OF DRAM TO BRAM!!!!!!!!!!!" << endl << endl << endl;
-
-
           
-            /*
+        //processing a single row:
+        //
+        //if(j==floor(width*0.1)+1){ //if we're at the last pixels of a row
+        //  bram_to_reg(moduo_points, i, i+1, 0, ADDR_INPUT_REG, offset);
+        //}else{                     //if we're not at the end of a row
+        //bram_to_reg(NUM_PARALLEL_POINTS+2, i, i+1, 0, ADDR_INPUT_REG, offset);
+        //
+        
           //START:
-          for(int i=0; i<BRAM_HEIGHT; ++i){ // da li ovjde umjesto height treba BRAM_HEIGHT
-            for(int j=0; j<floor(width*0.1)+2; ++j){
-            cout << i << " , " << j << endl; 
-            //PHASE I -> WRITE TO REG36:
-              if(i == BRAM_HEIGHT-2){ //processing the row before the last one
-                //processing a single row:
-                if(j==floor(width*0.1)+1){ //if we're at the last pixels of a row
-                  bram_to_reg(moduo_points, i, i+1, 0, ADDR_INPUT_REG, offset);
-                }else{                     //if we're not at the end of a row
-                  bram_to_reg(NUM_PARALLEL_POINTS+2, i, i+1, 0, ADDR_INPUT_REG, offset);
-                }
-
-              }else if(i == BRAM_HEIGHT-1){ //processing the last row
-                //processing a single row:
-                if(j==floor(width*0.1)+1){ //if we're at the last pixels of a row
-                  bram_to_reg(moduo_points, i, 0, 1, ADDR_INPUT_REG, offset);
-                }else{                     //if we're not at the end of a row
-                  bram_to_reg(NUM_PARALLEL_POINTS+2, i, 0, 1, ADDR_INPUT_REG, offset);
-                }
-
-              }else{                       //processing all other rows
-                //processing a single row:
-                if(j==floor(width*0.1)+1){ //if we're at the last pixels of a row
-                  bram_to_reg(moduo_points, i, i+1, i+2, ADDR_INPUT_REG, offset);
-                }else{                     //if we're not at the end of a row
-                  bram_to_reg(NUM_PARALLEL_POINTS+2, i, i+1, i+2, ADDR_INPUT_REG, offset);
-                }
-              }
+          for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS); i+=NUM_PARALLEL_POINTS){ // every time increment, i think also height - 2, we don't calculate last two rows 
+                if(k < cycles)
+                    k++;
+                    for(int j=0; j < width - 2; ++j){ // width - 2, [width-2][width-1][width]
+                    cout << i << " , " << j << endl; 
+                    //PHASE I -> WRITE TO REG36:
+                      if(i == BRAM_HEIGHT - 10){    //processing the 50th row
+                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, i+8, i+9, 0, k, ADDR_INPUT_REG, offset);
+                      }else if(i == BRAM_HEIGHT-9){ //processing the 51st row
+                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, i+8, 0, 1, k, ADDR_INPUT_REG, offset);
+                      }else if(i == BRAM_HEIGHT-8){ //processing the 52nd row
+                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, 0 ,1, 2, k, ADDR_INPUT_REG, offset);
+                      }else if(i == BRAM_HEIGHT-7){ //processing the 53rd row
+                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, i+6, 0, 1, 2, 3, k, ADDR_INPUT_REG, offset);
+                      }else if(i == BRAM_HEIGHT-6){ //processing the 54th row
+                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, 0, 1, 2, 3, 4, k, ADDR_INPUT_REG, offset);
+                      }else if(i == BRAM_HEIGHT-5){ //processing the 55th row
+                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, 0, 1, 2, 3, 4, 5, k, ADDR_INPUT_REG, offset);
+                      }else if(i == BRAM_HEIGHT-4){ //processing the 56th row
+                          bram_to_reg(j, i, i+1, i+2, i+3, 0, 1, 2, 3, 4, 5, 6, k, ADDR_INPUT_REG, offset);
+                      }else if(i == BRAM_HEIGHT-3){ //processing the 57th row
+                          bram_to_reg(j, i, i+1, i+2, 0, 1, 2, 3, 4, 5, 6, 7, k, ADDR_INPUT_REG, offset);
+                      }else if(i == BRAM_HEIGHT-1){ //processing the row before last one 58th
+                          bram_to_reg(j, i, i+1, 0, 1, 2, 3, 4, 5, 6, 7, 8, k, ADDR_INPUT_REG, offset);
+                      }else if(i == BRAM_HEIGHT){   //processing the last row 59th
+                          bram_to_reg(j, i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, k, ADDR_INPUT_REG, offset);
+                      }else{                        //processing all other rows
+                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, i+8, i+9, i+10, k, ADDR_INPUT_REG, offset); // j+0, j+1, j+2
+                      }
     
-            //PHASE II -> FILTER REG36 INTO REG10:
-              pl_t pl_filter;
+                    //PHASE II -> FILTER REG36 INTO REG10:
+                    //if((i+1)%(NUM_PARALLEL_POINTS+2) == 0) {
+                      pl_t pl_filter;
 
-              pl_filter.set_address(ADDR_CMD);
-              pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
-              pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-              
-              filter_socket -> b_transport(pl_filter, offset);
-            
-            //PHASE III -> WRITE REG10 INTO DRAM:
-
-
-
-            //PHASE IV -> READ FROM DRAM AND WRITE INTO BRAM:
-            
-            }
-          }*/
+                      pl_filter.set_address(ADDR_CMD);
+                      pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
+                      pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+                      
+                      filter_socket -> b_transport(pl_filter, offset);
+                    //}
+                    //PHASE III -> WRITE REG10 INTO DRAM:
+                    //PHASE IV -> READ FROM DRAM AND WRITE INTO BRAM:
+                    }
+                }
           cout << "finished " << endl;
           for(int i = 0; i < BRAM_HEIGHT; ++i)
             for(int j = 0; j < BRAM_WIDTH; ++j)
@@ -157,8 +153,6 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
     }
 
   offset += sc_core::sc_time(10, sc_core::SC_NS);  
-
-
 
  /* pl_bram.set_command(cmd);
   pl_bram.set_address(addr);
