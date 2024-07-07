@@ -32,27 +32,13 @@ public:
 protected:
   void b_transport (pl_t &, sc_core::sc_time &);
   void dram_to_bram(sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &); // i, j, k, sim_time
-  void bram_to_reg(sc_dt::uint64, // col
-                   sc_dt::uint64, // row[0]
-                   sc_dt::uint64, // row[1]
-                   sc_dt::uint64, // row[2]
-                   sc_dt::uint64, // row[3]
-                   sc_dt::uint64, // row[4]
-                   sc_dt::uint64, // row[5]
-                   sc_dt::uint64, // row[6]
-                   sc_dt::uint64, // row[7]
-                   sc_dt::uint64, // row[8]
-                   sc_dt::uint64, // row[9]  
-                   sc_dt::uint64, // row[10]
-                   sc_dt::uint64, // row[11]  
-                   sc_dt::uint64, // position of row inside of BRAM Block
-                   sc_dt::uint64, // ADDR_INPUT_REG
-                   sc_core::sc_time &); // offset
+  void bram_to_reg(int, int, int, sc_dt::uint64, sc_core::sc_time &);
   void read_bram(sc_dt::uint64, sc_core::sc_time &offset);
 
   sc_core::sc_time offset;
   int width, height, start, ready;
   int h;
+  int cycles, tmp = 0;
   int moduo_points; //the remainder of dividing width by NUM_PARALLEL_POINTS (=10)
   int pixel_cnt; //number of pixels in the picture
   pl_t pl_bram;

@@ -51,83 +51,59 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
               break;
           }
 
-          //INIT:           
+        //INIT:           
           cout << endl << endl << endl << "START OF DRAM TO BRAM!!!!!!!!!!!" << endl << endl << endl;
-          //TODO: what if there are leftover rows in DRAM? all this should be inside of another for loop that would start initialization again...
-          for(int i = 0; i < floor(BRAM_WIDTH/width); ++i) {
-              for(int j = 0; j < BRAM_HEIGHT; ++j) {
-                  h++; // increment counter of loaded rows
-                  for(int k = 0; k < width; ++k) {
-                      dram_to_bram(i, j, k, offset); // load from DRAM to BRAM
-                  }
+          for(int i = 0; i < floor(BRAM_WIDTH/width); ++i) { //maximum number of rows that can fit in a single BRAM BLOCK
+              for(int j = 0; j < BRAM_HEIGHT; ++j) {         //number of BRAM BLOCKS
+                 h++;
+                 //placing a single row on the i-th position within the j-th BRAM BLOCK:
+                 for(int k = 0; k < width; ++k) {
+                     dram_to_bram(i, j, k, offset); // load from DRAM to BRAM
+                 }
 
-                  if(h==height) { // check if loaded rows is equal to rows of an image and break from loop if TRUE
-                        cout << endl << endl << endl << "h = " << h << endl << endl << endl;
-                        goto label;
-                  }
+                  //if all the rows of our picture have been loaded into the BRAM exit the loop:
+                  if(h==height) goto START;
               }
           }
-          label:
 
+        //START:
+          START:
           cout << endl << endl << endl << "END OF DRAM TO BRAM!!!!!!!!!!!" << endl << endl << endl;
-          
-        //processing a single row:
-        //
-        //if(j==floor(width*0.1)+1){ //if we're at the last pixels of a row
-        //  bram_to_reg(moduo_points, i, i+1, 0, ADDR_INPUT_REG, offset);
-        //}else{                     //if we're not at the end of a row
-        //bram_to_reg(NUM_PARALLEL_POINTS+2, i, i+1, 0, ADDR_INPUT_REG, offset);
-        //
-        
-          //START:
-          for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS); i+=NUM_PARALLEL_POINTS){ // every time increment, i think also height - 2, we don't calculate last two rows 
-                if(k < cycles)
-                    k++;
-                    for(int j=0; j < width - 2; ++j){ // width - 2, [width-2][width-1][width]
-                    cout << i << " , " << j << endl; 
-                    //PHASE I -> WRITE TO REG36:
-                      if(i == BRAM_HEIGHT - 10){    //processing the 50th row
-                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, i+8, i+9, 0, k, ADDR_INPUT_REG, offset);
-                      }else if(i == BRAM_HEIGHT-9){ //processing the 51st row
-                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, i+8, 0, 1, k, ADDR_INPUT_REG, offset);
-                      }else if(i == BRAM_HEIGHT-8){ //processing the 52nd row
-                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, 0 ,1, 2, k, ADDR_INPUT_REG, offset);
-                      }else if(i == BRAM_HEIGHT-7){ //processing the 53rd row
-                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, i+6, 0, 1, 2, 3, k, ADDR_INPUT_REG, offset);
-                      }else if(i == BRAM_HEIGHT-6){ //processing the 54th row
-                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, 0, 1, 2, 3, 4, k, ADDR_INPUT_REG, offset);
-                      }else if(i == BRAM_HEIGHT-5){ //processing the 55th row
-                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, 0, 1, 2, 3, 4, 5, k, ADDR_INPUT_REG, offset);
-                      }else if(i == BRAM_HEIGHT-4){ //processing the 56th row
-                          bram_to_reg(j, i, i+1, i+2, i+3, 0, 1, 2, 3, 4, 5, 6, k, ADDR_INPUT_REG, offset);
-                      }else if(i == BRAM_HEIGHT-3){ //processing the 57th row
-                          bram_to_reg(j, i, i+1, i+2, 0, 1, 2, 3, 4, 5, 6, 7, k, ADDR_INPUT_REG, offset);
-                      }else if(i == BRAM_HEIGHT-1){ //processing the row before last one 58th
-                          bram_to_reg(j, i, i+1, 0, 1, 2, 3, 4, 5, 6, 7, 8, k, ADDR_INPUT_REG, offset);
-                      }else if(i == BRAM_HEIGHT){   //processing the last row 59th
-                          bram_to_reg(j, i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, k, ADDR_INPUT_REG, offset);
-                      }else{                        //processing all other rows
-                          bram_to_reg(j, i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, i+8, i+9, i+10, k, ADDR_INPUT_REG, offset); // j+0, j+1, j+2
-                      }
-    
-                    //PHASE II -> FILTER REG36 INTO REG10:
-                    //if((i+1)%(NUM_PARALLEL_POINTS+2) == 0) {
-                      pl_t pl_filter;
 
-                      pl_filter.set_address(ADDR_CMD);
-                      pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
-                      pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-                      
-                      filter_socket -> b_transport(pl_filter, offset);
-                    //}
-                    //PHASE III -> WRITE REG10 INTO DRAM:
-                    //PHASE IV -> READ FROM DRAM AND WRITE INTO BRAM:
-                    }
-                }
-          cout << "finished " << endl;
           for(int i = 0; i < BRAM_HEIGHT; ++i)
             for(int j = 0; j < BRAM_WIDTH; ++j)
               read_bram(i*BRAM_WIDTH + j, offset);
+          
+          cycles = floor(height / 59);
+        
+          for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS; i+=NUM_PARALLEL_POINTS){ //the number of times we will repeat a single cycle
+                
+              tmp = (int)i/59;
+            
+              for(int j=0; j < width - 2; ++j){
+                cout << i << " , " << j << endl; 
+              
+              //PHASE I -> WRITE TO REG36:
+                bram_to_reg(i%59, tmp, j, ADDR_INPUT_REG, offset);
+
+              //PHASE II -> FILTER REG36 INTO REG10:
+              //if((i+1)%(NUM_PARALLEL_POINTS+2) == 0) {
+                /*pl_t pl_filter;
+
+                pl_filter.set_address(ADDR_CMD);
+                pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
+                pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+                
+                filter_socket -> b_transport(pl_filter, offset);*/
+              //}
+              //PHASE III -> WRITE REG10 INTO DRAM:
+              //PHASE IV -> READ FROM DRAM AND WRITE INTO BRAM:
+              }
+          }
+          cout << "finished " << endl;
+          /*for(int i = 0; i < BRAM_HEIGHT; ++i)
+            for(int j = 0; j < BRAM_WIDTH; ++j)
+              read_bram(i*BRAM_WIDTH + j, offset);*/
 
           break;
         default:
@@ -201,49 +177,123 @@ void BramCtrl:: dram_to_bram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, 
 
 }
 
-void BramCtrl:: bram_to_reg(int num_parallel_pts, sc_dt::uint64 addr_bram0, sc_dt::uint64 addr_bram1, sc_dt::uint64 addr_bram2, sc_dt::uint64 addr_filter, sc_core::sc_time &offset){
+void BramCtrl:: bram_to_reg(int bram_block_ptr, int cycle_num, int row_position, sc_dt::uint64 addr_filter, sc_core::sc_time &offset){
 
   //READ FROM BRAM:
-  pl_t pl_bram0, pl_bram1, pl_bram2;
-  unsigned char buf_bram[LEN_IN_BYTES*num_parallel_pts*3];
-  unsigned char buf_bram0[LEN_IN_BYTES*num_parallel_pts];
-  unsigned char buf_bram1[LEN_IN_BYTES*num_parallel_pts];
-  unsigned char buf_bram2[LEN_IN_BYTES*num_parallel_pts];
+  pl_t pl_bram0;
+  num_t2 buf[(NUM_PARALLEL_POINTS+2)*3];
+  unsigned char buf_bram[LEN_IN_BYTES*(NUM_PARALLEL_POINTS+2)*3];
+  unsigned char buf_bram0[LEN_IN_BYTES];
 
-  pl_bram0.set_address(addr_bram0 * LEN_IN_BYTES);
-  pl_bram0.set_data_length(LEN_IN_BYTES*num_parallel_pts);
-  pl_bram0.set_data_ptr(buf_bram0);
-  pl_bram0.set_command(tlm::TLM_READ_COMMAND);
-  pl_bram0.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+  if(bram_block_ptr >= 49 && bram_block_ptr <= 58){
 
-  pl_bram1.set_address(addr_bram1 * LEN_IN_BYTES);
-  pl_bram1.set_data_length(LEN_IN_BYTES*num_parallel_pts);
-  pl_bram1.set_data_ptr(buf_bram1);
-  pl_bram1.set_command(tlm::TLM_READ_COMMAND);
-  pl_bram1.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    for(int i = 0; i < (59-bram_block_ptr); ++i){
 
-  pl_bram2.set_address(addr_bram2 * LEN_IN_BYTES);
-  pl_bram2.set_data_length(LEN_IN_BYTES*num_parallel_pts);
-  pl_bram2.set_data_ptr(buf_bram2);
-  pl_bram2.set_command(tlm::TLM_READ_COMMAND);
-  pl_bram2.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-  
-  //bram_socket0->b_transport(pl_bram0, offset);
-  bram_socket1->b_transport(pl_bram1, offset);
-  bram_socket2->b_transport(pl_bram2, offset);
+      cout << "CORNER CASE: [49, 58] " << i << endl;
 
-  for(int i=0; i<num_parallel_pts; ++i){
-    for(int j=0; j<LEN_IN_BYTES; ++j){
-      buf_bram[i*LEN_IN_BYTES*KERNEL_SIZE + j] = buf_bram0[i*LEN_IN_BYTES+j]; //0 1 <= 0 1 
-      buf_bram[i*LEN_IN_BYTES*KERNEL_SIZE + j + LEN_IN_BYTES] = buf_bram1[i*LEN_IN_BYTES+j]; //2 3 <= 0 1
-      buf_bram[i*LEN_IN_BYTES*KERNEL_SIZE + j + LEN_IN_BYTES*2] = buf_bram2[i*LEN_IN_BYTES+j]; //4 5 <= 0 1
+      /*cout << "address regular:" << (bram_block_ptr)*BRAM_WIDTH + cycle_num*width + i << endl;
+      cout << "bram_block_ptr:" << bram_block_ptr << endl;
+      cout << "cycle_num*width:" << cycle_num*width << endl;
+      cout << "i:" << i << endl;*/
+
+      for(int j = 0; j < 3; ++j) {
+      pl_bram0.set_address((bram_block_ptr+i)*BRAM_WIDTH + row_position + cycle_num*width + j);
+      pl_bram0.set_data_length(LEN_IN_BYTES);
+      pl_bram0.set_data_ptr(buf_bram0);
+      pl_bram0.set_command(tlm::TLM_READ_COMMAND);
+      pl_bram0.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+
+      bram_socket0->b_transport(pl_bram0, offset);
+
+      //buf[i*3 + j] = to_fixed(buf_bram0 + j*LEN_IN_BYTES); 
+      //   cout << buf[i*3+j] << " ";
+      cout << to_fixed(buf_bram0) << " ";
+      }/*
+      for(int j=0; j<3; ++j){
+         buf[i*3 + j] = to_fixed(buf_bram0 + j*LEN_IN_BYTES); 
+         cout << buf[i*3+j] << " ";
+      } */
+      cout << endl;
+    }
+
+
+    for(int i = 0; i < (NUM_PARALLEL_POINTS + 2 - (59-bram_block_ptr)); ++i){
+
+      cout << "CORNER CASE: [0, 9]" << (bram_block_ptr+i)*BRAM_WIDTH + (59-bram_block_ptr) + (cycle_num+1)*width << endl;
+      cout << "bram_block_ptr:" << bram_block_ptr << endl;
+      cout << "(59-bram_block_ptr):" << (59-bram_block_ptr) << endl;
+      cout << "cycle_num*width:" << (cycle_num+1)*width << endl;
+      cout << "i:" << i << endl;
+
+      for(int j = 0; j < 3; ++j) {
+        pl_bram0.set_address(i*BRAM_WIDTH + row_position + (cycle_num+1)*width + j);
+        pl_bram0.set_data_length(LEN_IN_BYTES);
+        pl_bram0.set_data_ptr(buf_bram0);
+        pl_bram0.set_command(tlm::TLM_READ_COMMAND);
+        pl_bram0.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+
+        bram_socket0->b_transport(pl_bram0, offset);
+        //buf[(i + (59-bram_block_ptr))*3 + j] = to_fixed(buf_bram0); 
+        //cout << buf[i*3+j] << " ";
+
+        cout << to_fixed(buf_bram0) << " ";
+      }/*
+      for(int j=0; j<3; ++j){ 
+        buf[(i + (59-bram_block_ptr))*3 + j] = to_fixed(buf_bram0 + j*LEN_IN_BYTES); 
+        cout << buf[i*3+j] << " ";
+      }*/
+      cout << endl;
+    }
+
+  }else{
+
+    for(int i = 0; i < (NUM_PARALLEL_POINTS+2); ++i){
+
+      cout << "redovna adresa: " << cycle_num*width + row_position + (bram_block_ptr+i)*BRAM_WIDTH << endl;
+      cout << "br bram bloka: " << bram_block_ptr << endl;
+      cout << "pozicija u redu: " << row_position << endl;
+      cout << "br ciklusa: " << cycle_num << endl;
+      unsigned char buf_bram00[LEN_IN_BYTES];
+      
+      for(int j = 0; j < 3; ++j) {   
+      //bram_block_ptr*BRAM_WIDTH - koji je pocetni BRAM BLOK
+      //cycle_num*width - koji red unutar BRAM BLOKA citamo
+      //row_position - pocetni pixel unutar tog reda
+      // i - trenutni BRAM BLOK od pocetnog
+      pl_bram0.set_address(cycle_num*width + row_position + (bram_block_ptr+i)*BRAM_WIDTH + j);
+      pl_bram0.set_data_length(LEN_IN_BYTES);
+      pl_bram0.set_data_ptr(buf_bram00);
+      pl_bram0.set_command(tlm::TLM_READ_COMMAND);
+      pl_bram0.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+
+      bram_socket0->b_transport(pl_bram0, offset);
+      cout << "address: " << cycle_num*width + row_position + (bram_block_ptr+i)*BRAM_WIDTH + j << endl;
+      cout << to_fixed(buf_bram00) << endl; 
+      }
+      //cout << to_fixed(buf_bram0+2) << endl;
+      //cout << to_fixed(buf_bram0+4) << endl;
+
+      for(int j=0; j<3; ++j){ 
+        buf[i*3 + j] = to_fixed(buf_bram0 + j*LEN_IN_BYTES); 
+        //cout << buf[i*3+j] << " ";
+      }
+      cout << endl;
     }
   }
 
-  //WRITE TO REG36:
+  cout << "CITAV BUF: " << endl << endl << endl;
+
+  for(int i=0; i<(NUM_PARALLEL_POINTS+2)*3; ++i){
+    to_uchar((buf_bram+i*LEN_IN_BYTES), (buf[i]));
+    cout << buf[i] << " ";
+  }
+  cout << endl;
+
+  //WRITE TO REG33:
   pl_t pl_filter;
 
-  pl_filter.set_data_length(LEN_IN_BYTES*num_parallel_pts*3);
+  pl_filter.set_address(addr_filter);
+  pl_filter.set_data_length(LEN_IN_BYTES*NUM_PARALLEL_POINTS*3);
   pl_filter.set_data_ptr(buf_bram);
   pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
   pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);

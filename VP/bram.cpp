@@ -29,7 +29,7 @@ void Bram::b_transport(pl_t& pl, sc_core::sc_time& offset)
         //for (unsigned int i = 0; i < len; ++i)
         //{
             mem[addr] = to_fixed(data);
-            cout << to_fixed(data) << " ";
+            //cout << to_fixed(data) << " ";
         //}
         pl.set_response_status(tlm::TLM_OK_RESPONSE); 
         break;
