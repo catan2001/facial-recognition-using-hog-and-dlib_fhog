@@ -24,7 +24,7 @@ protected:
 	void filter_image_t(void);
 	num_t2 read_bram(int addr);
 
-	std::vector<num_t2> mem36, mem10;
+	std::vector<num_t2> mem33, mem18;
 	std::vector<num_t2> kernel, temp;
 	
 };

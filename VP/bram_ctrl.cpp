@@ -88,13 +88,13 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 
               //PHASE II -> FILTER REG36 INTO REG10:
               //if((i+1)%(NUM_PARALLEL_POINTS+2) == 0) {
-                /*pl_t pl_filter;
+                pl_t pl_filter;
 
                 pl_filter.set_address(ADDR_CMD);
                 pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
                 pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
                 
-                filter_socket -> b_transport(pl_filter, offset);*/
+                filter_socket -> b_transport(pl_filter, offset);
               //}
               //PHASE III -> WRITE REG10 INTO DRAM:
               //PHASE IV -> READ FROM DRAM AND WRITE INTO BRAM:
@@ -130,21 +130,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 
   offset += sc_core::sc_time(10, sc_core::SC_NS);  
 
- /* pl_bram.set_command(cmd);
-  pl_bram.set_address(addr);
-  pl_bram.set_data_length(len);
-  pl_bram.set_data_ptr(buf);
-  pl_bram.set_response_status( tlm::TLM_INCOMPLETE_RESPONSE );
-
-  // IF COMMAND FOR  READ DO THIS:
-  bram_socket0->b_transport(pl_bram, offset); // TODO: change naming scheme, it's weird myb?
-  //bram_socket_b2->b_transport(pl_bram, offset); // TODO: do we need all 3???
-  //bram_socket_b3->b_transport(pl_bram, offset);   
-
-  // IF BRAM IS EMPTY, LOAD FROM DRAM:
-  dram_ctrl_socket->b_transport(pl_bram,offset);
-
-  if (pl_bram.is_response_error()) SC_REPORT_ERROR("Bram_Ctrl",pl_bram.get_response_string().c_str());*/
+  //if (pl_bram.is_response_error()) SC_REPORT_ERROR("Bram_Ctrl",pl_bram.get_response_string().c_str());*/
 }
 
 void BramCtrl:: dram_to_bram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, sc_core::sc_time &offset){
@@ -163,7 +149,8 @@ void BramCtrl:: dram_to_bram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, 
   pl_dram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
   
   dram_ctrl_socket->b_transport(pl_dram, offset);
-
+  //if (pl_dram.is_response_error()) SC_REPORT_ERROR("Dram CTRL",pl_dram.get_response_string().c_str());
+  
   //WRITE TO BRAM:
   pl_t pl_bram;
 
@@ -174,7 +161,7 @@ void BramCtrl:: dram_to_bram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, 
   pl_bram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
   
   bram_socket0 -> b_transport(pl_bram, offset);
-
+  //if (pl_bram.is_response_error()) SC_REPORT_ERROR("Bram CTRL",pl_bram.get_response_string().c_str());
 }
 
 void BramCtrl:: bram_to_reg(int bram_block_ptr, int cycle_num, int row_position, sc_dt::uint64 addr_filter, sc_core::sc_time &offset){
@@ -205,7 +192,7 @@ void BramCtrl:: bram_to_reg(int bram_block_ptr, int cycle_num, int row_position,
 
       bram_socket0->b_transport(pl_bram0, offset);
 
-      //buf[i*3 + j] = to_fixed(buf_bram0 + j*LEN_IN_BYTES); 
+      buf[i*3 + j] = to_fixed(buf_bram0); 
       //   cout << buf[i*3+j] << " ";
       cout << to_fixed(buf_bram0) << " ";
       }/*
@@ -233,7 +220,7 @@ void BramCtrl:: bram_to_reg(int bram_block_ptr, int cycle_num, int row_position,
         pl_bram0.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
 
         bram_socket0->b_transport(pl_bram0, offset);
-        //buf[(i + (59-bram_block_ptr))*3 + j] = to_fixed(buf_bram0); 
+        buf[(i + (59-bram_block_ptr))*3 + j] = to_fixed(buf_bram0); 
         //cout << buf[i*3+j] << " ";
 
         cout << to_fixed(buf_bram0) << " ";
@@ -267,38 +254,56 @@ void BramCtrl:: bram_to_reg(int bram_block_ptr, int cycle_num, int row_position,
       pl_bram0.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
 
       bram_socket0->b_transport(pl_bram0, offset);
-      cout << "address: " << cycle_num*width + row_position + (bram_block_ptr+i)*BRAM_WIDTH + j << endl;
-      cout << to_fixed(buf_bram00) << endl; 
+      //cout << "address: " << cycle_num*width + row_position + (bram_block_ptr+i)*BRAM_WIDTH + j << endl;
+      //cout << to_fixed(buf_bram00) << endl; 
+
+      buf[i*3 + j] = to_fixed(buf_bram00); 
+
+      cout << " buf : " << buf[i*3 + j] << endl;
+      unsigned char test[LEN_IN_BYTES];
+      to_uchar(test, buf[i*3 + j]);
+      cout << "uchar buf: " << test << endl;
+
       }
       //cout << to_fixed(buf_bram0+2) << endl;
       //cout << to_fixed(buf_bram0+4) << endl;
 
-      for(int j=0; j<3; ++j){ 
-        buf[i*3 + j] = to_fixed(buf_bram0 + j*LEN_IN_BYTES); 
+      //for(int j=0; j<3; ++j){ 
+      //  buf[i*3 + j] = to_fixed(buf_bram0 + j*LEN_IN_BYTES); 
         //cout << buf[i*3+j] << " ";
-      }
-      cout << endl;
+      //}
+      //cout << endl;
     }
   }
 
   cout << "CITAV BUF: " << endl << endl << endl;
-
+         
   for(int i=0; i<(NUM_PARALLEL_POINTS+2)*3; ++i){
-    to_uchar((buf_bram+i*LEN_IN_BYTES), (buf[i]));
+      to_uchar((buf_bram+i*LEN_IN_BYTES), (buf[i]));
+
+      pl_t pl_filter;
+      pl_filter.set_address(addr_filter);
+      pl_filter.set_data_length(LEN_IN_BYTES*NUM_PARALLEL_POINTS*3); // 27 tacaka?
+      pl_filter.set_data_ptr(buf_bram);
+      pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
+      pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+      
+      filter_socket -> b_transport(pl_filter, offset); 
+
     cout << buf[i] << " ";
   }
-  cout << endl;
+  cout << endl; 
 
-  //WRITE TO REG33:
-  pl_t pl_filter;
+  //WRITE TO REG33: 
+  /*pl_t pl_filter;
 
   pl_filter.set_address(addr_filter);
-  pl_filter.set_data_length(LEN_IN_BYTES*NUM_PARALLEL_POINTS*3);
+  pl_filter.set_data_length(LEN_IN_BYTES*NUM_PARALLEL_POINTS*3); // 27 tacaka?
   pl_filter.set_data_ptr(buf_bram);
   pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
   pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
   
-  filter_socket -> b_transport(pl_filter, offset);
+  filter_socket -> b_transport(pl_filter, offset); */
 
 }
 
@@ -316,5 +321,5 @@ void BramCtrl::read_bram(sc_dt::uint64 addr_bram, sc_core::sc_time &offset) {
   
   bram_socket0 -> b_transport(pl_filter, offset); // TODO: change 0 
 
-  cout << to_fixed(buf) << " ";
+  //cout << to_fixed(buf) << " ";
 }
