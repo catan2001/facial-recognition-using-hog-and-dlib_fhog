@@ -95,18 +95,18 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
               //k*NUM_PARALLEL_POINTS*2*COLS -> offset by rows when the first batch of 18 rows has been filtered
               //i*ROWS*2 -> place the first 9 pixels in the even rows
               //NUM_PARALLEL_POINTS*j -> starting point within row for each new batch of parallel points
-              reg_to_dram(i, DRAM_LOW_ADDR | ((ROWS+2)*(COLS+2) + row_batch_cnt*NUM_PARALLEL_POINTS*2*COLS + i*(COLS*2) + NUM_PARALLEL_POINTS*pixel_batch_cnt), offset);
+              reg_to_dram(i, (ROWS+2)*(COLS+2) + row_batch_cnt*NUM_PARALLEL_POINTS*2*COLS + i*2*COLS + pixel_batch_cnt, offset);
 
             }else{
               //(i-9)*(ROWS+1) -> place the first 9 pixels in the odd rows
-              reg_to_dram(i, DRAM_LOW_ADDR | ((ROWS+2)*(COLS+2) + row_batch_cnt*NUM_PARALLEL_POINTS*2*COLS + (i-9)*(2*COLS+1) + NUM_PARALLEL_POINTS*pixel_batch_cnt), offset);
+              reg_to_dram(i,(ROWS+2)*(COLS+2) + row_batch_cnt*NUM_PARALLEL_POINTS*2*COLS + (2*(i-9)+1)*COLS  + pixel_batch_cnt, offset);
 
             }
       
           }
 
           pixel_batch_cnt++;
-          if(pixel_batch_cnt>=ROWS/NUM_PARALLEL_POINTS) {pixel_batch_cnt=0; row_batch_cnt++;}
+          if(pixel_batch_cnt>=ROWS) {pixel_batch_cnt=0; row_batch_cnt++;}
 
           pl.set_response_status(tlm::TLM_OK_RESPONSE); 
           break;

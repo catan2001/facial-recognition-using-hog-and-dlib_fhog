@@ -22,6 +22,7 @@ void DRAM::b_transport(pl_t &pl, sc_core::sc_time &offset) {
             //for(unsigned char i = 0; i < len; ++i) {
             dmem[addr] = to_fixed(buf);
             //}
+            cout<< "dram addr: "<< addr <<endl;
             cout << "DRAM BUF: " << to_fixed(buf) << endl;
             pl.set_response_status(tlm::TLM_OK_RESPONSE);
             break;
@@ -30,6 +31,7 @@ void DRAM::b_transport(pl_t &pl, sc_core::sc_time &offset) {
             //    buf[i] = dmem[addr+i];
             //}
             to_uchar(buf, dmem[addr]);
+            //cout<<dmem[addr]<<" ";
             pl.set_response_status(tlm::TLM_OK_RESPONSE);
             break;
         default: 

@@ -31,7 +31,7 @@ protected:
 
 	std::vector<num_t2>temp;
 
-	int pixel_batch_cnt, row_batch_cnt;
+	int pixel_batch_cnt = 0, row_batch_cnt = 0;
  
 };
  

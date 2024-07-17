@@ -20,7 +20,7 @@ void DramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 
   num_t2 temp = to_fixed(buf);
 
-  cout << "DRAM_CTRL_BUF: " << temp << endl;
+  //cout << "DRAM_CTRL_BUF: " << temp << endl;
     
   pl_dram.set_command(cmd);
   pl_dram.set_address(addr);
