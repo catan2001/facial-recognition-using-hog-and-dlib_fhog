@@ -56,7 +56,7 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 #define NUM_PARALLEL_POINTS 9
 #define KERNEL_SIZE 3
 
-#define REG36 36
+#define REG33 33
 
 #define HIST_SIZE nBINS*BLOCK_SIZE*BLOCK_SIZE
 

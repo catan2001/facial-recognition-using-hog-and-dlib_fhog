@@ -3,6 +3,7 @@
 DramCtrl::DramCtrl(sc_core::sc_module_name name) : sc_module(name) {
     interconnect_socket.register_b_transport(this, &DramCtrl::b_transport);  
     bram_ctrl_socket.register_b_transport(this, &DramCtrl::b_transport); 
+    hw_socket.register_b_transport(this, &DramCtrl::b_transport); 
     SC_REPORT_INFO("DRAM Controller", "Constructed.");
 }
 
@@ -16,6 +17,10 @@ void DramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
   sc_dt::uint64 addr = pl.get_address();
   unsigned int len = pl.get_data_length();
   unsigned char *buf = pl.get_data_ptr();
+
+  num_t2 temp = to_fixed(buf);
+
+  cout << "DRAM_CTRL_BUF: " << temp << endl;
     
   pl_dram.set_command(cmd);
   pl_dram.set_address(addr);
