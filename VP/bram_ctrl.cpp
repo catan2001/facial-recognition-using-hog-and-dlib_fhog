@@ -58,7 +58,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
                  h++;
                  //placing a single row on the i-th position within the j-th BRAM BLOCK:
                  for(int k = 0; k < width; ++k) {
-                     dram_to_bram(i, j, k, offset); // load from DRAM to BRAM
+                     dram_to_bram(1, i, j, k, offset); // load from DRAM to BRAM
                  }
  
                   //if all the rows of our picture have been loaded into the BRAM exit the loop:
@@ -70,14 +70,11 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           START:
           cout << endl << endl << endl << "END OF DRAM TO BRAM!!!!!!!!!!!" << endl << endl << endl;
  
-          for(int i = 0; i < BRAM_HEIGHT; ++i)
+          /*for(int i = 0; i < BRAM_HEIGHT; ++i)
             for(int j = 0; j < BRAM_WIDTH; ++j)
-              read_bram(i*BRAM_WIDTH + j, offset);
- 
-          cycles = floor(height / 59);
+              read_bram(i*BRAM_WIDTH + j, offset);*/
  
           for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS; i+=NUM_PARALLEL_POINTS){ //the number of times we will repeat a single cycle
- 
               tmp = (int)i/59;
  
               for(int j=0; j < width - 2; ++j){
@@ -87,15 +84,20 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
                 bram_to_reg(i%59, tmp, j, ADDR_INPUT_REG, offset);
  
               //PHASE II -> FILTER REG36 INTO REG10:
-              pl_t pl_filter;
-              pl_filter.set_address(ADDR_CMD);
-              pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
-              pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+                pl_t pl_filter;
+                pl_filter.set_address(ADDR_CMD);
+                pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
+                pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
 
-              filter_socket -> b_transport(pl_filter, offset);
+                filter_socket -> b_transport(pl_filter, offset);
             
-              //PHASE IV -> READ FROM DRAM AND WRITE INTO BRAM:
-
+              //PHASE III -> READ FROM DRAM AND WRITE INTO BRAM:
+                if(h < height){
+                  //k - pixel within row
+                  //j - current_bram_block
+                  //i - current row within bram block
+                  dram_to_bram(0, ii, jj, j, offset); // load from DRAM to BRAM
+                }
 
               }
           }
@@ -133,12 +135,18 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
   //if (pl_bram.is_response_error()) SC_REPORT_ERROR("Bram_Ctrl",pl_bram.get_response_string().c_str());*/
 }
  
-void BramCtrl:: dram_to_bram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, sc_core::sc_time &offset){
+void BramCtrl:: dram_to_bram(int init, sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, sc_core::sc_time &offset){
  
   //READ FROM DRAM:
   pl_t pl_dram;
-  sc_dt::uint64 dram_addr = i*(BRAM_HEIGHT*(this->width)) + j*(this->width) + k;
-  sc_dt::uint64 bram_addr = i*(this->width) + j*BRAM_WIDTH + k;
+
+  if(init){
+    sc_dt::uint64 dram_addr = i*(BRAM_HEIGHT*(this->width)) + j*(this->width) + k;
+    sc_dt::uint64 bram_addr = i*(this->width) + j*BRAM_WIDTH + k;
+  }else{
+    sc_dt::uint64 dram_addr = i*(BRAM_HEIGHT*(this->width)) + (j+(h+1))*(this->width) + k;
+    sc_dt::uint64 bram_addr = i*(this->width) + j*BRAM_WIDTH + k;
+  }
  
   unsigned char buf_dram[LEN_IN_BYTES];
   // we don't need address of DRAM, it's connected directly BRAM_CTRL -> DRAM_CTRL

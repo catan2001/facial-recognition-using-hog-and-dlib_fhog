@@ -84,22 +84,23 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
           break;
  
         case ADDR_CMD:
+
+        //take REG33 pixels and filter them into REG18:
           filter_image_t();
 
-          cout << "WRITE TO DRAM: [" << pixel_batch_cnt << ", " << row_batch_cnt << "]" << endl << endl;
-
+        //write REG18 pixels to DRAM:
           for(int i=0; i<2*NUM_PARALLEL_POINTS; ++i){
 
             if(i<9){
               //(ROWS+2)*(COLS+2) -> offset start of filtered img in DRAM by the biggest allowed size of the original picture
-              //k*NUM_PARALLEL_POINTS*2*COLS -> offset by rows when the first batch of 18 rows has been filtered
-              //i*ROWS*2 -> place the first 9 pixels in the even rows
-              //NUM_PARALLEL_POINTS*j -> starting point within row for each new batch of parallel points
+              //row_batch_cnt*NUM_PARALLEL_POINTS*2*COLS -> offset by rows when the first batch of 18 rows has been filtered
+              //i*COLS*2 -> place the first 9 pixels in the even rows
+              //pixel_batch_cnt -> starting point within row for each new batch of parallel points
               reg_to_dram(i, (ROWS+2)*(COLS+2) + row_batch_cnt*NUM_PARALLEL_POINTS*2*COLS + i*2*COLS + pixel_batch_cnt, offset);
 
             }else{
-              //(i-9)*(ROWS+1) -> place the first 9 pixels in the odd rows
-              reg_to_dram(i,(ROWS+2)*(COLS+2) + row_batch_cnt*NUM_PARALLEL_POINTS*2*COLS + (2*(i-9)+1)*COLS  + pixel_batch_cnt, offset);
+              //(2*(i-9)+1)*COLS -> place the first 9 pixels in the odd rows
+              reg_to_dram(i, (ROWS+2)*(COLS+2) + row_batch_cnt*NUM_PARALLEL_POINTS*2*COLS + (2*(i-9)+1)*COLS  + pixel_batch_cnt, offset);
 
             }
       
