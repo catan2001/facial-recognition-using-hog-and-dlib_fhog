@@ -18,62 +18,12 @@ num_t2 concat (unsigned char buf_high, unsigned char buf_low)
   return sum;
 }
 
-char flip(char c) {return (c == '0')? '1': '0';}
-
-string twos_complement(string bin)
-{
-  int n = bin.length();
-  int i;
-
-  string ones, twos;
-  ones = twos = "";
-
-  //  for ones complement flip every bit
-  for (i = 0; i < n; i++)
-    ones += flip(bin[i]);
-
-  //  for two's complement go from right to left in
-  //  ones complement and if we get 1 make, we make
-  //  them 0 and keep going left when we get first
-  //  0, make that 1 and go out of loop
-  twos = ones;
-  for (i = n - 1; i >= 0; i--)
-    {
-      if (ones[i] == '1')
-        twos[i] = '0';
-      else
-        {
-          twos[i] = '1';
-          break;
-        }
-    }
-
-  // If No break : all are 1  as in 111  or  11111;
-  // in such case, add extra 1 at beginning
-  if (i == -1)
-    twos = '1' + twos;
-
-  // cout << "1's complement: " << ones << endl;
-  // cout << "2's complement: " << twos << endl; 
-  return twos;
-}
-
-
-
 double to_fixed (unsigned char *buf)
 {
   string concated = "";
   for (int i = 0; i<CHARS_AMOUNT; ++i) {// concatenate char array into eg. "10101101000"
     concated += bitset<CHAR_LEN>((int)buf[i]).to_string();
   }
-
-  double multiplier = 1;
-  if (concated[0] == '1')
-  {
-      concated = twos_complement(concated);
-      multiplier = -1;
-  }
-
   double sum = 0;
   int tmp = 0;
   
@@ -82,8 +32,7 @@ double to_fixed (unsigned char *buf)
       tmp = (I - i - 1);
       sum += (concated[i]-'0') * pow(2.0, tmp);
     }
-
-  return sum*multiplier;
+  return sum;
 }
 
 void to_char (unsigned char *buf, string s)

@@ -27,8 +27,6 @@ Vp::Vp(sc_core::sc_module_name name)
     
     // Connecting HW with BRAM_CTRL
 	hard.bram_ctrl_socket.bind(bram_ctrl.filter_socket);
-	// Connecting HW with DRAM_CTRL
-	dram_ctrl.hw_socket.bind(hard.dram_ctrl_socket);
     
 	soft.interconnect_socket.bind(interconnect.soft_socket);
 	SC_REPORT_INFO("Virtual Platform", "Constructed.");

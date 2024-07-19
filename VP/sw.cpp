@@ -99,15 +99,15 @@ void SW::process_img(){
     mat_txt(name_txt, &padded_img, rows+2, cols+2);*/
 
 
-    /*for(int i=0; i<rows+2; ++i){
+      /*for(int i=0; i<rows+2; ++i){
       for(int j=0; j<cols+2; ++j){
         cout<<padded_img[i][j]<<" ";
         //padded_img[i][j];
       }
       cout << endl;
       cout << "i: " << i << endl;
-    } 
-    cout << endl << endl << endl;*/
+    } */
+    cout << endl << endl << endl;
 
     // 1 WRITE IMAGE TO DRAM:
     for(int i=0; i<rows+2; ++i){
@@ -121,16 +121,6 @@ void SW::process_img(){
     write_hard(ADDR_WIDTH, ROWS+2);
     write_hard(ADDR_HEIGHT, COLS+2);
     write_hard(ADDR_CMD, 1);
-    
-    for(int i = 0; i<ROWS; ++i){
-      for(int j = 0; j<COLS; ++j){
-        read_dram((ROWS+2)*(COLS+2) + 2*COLS*i +j, matrix_im_filtered_x[i][j]);
-        //cout<<matrix_im_filtered_x[i][j]<<" ";
-        read_dram((ROWS+2)*(COLS+2) + (2*i+1)*COLS +j, matrix_im_filtered_y[i][j]);
-        //cout<<matrix_im_filtered_y[i][j]<<" ";
-      }
-      cout<<endl;
-    }
 
     // 3 WAIT FOR HW TO FINISH:
     /*int ready = 1;
@@ -175,7 +165,7 @@ void SW::read_dram(sc_dt::uint64 addr, num_t2& val)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];
-    pl.set_address(addr | DRAM_BASE_ADDR);
+    pl.set_address((addr * LEN_IN_BYTES) | DRAM_BASE_ADDR);
     pl.set_data_length(LEN_IN_BYTES);
     pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_READ_COMMAND);
