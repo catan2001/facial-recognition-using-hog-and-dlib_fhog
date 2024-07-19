@@ -77,7 +77,7 @@ int sc_main(int, char*[]) {
     // TODO: implement filters to be also bit width dependant 
 
     int W = 32;
-    const int I = 3;
+    const int I = 3;  
     
     #ifdef DEBUG
         cout << endl << "        NOTE: DEBUG preprocessor directive is on!" << endl << endl;
@@ -92,7 +92,7 @@ int sc_main(int, char*[]) {
         cout << "Fixed point: " << I << endl;
         
         FILE * rach;
-        rach = fopen("gray.txt", "rb");
+        rach = fopen("template/gray.txt", "rb");
         if(rach == NULL) {
             cout << "ERROR! could not open file!" << endl;
             return 101;
@@ -262,6 +262,7 @@ void filter_image_t(int rows, int cols, int W, int I, matrix_t& matrix_im_filter
                 matrix_im_filtered_y[i][j] += imROI[k] * filter_y[k];
                 matrix_im_filtered_x[i][j] += imROI[k] * filter_x[k];
             }
+            cout << " im_fx: " << matrix_im_filtered_x[i][j] << endl; 
         }
     }
 
@@ -703,7 +704,7 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
     for(int width = UPPER_BOUNDARY; width >= LOWER_BOUNDARY; width -= step) {
      	cout << "current template: " << width << endl;
         
-        char gray_template[20] = "template_";
+        char gray_template[20] = "template/template_";
         char size_gray[4];
         snprintf(size_gray, sizeof(size_gray), "%d", width);
         strcat(gray_template, size_gray);
