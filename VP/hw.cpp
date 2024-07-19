@@ -1,11 +1,10 @@
 #include "hw.hpp"
-//SC_HAS_PROCESS(HW);
  
 HW::HW(sc_core::sc_module_name name)
     : sc_module(name)
 {
     SC_REPORT_INFO("Hard", "Constructed.");
-    //SC_THREAD(filter_image_t);
+
     bram_ctrl_socket.register_b_transport(this, &HW::b_transport); // changed
     
     mem33.reserve(REG33);
@@ -27,15 +26,6 @@ HW::~HW()
 void HW::filter_image_t(void){
 
   for (int i=0; i<NUM_PARALLEL_POINTS; ++i){ 
- 
-    /*cout << "mem33["<<0+i*3<<"]: " << mem33[0+i*3] << endl;
-    cout << "mem33["<<1+i*3<<"]: " << mem33[1+i*3] << endl;
-    cout << "mem33["<<2+i*3<<"]: " << mem33[2+i*3] << endl;
-    cout << "mem33["<<3+i*3<<"]: " << mem33[3+i*3] << endl;
-    cout << "mem33["<<5+i*3<<"]: " << mem33[5+i*3] << endl;
-    cout << "mem33["<<6+i*3<<"]: " << mem33[6+i*3] << endl;
-    cout << "mem33["<<7+i*3<<"]: " << mem33[7+i*3] << endl;
-    cout << "mem33["<<8+i*3<<"]: " << mem33[8+i*3] << endl;*/
 
     //FILTER_X
     //tier 1:
@@ -58,7 +48,6 @@ void HW::filter_image_t(void){
     //cout << "f_y["<<i<<"]: " << mem18[i+NUM_PARALLEL_POINTS] << " ";
  
   }  
-  //cout << endl;
 }
  
 void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)

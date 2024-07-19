@@ -17,14 +17,14 @@ SW::~SW()
 
 void SW::process_img(){
 
-    int rows = 350;
-    int cols = 350;
+    int rows = 400;
+    int cols = 400;
     int height = rows/CELL_SIZE;
     int width = cols/CELL_SIZE;
     
     double *gray = new double[rows*cols];
     
-    FILE * gray_f = fopen("gray_350.txt", "rb");
+    FILE * gray_f = fopen("gray400.txt", "rb");
     double tmp_gray;
       for (int i = 0; i < ROWS; ++i){
           for (int j = 0; j < COLS; ++j){
@@ -126,9 +126,9 @@ void SW::process_img(){
         cout << "I = " << i << endl;
       for(int j = 0; j<COLS; ++j){
         read_dram((ROWS+2)*(COLS+2) + 2*COLS*i +j, matrix_im_filtered_x[i][j]);
-        cout<<matrix_im_filtered_x[i][j]<<" ";
+        //cout<<matrix_im_filtered_x[i][j]<<" ";
         read_dram((ROWS+2)*(COLS+2) + (2*i+1)*COLS +j, matrix_im_filtered_y[i][j]);
-        //cout<<matrix_im_filtered_y[i][j]<<" ";
+        cout<<matrix_im_filtered_y[i][j]<<" ";
       }
       cout<<endl;
     }
