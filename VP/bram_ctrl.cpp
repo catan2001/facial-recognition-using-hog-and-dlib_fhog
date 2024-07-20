@@ -78,7 +78,9 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
                   
                   //change dram_ptr position from the last unwritten row in BRAM
                   //to the last unfiltered row in BRAM:
-                  dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT-1) - (BRAM_HEIGHT-bram_block_ptr);
+                  //236 - (59-57) = 234
+                  cout << "BRAM_HEIGHT-bram_ptr: " << (BRAM_HEIGHT-bram_block_ptr) << endl;
+                  dram_row_ptr = floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr);
 
                   //setup i and the corresponding cycle_num and bram_ptr derived from i
                   //so that they continue from the beginning of the BRAM:
@@ -142,6 +144,7 @@ void BramCtrl:: initialisation(bool init){
 
   for(int i = 0; i < floor(BRAM_WIDTH/width); ++i) { //maximum number of rows that can fit in a single BRAM BLOCK
     for(int j = 0; j < BRAM_HEIGHT; ++j) {         //number of BRAM BLOCKS
+        cout<< "BEFORE INC dram_row_ptr: " << dram_row_ptr << endl;
         dram_row_ptr++;
         cout<< "dram_row_ptr: " << dram_row_ptr << endl;
         //placing a single row on the i-th position within the j-th BRAM BLOCK:

@@ -40,8 +40,8 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 #define ADDR_INPUT_REG 0x10
 
 //#define MAX_SIZE 200
-#define ROWS 450
-#define COLS 450
+#define ROWS 623
+#define COLS 492
 #define nBINS 6
 #define CELL_SIZE 8
 #define CELL_POW (CELL_SIZE*CELL_SIZE)

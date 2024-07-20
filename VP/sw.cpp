@@ -17,14 +17,14 @@ SW::~SW()
 
 void SW::process_img(){
 
-    int rows = 450;
-    int cols = 450;
+    int rows = 623;
+    int cols = 492;
     int height = rows/CELL_SIZE;
     int width = cols/CELL_SIZE;
     
     double *gray = new double[rows*cols];
     
-    FILE * gray_f = fopen("gray450.txt", "rb");
+    FILE * gray_f = fopen("gray_492_623.txt", "rb");
     double tmp_gray;
       for (int i = 0; i < ROWS; ++i){
           for (int j = 0; j < COLS; ++j){
