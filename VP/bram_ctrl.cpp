@@ -3,8 +3,6 @@
 BramCtrl::BramCtrl(sc_core::sc_module_name name) : 
     sc_module(name), 
     offset(sc_core::SC_ZERO_TIME),
-    pixel_cnt(0),
-    moduo_points(0),
     dram_row_ptr(0),
     width(0),
     height(0),
@@ -26,6 +24,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
   sc_dt::uint64 addr = pl.get_address();
   unsigned int len = pl.get_data_length();
   unsigned char *buf = pl.get_data_ptr();
+  int bonus, skipped_rows;
   
   switch(cmd)
     {
@@ -33,20 +32,17 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
  
       switch(addr)
         {
-
         case ADDR_WIDTH:
           width = to_int(buf);
-          moduo_points = (width - floor(width*0.1) + 1)*LEN_IN_BYTES;
-          //cout << "ADDR_WIDTH" << endl;
           break;
 
         case ADDR_HEIGHT:
           height = to_int(buf);
-          //cout << "ADDR_HEIGHT" << endl;
           break;
+
         case ADDR_CMD:
           start = to_int(buf);
-          //cout << "ADDR_CMD" << endl;
+  
           if(width > BRAM_WIDTH) {
               pl.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
               cout << "ERROR: Width of image is larger than BRAM_WIDTH[" << BRAM_WIDTH << "]" << endl;
@@ -55,37 +51,49 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
  
           initialisation(1);
 
-          //if there is more of the picture in DRAM  we should write those rows into BRAM overwritting from the beginning of BRAM
-          //the cycle number for a picture of 350x350 gives us 5 cycles since each BRAM block can fit 5 rows 
-          //cycle num = 0 1 2 3 4
-          //we need to reset this cycle num to 0 again when the bram_pointer reaches [49,58] with the cycle_num at 4
-          //so if cycle_num == floor(BRAM_WIDTH/width) and bram_ptr = [BRAM_HEIGHT-10, BRAM_HEIGHT-1] -> cycle_num = 0
-          //this if should also check if we need to do a new initialisation before continuing 
-          //so after another possible init and reseting of the cycle_num we should continue with the for loop
+          //height - the number of rows we have in DRAM
+          //(BRAM_HEIGHT*floor(BRAM_WIDTH/width)) - the number of rows which can fit into the BRAM at once
+          //if the division of these two yields a number <= 1 it means the whole picture can fit into the BRAM
+          //if it is >1 then we will need to do initialisation a few times
+          //if it's 1.5 we will need to do one additional init -> add 1 to the upper limit
+          // 2.9 -> 2 additional inits
+                  //59          //57
+          bonus = BRAM_HEIGHT - ((int)((floor(BRAM_WIDTH/width)*BRAM_HEIGHT/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS)%BRAM_HEIGHT);
+          skipped_rows = floor(height/(BRAM_HEIGHT*floor(BRAM_WIDTH/width)))*bonus;
 
-          for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS; i+=NUM_PARALLEL_POINTS){ //the number of times we will repeat a single cycle
+          //upper limit of for loop is a constant which will be forwarded from sw
+          for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS + skipped_rows; i+=NUM_PARALLEL_POINTS){ ++//the number of times we will repeat a single cycle
               
               //(int)i/BRAM_HEIGHT -> change cycles every time i has gone through all 59 BRAM BLOCKS
               //floor(BRAM_WIDTH/width) -> keep the maximum number of cycles within what is possible
-              cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);
-              bram_block_ptr = i%BRAM_HEIGHT;
+              cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
+              bram_block_ptr = i%BRAM_HEIGHT;  // bram_block_ptr++ -> bram_block_ptr == BRAM_HEIGHT ? bram_ptr = 0
 
-              cout << "cycle_number: " << cycle_number;
-              cout << " bram_block_ptr: " << bram_block_ptr << endl;
+              cout << "cycle_num: " << cycle_number << " bram_ptr: " << bram_block_ptr << endl;
 
               //if we're on the last cycle and the bram_block_ptr is on the rows which will need supplementation rows from the next cycle
               //which currently doesn't exist -> check if we have more rows in DRAM that need to be stored and transfer them
-
               if(cycle_number == (floor(BRAM_WIDTH/width)-1) && (bram_block_ptr >= (BRAM_HEIGHT-10) && bram_block_ptr <= (BRAM_HEIGHT-1))){
                 if(dram_row_ptr<height){ //do we have more rows in DRAM?
-                  cout << endl << endl << "INITIALIZATION AGAIN!!!!!!!!!!!!!!!!!" << endl << endl << endl;
+                  
+                  //change dram_ptr position from the last unwritten row in BRAM
+                  //to the last unfiltered row in BRAM:
+                  dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT-1) - (BRAM_HEIGHT-bram_block_ptr);
+
+                  //setup i and the corresponding cycle_num and bram_ptr derived from i
+                  //so that they continue from the beginning of the BRAM:
+                  i+=(BRAM_HEIGHT-bram_block_ptr);
+                  cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
+                  bram_block_ptr = i%BRAM_HEIGHT;
+
+                  cout << "RESET cycle_num: " << cycle_number << " bram_ptr: " << bram_block_ptr << endl;
+                  
                   initialisation(0);
                 }
               }
 
 
-              for(int j=0; j < width - 2; ++j){
-                //cout << i << " , " << j << endl; 
+              for(int j=0; j < width - 2; ++j){ 
  
               //PHASE I -> WRITE TO REG36:
                 bram_to_reg(bram_block_ptr, cycle_number, j, ADDR_INPUT_REG, offset);
@@ -128,8 +136,6 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
     
     }
   offset += sc_core::sc_time(10, sc_core::SC_NS);  
- 
-  //if (pl_bram.is_response_error()) SC_REPORT_ERROR("Bram_Ctrl",pl_bram.get_response_string().c_str());*/
 }
 
 void BramCtrl:: initialisation(bool init){
@@ -142,10 +148,8 @@ void BramCtrl:: initialisation(bool init){
         for(int k = 0; k < width; ++k) {
               dram_to_bram(init, i, j, k, offset); // load from DRAM to BRAM from 0th position
         }
-
         //if all the rows of our picture have been loaded into the BRAM exit the loop:
         if(dram_row_ptr==height) return;
-        
     }
   }
 
@@ -161,12 +165,12 @@ void BramCtrl:: dram_to_bram(int init, sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::
     dram_addr = i*(BRAM_HEIGHT*(this->width)) + j*(this->width) + k;
     bram_addr = i*(this->width) + j*BRAM_WIDTH + k;
   }else{
-    dram_addr = i*(BRAM_HEIGHT*(this->width)) + (dram_row_ptr-1)*(this->width) + k; // h is replacing j for rows 
+    dram_addr = (dram_row_ptr-1)*(this->width) + k;
     bram_addr = i*(this->width) + j*BRAM_WIDTH + k;
   }
   
   cout << "DRAM ADDR: " << dram_addr << endl;
-  //cout << "BRAM ADDR: " << bram_addr << endl;
+  cout << "BRAM ADDR: " << bram_addr << endl;
   unsigned char buf_dram[LEN_IN_BYTES];
   // we don't need address of DRAM, it's connected directly BRAM_CTRL -> DRAM_CTRL
   pl_dram.set_address(dram_addr);
@@ -204,12 +208,7 @@ void BramCtrl:: bram_to_reg(int bram_block_ptr, int cycle_num, int row_position,
  
     for(int i = 0; i < (BRAM_HEIGHT-bram_block_ptr); ++i){
  
-      /*cout << "CORNER CASE: [49, 58] " << i << endl;
- 
-      cout << "address regular:" << (bram_block_ptr)*BRAM_WIDTH + cycle_num*width + i << endl;
-      cout << "bram_block_ptr:" << bram_block_ptr << endl;
-      cout << "cycle_num*width:" << cycle_num*width << endl;
-      cout << "i:" << i << endl;*/
+      //cout << "CORNER CASE: [49, 58] " << i << endl;
  
       for(int j = 0; j < 3; ++j) {
       pl_bram0.set_address((bram_block_ptr+i)*BRAM_WIDTH + row_position + cycle_num*width + j);
@@ -221,21 +220,12 @@ void BramCtrl:: bram_to_reg(int bram_block_ptr, int cycle_num, int row_position,
       bram_socket0->b_transport(pl_bram0, offset);
  
       buf[i*3 + j] = to_fixed(buf_bram0); 
-      
-      //cout << to_fixed(buf_bram0) << " ";
       }
-
-      //cout << endl;
     }
- 
  
     for(int i = 0; i < (NUM_PARALLEL_POINTS + 2 - (BRAM_HEIGHT-bram_block_ptr)); ++i){
  
-      /*cout << "CORNER CASE: [0, 9]" << (bram_block_ptr+i)*BRAM_WIDTH + (59-bram_block_ptr) + (cycle_num+1)*width << endl;
-      cout << "bram_block_ptr:" << bram_block_ptr << endl;
-      cout << "(59-bram_block_ptr):" << (59-bram_block_ptr) << endl;
-      cout << "cycle_num*width:" << (cycle_num+1)*width << endl;
-      cout << "i:" << i << endl;*/
+      //cout << "CORNER CASE: [0, 9]" << (bram_block_ptr+i)*BRAM_WIDTH + (59-bram_block_ptr) + (cycle_num+1)*width << endl;
  
       for(int j = 0; j < 3; ++j) {
         pl_bram0.set_address(i*BRAM_WIDTH + row_position + ((cycle_num+1)%((int)(BRAM_WIDTH/width)))*width + j);
@@ -246,21 +236,14 @@ void BramCtrl:: bram_to_reg(int bram_block_ptr, int cycle_num, int row_position,
  
         bram_socket0->b_transport(pl_bram0, offset);
         buf[(i + (59-bram_block_ptr))*3 + j] = to_fixed(buf_bram0); 
- 
-        //cout << to_fixed(buf_bram0) << " ";
       }
-
-      //cout << endl;
     }
  
   }else{
  
     for(int i = 0; i < (NUM_PARALLEL_POINTS+2); ++i){
  
-      /*cout << "redovna adresa: " << cycle_num*width + row_position + (bram_block_ptr+i)*BRAM_WIDTH << endl;
-      cout << "br bram bloka: " << bram_block_ptr << endl;
-      cout << "pozicija u redu: " << row_position << endl;
-      cout << "br ciklusa: " << cycle_num << endl;*/
+      //cout << "redovna adresa: "
  
       for(int j = 0; j < 3; ++j) {   
       //bram_block_ptr*BRAM_WIDTH - koji je pocetni BRAM BLOK
@@ -274,21 +257,11 @@ void BramCtrl:: bram_to_reg(int bram_block_ptr, int cycle_num, int row_position,
       pl_bram0.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
  
       bram_socket0->b_transport(pl_bram0, offset);
-      //cout << "address: " << cycle_num*width + row_position + (bram_block_ptr+i)*BRAM_WIDTH + j << endl;
-      //cout << to_fixed(buf_bram00) << endl; 
- 
+
       buf[i*3 + j] = to_fixed(buf_bram0); 
- 
-      //cout << " buf : " << buf[i*3 + j] << endl;
-      unsigned char test[LEN_IN_BYTES];
-      to_uchar(test, buf[i*3 + j]);
-      //cout << "uchar buf: " << *test << endl;
- 
       }
     }
   }
- 
-  //cout << "CITAV BUF: " << endl << endl << endl;
  
   for(int i=0; i<(NUM_PARALLEL_POINTS+2)*3; ++i){
       to_uchar(buf_bram0, buf[i]);
@@ -303,26 +276,5 @@ void BramCtrl:: bram_to_reg(int bram_block_ptr, int cycle_num, int row_position,
       filter_socket -> b_transport(pl_filter, offset); 
  
     num_t2 t = to_fixed (buf_bram0);
-    //cout << "bram: " << t << " ";
-
   }
-  //cout << endl; 
- 
-}
- 
-void BramCtrl::read_bram(sc_dt::uint64 addr_bram, sc_core::sc_time &offset) {
- 
-  pl_t pl_filter;
- 
-  unsigned char buf[LEN_IN_BYTES];
- 
-  pl_filter.set_address(addr_bram);
-  pl_filter.set_data_length(LEN_IN_BYTES);
-  pl_filter.set_data_ptr(buf);
-  pl_filter.set_command(tlm::TLM_READ_COMMAND);
-  pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
- 
-  bram_socket0 -> b_transport(pl_filter, offset); // TODO: change 0 
- 
-  //cout << to_fixed(buf) << " ";
 }
