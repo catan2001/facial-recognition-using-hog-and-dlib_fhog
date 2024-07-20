@@ -24,6 +24,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
   sc_dt::uint64 addr = pl.get_address();
   unsigned int len = pl.get_data_length();
   unsigned char *buf = pl.get_data_ptr();
+  unsigned char counter_init = 0;
   int bonus, skipped_rows;
   
   switch(cmd)
@@ -50,7 +51,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           }
  
           initialisation(1);
-
+          cout << "START INITIALIZATION FINISHED!!!!!!!!" << endl << endl << endl;
           //height - the number of rows we have in DRAM
           //(BRAM_HEIGHT*floor(BRAM_WIDTH/width)) - the number of rows which can fit into the BRAM at once
           //if the division of these two yields a number <= 1 it means the whole picture can fit into the BRAM
@@ -79,8 +80,9 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
                   //change dram_ptr position from the last unwritten row in BRAM
                   //to the last unfiltered row in BRAM:
                   //236 - (59-57) = 234
+                  counter_init++; // counts how many times it's initialized, it's used to multiply dram_row_ptr
                   cout << "BRAM_HEIGHT-bram_ptr: " << (BRAM_HEIGHT-bram_block_ptr) << endl;
-                  dram_row_ptr = floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr);
+                  dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr)) * counter_init;
 
                   //setup i and the corresponding cycle_num and bram_ptr derived from i
                   //so that they continue from the beginning of the BRAM:
@@ -91,6 +93,8 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
                   cout << "RESET cycle_num: " << cycle_number << " bram_ptr: " << bram_block_ptr << endl;
                   
                   initialisation(0);
+
+                  cout << "INIT 0 FINISHED!" << endl << endl << endl;
                 }
               }
 
@@ -173,7 +177,7 @@ void BramCtrl:: dram_to_bram(int init, sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::
   }
   
   cout << "DRAM ADDR: " << dram_addr << endl;
-  cout << "BRAM ADDR: " << bram_addr << endl;
+  //cout << "BRAM ADDR: " << bram_addr << endl;
   unsigned char buf_dram[LEN_IN_BYTES];
   // we don't need address of DRAM, it's connected directly BRAM_CTRL -> DRAM_CTRL
   pl_dram.set_address(dram_addr);

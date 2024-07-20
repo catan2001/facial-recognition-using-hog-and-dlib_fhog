@@ -44,8 +44,15 @@ void HW::filter_image_t(void){
     temp[5] = mem33[6+i*3]*(-1) - mem33[8+i*3];
     //tier 2:
     mem18[i+NUM_PARALLEL_POINTS] = temp[3]+temp[4]+temp[5];
-
-    //cout << "f_y["<<i<<"]: " << mem18[i+NUM_PARALLEL_POINTS] << " ";
+    cout << " mem33[0+" << i*3 << "] = "<<  mem33[0+i*3] << endl;
+    cout << " mem33[1+" << i*3 << "] = "<<  mem33[1+i*3] << endl;
+    cout << " mem33[2+" << i*3 << "] = "<<  mem33[2+i*3] << endl;
+    cout << " mem33[3+" << i*3 << "] = "<<  mem33[3+i*3] << endl;
+    cout << " mem33[5+" << i*3 << "] = "<<  mem33[5+i*3] << endl;
+    cout << " mem33[6+" << i*3 << "] = "<<  mem33[6+i*3] << endl;
+    cout << " mem33[7+" << i*3 << "] = "<<  mem33[7+i*3] << endl;
+    cout << " mem33[8+" << i*3 << "] = "<<  mem33[8+i*3] << endl;
+    cout << "f_y["<<i<<"]: " << mem18[i+NUM_PARALLEL_POINTS] << " ";
  
   }  
 }
@@ -96,7 +103,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
           }
 
           pixel_batch_cnt++;
-          if(pixel_batch_cnt>=ROWS) {pixel_batch_cnt=0; row_batch_cnt++;}
+          if(pixel_batch_cnt>=COLS) {pixel_batch_cnt=0; row_batch_cnt++;}
 
           pl.set_response_status(tlm::TLM_OK_RESPONSE); 
           break;

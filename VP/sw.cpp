@@ -118,8 +118,8 @@ void SW::process_img(){
     }
 
     // 2 CONFIGURE HW REGISTERS AND SEND START CMD:
-    write_hard(ADDR_WIDTH, ROWS+2);
-    write_hard(ADDR_HEIGHT, COLS+2);
+    write_hard(ADDR_WIDTH, COLS+2);
+    write_hard(ADDR_HEIGHT, ROWS+2);
     write_hard(ADDR_CMD, 1);
     
     for(int i = 0; i<ROWS; ++i){
