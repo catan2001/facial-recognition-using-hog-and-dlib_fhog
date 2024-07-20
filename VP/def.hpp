@@ -16,6 +16,7 @@ typedef sc_dt::sc_fixed_fast <W, I ,Q ,O> num_t2;
 typedef std::vector<num_t> array_t2;
 typedef std::deque<num_t2> array_t;
 typedef std::deque<array_t> matrix_t;
+typedef std::deque<array_t2> matrix_t2;
 typedef std::vector<std::vector<double>> orig_array_t;
 
 typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
@@ -40,12 +41,17 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 #define ADDR_INPUT_REG 0x10
 
 //#define MAX_SIZE 200
-#define ROWS 623
-#define COLS 492
+#define ROWS 150
+#define COLS 150
 #define nBINS 6
 #define CELL_SIZE 8
 #define CELL_POW (CELL_SIZE*CELL_SIZE)
 #define BLOCK_SIZE 2
+
+#define UPPER_BOUNDARY ROWS > COLS ? COLS : ROWS
+#define LOWER_BOUNDARY floor(UPPER_BOUNDARY/3)
+#define THRESHOLD 0.6 // TODO: CHANGE AS NEEDED!
+#define SUPPRESSION 0.5 // TODO: CHANGE AS NEEDED!
 
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)

@@ -25,12 +25,14 @@ int to_int (unsigned char *);
 
 void int_to_uchar(unsigned char *buf, int num);
 
-void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int width, int integer);
+void write_txt(double* found_faces, int len, char *name_txt);
 
-void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, double *ori_histo);
+//void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int width, int integer);
 
-void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_histo_normalized);
+//void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, double *ori_histo);
 
-void extract_hog(int rows, int cols, int A, int B, double *im, double *hog);
+//void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_histo_normalized);
+
+//void extract_hog(int rows, int cols, int A, int B, double *im, double *hog);
 
 #endif // _UTILS_HPP_

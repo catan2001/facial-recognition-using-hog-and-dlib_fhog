@@ -44,16 +44,7 @@ void HW::filter_image_t(void){
     temp[5] = mem33[6+i*3]*(-1) - mem33[8+i*3];
     //tier 2:
     mem18[i+NUM_PARALLEL_POINTS] = temp[3]+temp[4]+temp[5];
-    cout << " mem33[0+" << i*3 << "] = "<<  mem33[0+i*3] << endl;
-    cout << " mem33[1+" << i*3 << "] = "<<  mem33[1+i*3] << endl;
-    cout << " mem33[2+" << i*3 << "] = "<<  mem33[2+i*3] << endl;
-    cout << " mem33[3+" << i*3 << "] = "<<  mem33[3+i*3] << endl;
-    cout << " mem33[5+" << i*3 << "] = "<<  mem33[5+i*3] << endl;
-    cout << " mem33[6+" << i*3 << "] = "<<  mem33[6+i*3] << endl;
-    cout << " mem33[7+" << i*3 << "] = "<<  mem33[7+i*3] << endl;
-    cout << " mem33[8+" << i*3 << "] = "<<  mem33[8+i*3] << endl;
-    cout << "f_y["<<i<<"]: " << mem18[i+NUM_PARALLEL_POINTS] << " ";
- 
+    //cout << "f_y["<<i<<"]: " << mem18[i+NUM_PARALLEL_POINTS] << " ";
   }  
 }
  

@@ -51,7 +51,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           }
  
           initialisation(1);
-          cout << "START INITIALIZATION FINISHED!!!!!!!!" << endl << endl << endl;
+          //cout << "START INITIALIZATION FINISHED!!!!!!!!" << endl << endl << endl;
           //height - the number of rows we have in DRAM
           //(BRAM_HEIGHT*floor(BRAM_WIDTH/width)) - the number of rows which can fit into the BRAM at once
           //if the division of these two yields a number <= 1 it means the whole picture can fit into the BRAM
@@ -70,7 +70,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
               cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
               bram_block_ptr = i%BRAM_HEIGHT;  // bram_block_ptr++ -> bram_block_ptr == BRAM_HEIGHT ? bram_ptr = 0
 
-              cout << "cycle_num: " << cycle_number << " bram_ptr: " << bram_block_ptr << endl;
+              //cout << "cycle_num: " << cycle_number << " bram_ptr: " << bram_block_ptr << endl;
 
               //if we're on the last cycle and the bram_block_ptr is on the rows which will need supplementation rows from the next cycle
               //which currently doesn't exist -> check if we have more rows in DRAM that need to be stored and transfer them
@@ -81,7 +81,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
                   //to the last unfiltered row in BRAM:
                   //236 - (59-57) = 234
                   counter_init++; // counts how many times it's initialized, it's used to multiply dram_row_ptr
-                  cout << "BRAM_HEIGHT-bram_ptr: " << (BRAM_HEIGHT-bram_block_ptr) << endl;
+                  //cout << "BRAM_HEIGHT-bram_ptr: " << (BRAM_HEIGHT-bram_block_ptr) << endl;
                   dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr)) * counter_init;
 
                   //setup i and the corresponding cycle_num and bram_ptr derived from i
@@ -90,11 +90,11 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
                   cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
                   bram_block_ptr = i%BRAM_HEIGHT;
 
-                  cout << "RESET cycle_num: " << cycle_number << " bram_ptr: " << bram_block_ptr << endl;
+                  //cout << "RESET cycle_num: " << cycle_number << " bram_ptr: " << bram_block_ptr << endl;
                   
                   initialisation(0);
 
-                  cout << "INIT 0 FINISHED!" << endl << endl << endl;
+                  //cout << "INIT 0 FINISHED!" << endl << endl << endl;
                 }
               }
 
@@ -148,9 +148,9 @@ void BramCtrl:: initialisation(bool init){
 
   for(int i = 0; i < floor(BRAM_WIDTH/width); ++i) { //maximum number of rows that can fit in a single BRAM BLOCK
     for(int j = 0; j < BRAM_HEIGHT; ++j) {         //number of BRAM BLOCKS
-        cout<< "BEFORE INC dram_row_ptr: " << dram_row_ptr << endl;
+        //cout<< "BEFORE INC dram_row_ptr: " << dram_row_ptr << endl;
         dram_row_ptr++;
-        cout<< "dram_row_ptr: " << dram_row_ptr << endl;
+        //cout<< "dram_row_ptr: " << dram_row_ptr << endl;
         //placing a single row on the i-th position within the j-th BRAM BLOCK:
         for(int k = 0; k < width; ++k) {
               dram_to_bram(init, i, j, k, offset); // load from DRAM to BRAM from 0th position
@@ -176,7 +176,7 @@ void BramCtrl:: dram_to_bram(int init, sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::
     bram_addr = i*(this->width) + j*BRAM_WIDTH + k;
   }
   
-  cout << "DRAM ADDR: " << dram_addr << endl;
+  //cout << "DRAM ADDR: " << dram_addr << endl;
   //cout << "BRAM ADDR: " << bram_addr << endl;
   unsigned char buf_dram[LEN_IN_BYTES];
   // we don't need address of DRAM, it's connected directly BRAM_CTRL -> DRAM_CTRL

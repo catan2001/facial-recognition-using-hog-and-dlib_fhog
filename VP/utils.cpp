@@ -109,6 +109,21 @@ void int_to_uchar(unsigned char *buf, int num) {
     buf[1] = (num & 0x00FF);
 }
 
+void write_txt(double* found_faces, int len, char *name_txt){
+	
+	FILE *fp;
+	
+  	fp = fopen(name_txt, "wb");
+
+    	for(int i=0; i<len; ++i){
+	       	fprintf(fp, "x: %.0lf y: %.0lf score: %.4lf \n", found_faces[i*3], found_faces[3*i+1], found_faces[3*i+2]);
+    	//	printf("x: %.2lf y: %.2lf score: %.4lf \n", found_faces[i*3], found_faces[3*i+1], found_faces[3*i+2]);
+	}
+	fclose(fp);
+
+}
+
+/*
 void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int width, int integer) {
     for(int i = 0; i != rows; ++i) {
         for (int j = 0; j != cols; ++j) {
@@ -119,8 +134,8 @@ void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int widt
             dest[i][j] = d;
         }
     }
-}
-
+} */
+/*
 void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, double *ori_histo){
 
     double magROI[CELL_POW], angleROI[CELL_POW];
@@ -187,4 +202,4 @@ void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_his
         }
     }
 }
-
+*/
