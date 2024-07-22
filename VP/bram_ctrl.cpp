@@ -34,11 +34,14 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
       switch(addr)
         {
         case ADDR_WIDTH:
-          width = to_int(buf);
+          width = to_int(buf);  
+          dram_row_ptr = 0;
+          write_filter(ADDR_WIDTH, width);
           break;
 
         case ADDR_HEIGHT:
           height = to_int(buf);
+          write_filter(ADDR_HEIGHT, height);
           break;
 
         case ADDR_CMD:
@@ -97,10 +100,11 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
                   //cout << "INIT 0 FINISHED!" << endl << endl << endl;
                 }
               }
-
+                
 
               for(int j=0; j < width - 2; ++j){ 
- 
+              
+
               //PHASE I -> WRITE TO REG36:
                 bram_to_reg(bram_block_ptr, cycle_number, j, ADDR_INPUT_REG, offset);
  
@@ -285,3 +289,17 @@ void BramCtrl:: bram_to_reg(int bram_block_ptr, int cycle_num, int row_position,
     num_t2 t = to_fixed (buf_bram0);
   }
 }
+
+void BramCtrl::write_filter(sc_dt::uint64 addr, int val)
+{
+    pl_t pl;
+    unsigned char buf[LEN_IN_BYTES];
+    int_to_uchar(buf, val); // NOTE: only for int...
+    pl.set_address(addr);
+    pl.set_data_length(LEN_IN_BYTES);
+    pl.set_data_ptr(buf);
+    pl.set_command(tlm::TLM_WRITE_COMMAND);
+    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    filter_socket->b_transport(pl, offset);
+}
+

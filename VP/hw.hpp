@@ -25,7 +25,7 @@ protected:
 	void filter_image_t(void);
 	num_t2 read_bram(int addr);
 	void reg_to_dram(sc_dt::uint64 i, int dram_addr, sc_core::sc_time &offset);
- 
+    int width, height; 
 	std::vector<num_t2> mem33, mem18;
 	int mem33_ptr;
 
