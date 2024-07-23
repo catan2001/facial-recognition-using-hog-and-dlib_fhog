@@ -1,0 +1,11 @@
+x: 66 y: 21 score: 60.8773 
+x: 66 y: 21 score: 68.3683 
+x: 24 y: 60 score: 66.3288 
+x: 87 y: 21 score: 66.2778 
+x: 33 y: 24 score: 65.7908 
+x: 51 y: 54 score: 63.3390 
+x: 84 y: 42 score: 62.4202 
+x: 15 y: 21 score: 61.9840 
+x: 54 y: 33 score: 60.9923 
+x: 33 y: 24 score: 63.3822 
+x: 30 y: 63 score: 61.6671 

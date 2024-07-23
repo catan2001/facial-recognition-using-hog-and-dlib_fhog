@@ -15,7 +15,6 @@ public:
 	~Interconnect();
 	tlm_utils::simple_initiator_socket<Interconnect> hw_socket; // filterX/filterY
 	tlm_utils::simple_initiator_socket<Interconnect> dram_ctrl_socket;
-	//tlm_utils::simple_initiator_socket<Interconnect> mem_ic_socket; we decided to not represent memory interconnect
 	tlm_utils::simple_target_socket<Interconnect> soft_socket;
 
 protected:

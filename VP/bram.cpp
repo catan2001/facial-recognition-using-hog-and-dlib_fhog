@@ -26,23 +26,15 @@ void Bram::b_transport(pl_t& pl, sc_core::sc_time& offset)
     switch (cmd)
     {
     case tlm::TLM_WRITE_COMMAND:
-        //for (unsigned int i = 0; i < len; ++i)
-        //{
             mem[addr] = to_fixed(data);
-            //cout << to_fixed(data) << " ";
-        //}
         pl.set_response_status(tlm::TLM_OK_RESPONSE); 
         break;
     case tlm::TLM_READ_COMMAND:
-        //for (unsigned int i = 0; i < len; ++i)
-        //{
           to_uchar(data, mem[addr]);
-        //}
         pl.set_response_status(tlm::TLM_OK_RESPONSE);
         break;
     default:
         pl.set_response_status(tlm::TLM_COMMAND_ERROR_RESPONSE);
     }
-
     offset += sc_core::sc_time(10, sc_core::SC_NS);
 }

@@ -31,9 +31,12 @@ using namespace sc_dt;
 #define SUPPRESSION 0.5 // TODO: CHANGE AS NEEDED!
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)
+#define I_INPUT 1
+#define I_CONST 3
+#define I_OUTPUT 4
 
-const double filter_x[9] = {1,0,-1, 2,0,-2, 1,0,-1};  //Dx = filter_x conv D
-const double filter_y[9] = {1,2,1, 0,0,0, -1,-2,-1};    //Dy = filter_y conv D
+
+typedef const sc_dt::sc_int<I_CONST> const_t;
 
 int num_thresholded = 0;
 int num_faces = 0;
@@ -51,7 +54,7 @@ double array_dot(int len, double *array1, double *array2);
 
 void sort(int x, int y, int z, double *array);
 
-void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int W, int I);
+void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int W);
 
 void find_max(int rows, int cols, double *matrix);
 
@@ -67,17 +70,14 @@ void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, d
 
 void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_histo_normalized);
 
-void extract_hog(int rows, int cols, int W, int I, double *im, double *hog);
+void extract_hog(int rows, int cols, int W, double *im, double *hog);
 
-double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, double *I_target, double *I_template);
+double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, double *I_target, double *I_template);
 
-void face_recognition_range(int W, int I, double *I_target, int step); 
+void face_recognition_range(int W, double *I_target, int step); 
 
 int sc_main(int, char*[]) {
-    // TODO: implement filters to be also bit width dependant 
-
-    int W = 32;
-    const int I = 3;  
+    int W = 32; 
     
     #ifdef DEBUG
         cout << endl << "        NOTE: DEBUG preprocessor directive is on!" << endl << endl;
@@ -89,7 +89,9 @@ int sc_main(int, char*[]) {
     do {
         
         cout << "Width W: " << W << endl;
-        cout << "Fixed point: " << I << endl;
+        cout << "Fixed point for input: " << I_INPUT << endl;
+        cout << "Fixed point for output: " << I_OUTPUT << endl;       
+        cout << "Fixed point for filter constants: " << I_CONST << endl;
         
         FILE * rach;
         rach = fopen("template/gray.txt", "rb");
@@ -104,17 +106,16 @@ int sc_main(int, char*[]) {
         for (int i = 0; i < ROWS; ++i){
             for (int j = 0; j < COLS; ++j){
                 fscanf(rach, "%lf", &val);
-		
                 gray[i * COLS + j] = val;
             }
         }
         fclose(rach);
 
-        face_recognition_range(W, I, &gray[0], 10);
+        face_recognition_range(W, &gray[0], 10);
 
         delete [] gray; // deallocates whole array in memory
     
-        W -= 1;
+        W -= 1; // decrease width
     }
     while (W > 8);
   
@@ -123,17 +124,12 @@ int sc_main(int, char*[]) {
 }
 
 void write_txt(double* found_faces, int len, char *name_txt){
-	
 	FILE *fp;
-	
   	fp = fopen(name_txt, "wb");
-
     	for(int i=0; i<len; ++i){
 	       	fprintf(fp, "x: %.0lf y: %.0lf score: %.4lf \n", found_faces[i*3], found_faces[3*i+1], found_faces[3*i+2]);
-    	//	printf("x: %.2lf y: %.2lf score: %.4lf \n", found_faces[i*3], found_faces[3*i+1], found_faces[3*i+2]);
 	}
 	fclose(fp);
-
 }
 
 double mean_subtract(int len, double *array) {
@@ -222,10 +218,10 @@ double box_iou(double box1_x, double box1_y, double box2_x, double box2_y, doubl
     return (intersectionArea / (sumOfAreas - intersectionArea)); 
 }
 
-void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int W, int I) {
+void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int W) {
     for(int i = 0; i != rows; ++i) {
         for (int j = 0; j != cols; ++j) {
-            num_t d(W, I);
+            num_t d(W, I_INPUT);
             d = src[i][j];
             if(d.overflow_flag())
                 std::cout << "Overflow!" << endl;
@@ -235,7 +231,6 @@ void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int W, i
 }
 
 void find_max(int rows, int cols, double *matrix) {
-    // TODO: implement faster algorithm
     double tmp_max = *matrix;
     int row, col;
 
@@ -247,13 +242,14 @@ void find_max(int rows, int cols, double *matrix) {
                 col = j;
             }
         }
-     cout << "max: "<< tmp_max << endl;
-     cout << "x = " << row *3 << " y= " << col*3 << endl;
 }
 
-void filter_image_t(int rows, int cols, int W, int I, matrix_t& matrix_im_filtered_x, matrix_t& matrix_im_filtered_y, const double *filter_x, const double *filter_y, matrix_t& padded_img){
+void filter_image_t(int rows, int cols, int W, matrix_t& matrix_im_filtered_x, matrix_t& matrix_im_filtered_y, matrix_t& padded_img){
 
- array_t imROI(9, num_t(W, I, Q, O));
+    const_t filter_x[9] = {1,0,-1, 2,0,-2, 1,0,-1};  //Dx = filter_x conv D
+    const_t filter_y[9] = {1,2,1, 0,0,0, -1,-2,-1};    //Dy = filter_y conv D
+
+    array_t imROI(9, num_t(W, I_INPUT, Q, O));
 
     for (int i=0; i<rows; ++i){
         for (int j=0; j<cols; ++j){
@@ -262,10 +258,8 @@ void filter_image_t(int rows, int cols, int W, int I, matrix_t& matrix_im_filter
                 matrix_im_filtered_y[i][j] += imROI[k] * filter_y[k];
                 matrix_im_filtered_x[i][j] += imROI[k] * filter_x[k];
             }
-            cout << " im_fx: " << matrix_im_filtered_x[i][j] << endl; 
         }
     }
-
 }
 
 void get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad_mag, double *grad_angle){
@@ -291,8 +285,7 @@ void get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad
         }
     }
 }
-
-
+/*
 void get_gradient_t(int rows, int cols, int W, int I, matrix_t& dx, matrix_t& dy, matrix_t& grad_mag_t, matrix_t& grad_angle_t, double *grad_mag, double *grad_angle){
 
     num_t dX(W, I, Q, O);
@@ -320,16 +313,10 @@ void get_gradient_t(int rows, int cols, int W, int I, matrix_t& dx, matrix_t& dy
             }else{
                 grad_angle_t[i][j] = pi_const;
             }
-	    
-//	    *(grad_mag + i*cols + j) = grad_mag_t[i][j];
-//	    *(grad_angle + i*cols + j) = grad_angle_t[i][j];
         }
     }
-
-
-
 }
-
+*/
 void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, double *ori_histo){
 
     double magROI[CELL_POW], angleROI[CELL_POW];
@@ -339,11 +326,9 @@ void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, d
             double hist[nBINS]={0, 0, 0, 0, 0, 0};
 
             for(int k = 0; k < CELL_POW; ++k){
-                //magROI[k]=grad_mag[i-CELL_SIZE+(int)(k/CELL_SIZE)][j-CELL_SIZE+(k%CELL_SIZE)];
                 magROI[k]= *(grad_mag + (i-CELL_SIZE+(int)(k/CELL_SIZE))*cols + j-CELL_SIZE+(k%CELL_SIZE));
                 if(magROI[k] != magROI[k]) cout << "NAN! -> " << k << " = " << magROI[k] << endl;
 
-                //angleROI[k]=grad_angle[i-CELL_SIZE+(int)(k/CELL_SIZE)][j-CELL_SIZE+(k%CELL_SIZE)];
                 angleROI[k]= *(grad_angle + (i-CELL_SIZE+(int)(k/CELL_SIZE))*cols + j-CELL_SIZE+(k%CELL_SIZE));
                 angleInDeg = angleROI[k]*(180.0 / PI);
                 if(angleInDeg != angleInDeg) cout << "NAN angleInDeg!" << endl;
@@ -362,9 +347,8 @@ void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, d
                 }  
             } 
 
-            for(int k=0; k<nBINS; ++k) //ori_histo[(int)(i-CELL_SIZE)/CELL_SIZE][(int)(j-CELL_SIZE)/CELL_SIZE][k] = hist[k]; 
-                                       *(ori_histo + ((int)(i-CELL_SIZE)/CELL_SIZE) * nBINS * (int)(cols/CELL_SIZE) + ((int)(j-CELL_SIZE)/CELL_SIZE)*nBINS + k) = hist[k]; 
-
+            for(int k=0; k<nBINS; ++k) 
+                *(ori_histo + ((int)(i-CELL_SIZE)/CELL_SIZE) * nBINS * (int)(cols/CELL_SIZE) + ((int)(j-CELL_SIZE)/CELL_SIZE)*nBINS + k) = hist[k]; 
         }
     } 
 }
@@ -401,12 +385,11 @@ void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_his
         }
     }
 }
-//changed so it accepts both filtered by x and y filter
-void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) { 
+
+void extract_hog(int rows, int cols, int W, double *im, double *hog) { 
     
     double im_min = *(im + 0)/255.00000000;
     double im_max = *(im + 0)/255.00000000;
-    
     double *im_c = new double[rows*cols];
 
     for(int i = 0; i < rows; ++i){
@@ -424,7 +407,6 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
         }
     }
 
-
     //HARDWARE PART OF CODE:
     //Pad image:
     orig_array_t orig_gray(rows, vector<double>(cols));
@@ -437,12 +419,12 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
 
     delete [] im_c;
     
-    matrix_t matrix_gray(rows, array_t(cols, num_t(W, I, Q, O)));
-    matrix_t matrix_im_filtered_y(rows, array_t(cols, num_t(W,I,Q,O)));
-    matrix_t matrix_im_filtered_x(rows, array_t(cols, num_t(W,I,Q,O)));
-    matrix_t padded_img(rows+2, array_t(cols+2, num_t(W,I,Q, O)));
-    cast_to_fix(rows, cols, matrix_gray, orig_gray, W, I);
+    matrix_t matrix_gray(rows, array_t(cols, num_t(W, I_INPUT, Q, O)));
+    matrix_t padded_img(rows+2, array_t(cols+2, num_t(W,I_INPUT,Q, O)));
+    matrix_t matrix_im_filtered_y(rows, array_t(cols, num_t(W,I_OUTPUT,Q,O)));
+    matrix_t matrix_im_filtered_x(rows, array_t(cols, num_t(W,I_OUTPUT,Q,O)));
 
+    cast_to_fix(rows, cols, matrix_gray, orig_gray, W);
     
     //pad the image on the outer edges with zeros:
     for(int i=0; i<rows+2; ++i) {
@@ -464,25 +446,10 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
     }
 
     //Filter image:
-    filter_image_t(rows, cols, W, I, matrix_im_filtered_x, matrix_im_filtered_y, &filter_x[0], &filter_y[0], padded_img);
-
-   //Get_gradient:  
-   /* matrix_t grad_mag_t(rows, array_t(cols, num_t(W, I, Q, O)));
-    matrix_t grad_angle_t(rows, array_t(cols, num_t(W, I, Q, O)));
     
-    double *grad_mag = new double[rows * cols];
-    double *grad_angle = new double[rows * cols];
+    filter_image_t(rows, cols, W, matrix_im_filtered_x, matrix_im_filtered_y, padded_img);
     
-    get_gradient_t(rows, cols, W, I, matrix_im_filtered_x, matrix_im_filtered_y, grad_mag_t, grad_angle_t, &grad_mag[0], &grad_angle[0]);
-
-   for(int i=0; i<rows; ++i){
-   	for(int j=0; j<cols; ++j){
-		*(grad_mag + i*cols + j) = grad_mag_t[i][j];
-	        *(grad_angle + i*cols + j) = grad_angle_t[i][j];	
-	}
-   }*/
-
-   //END OF HARDWARE PART
+    //END OF HARDWARE PART
 
     double *im_dx = new double[rows * cols];
     double *im_dy = new double[rows * cols];
@@ -506,7 +473,6 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
 
     build_histogram(rows, cols, &grad_mag[0], &grad_angle[0], &ori_histo[0]);
     
-    // TODO: Make makro to replace underneath
     double *ori_histo_normalized = new double[(height-(BLOCK_SIZE-1)) * (width-(BLOCK_SIZE-1)) * nBINS*(BLOCK_SIZE*BLOCK_SIZE)];   
 
     get_block_descriptor(rows, cols, &ori_histo[0], &ori_histo_normalized[0]);
@@ -530,15 +496,14 @@ void extract_hog(int rows, int cols, int W, int I, double *im, double *hog) {
     delete [] ori_histo_normalized;
 }
 
-double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int I, double *I_target, double *I_template) {
+double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, double *I_target, double *I_template) {
     
     int hog_len = ((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24;    
-    double *template_HOG = new double[((int)(box_h/8)-1)*((int)(box_w/8)-1)*24];
-
-    extract_hog(box_h, box_w, W, I, &(I_template[0]), template_HOG);
-
-    double template_HOG_norm = 0;
+    double *template_HOG = new double[hog_len];
     double template_HOG_mean = 0;
+    double template_HOG_norm = 0;
+    
+    extract_hog(box_h, box_w, W, &(I_template[0]), template_HOG);
     
     template_HOG_mean = mean_subtract(hog_len, &template_HOG[0]);
 
@@ -577,7 +542,7 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int 
             
             double *img_HOG = new double[((int)(box_h/8) - 1)*((int)(box_w/8) - 1)*24];
 
-            extract_hog(box_h, box_w, W, I, &img_window[0], &img_HOG[0]);    
+            extract_hog(box_h, box_w, W, &img_window[0], &img_HOG[0]);    
             img_HOG_mean = mean_subtract(hog_len, &img_HOG[0]);
         
             for(int l = 0; l < hog_len; ++l){ 
@@ -615,7 +580,6 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int 
         }
     #endif
      
-    // sorting array [Bubble Sort(slower version)]
     sort_bounded_boxes((img_h-box_h)/3 + 1, (img_w-box_w)/3 + 1, 3, all_bounding_boxes);
     num_thresholded = 0;
 
@@ -637,8 +601,6 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int 
                 thresholded_boxes[tb*3 + 0] = *(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 0); 
                 thresholded_boxes[tb*3 + 1] = *(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 1); 
                 thresholded_boxes[tb*3 + 2] = *(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 2);
-          
-		 //       cout << "x: " << thresholded_boxes[tb*3 + 0] << " y: " << thresholded_boxes[tb*3 + 1] << " score: " << thresholded_boxes[tb*3 + 2] << endl;
 		        tb++;
             }
         }
@@ -678,7 +640,7 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int 
     }
     
     num_thresholded = kk;
-
+ 
     #ifdef DEBUG
         for(int i = 0; i < kk; ++i) {
             cout << "after x: " << bounding_boxes[i*3 + 0] << " y: " << bounding_boxes[i*3 + 1] << " score: " << bounding_boxes[i*3 + 2] << endl;
@@ -696,7 +658,7 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, int 
     return bounding_boxes;
 }
 
-void face_recognition_range(int W, int I, double *I_target, int step) {
+void face_recognition_range(int W, double *I_target, int step) {
    
     double *found_faces = (double *) malloc(sizeof(double)*3);
     num_faces = 0;
@@ -709,8 +671,6 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
         snprintf(size_gray, sizeof(size_gray), "%d", width);
         strcat(gray_template, size_gray);
         strcat(gray_template, ".txt");
-
-        cout << gray_template << endl;
             
         double *I_template = new double[width * width];
 
@@ -724,18 +684,14 @@ void face_recognition_range(int W, int I, double *I_target, int step) {
             }
         }
 
-        double *found_boxes = face_recognition(ROWS, COLS, width, width, W, I, I_target, I_template);
+        double *found_boxes = face_recognition(ROWS, COLS, width, width, W, I_target, I_template);
         num_faces += num_thresholded;   
         found_faces = (double *) realloc(found_faces, sizeof(double)*num_faces*3);
-
-   //     cout << "number_thresholded: " << num_thresholded << " at " << width << endl;
-     //   cout << "number_faces: " << num_faces << endl;
         
         for(int i = 0; i < num_thresholded; i++) {
             found_faces[(i+(num_faces-num_thresholded))*3 + 0] = found_boxes[i*3 + 0];
             found_faces[(i+(num_faces-num_thresholded))*3 + 1] = found_boxes[i*3 + 1];
             found_faces[(i+(num_faces-num_thresholded))*3 + 2] = found_boxes[i*3 + 2];
-
 
            cout << "x_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 0] << " y_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 1] << " score_ff: " <<  found_faces[(i+(num_faces-num_thresholded))*3 + 2] <<  endl;  
         }

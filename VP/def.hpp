@@ -41,15 +41,15 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 #define ADDR_INPUT_REG 0x10
 
 //#define MAX_SIZE 200
-#define ROWS 150
-#define COLS 150
+#define ROWS 350
+#define COLS 250
 #define nBINS 6
 #define CELL_SIZE 8
 #define CELL_POW (CELL_SIZE*CELL_SIZE)
 #define BLOCK_SIZE 2
 
-#define UPPER_BOUNDARY ROWS > COLS ? COLS : ROWS
-#define LOWER_BOUNDARY floor(UPPER_BOUNDARY/3)
+#define UPPER_BOUNDARY (ROWS > COLS ? COLS : ROWS)
+#define LOWER_BOUNDARY (floor(UPPER_BOUNDARY/3))
 #define THRESHOLD 0.6 // TODO: CHANGE AS NEEDED!
 #define SUPPRESSION 0.5 // TODO: CHANGE AS NEEDED!
 

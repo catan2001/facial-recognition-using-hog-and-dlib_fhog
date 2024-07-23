@@ -16,7 +16,6 @@ public:
 
   // FILTER SOCKETS:
   tlm_utils::simple_initiator_socket<BramCtrl> filter_socket;
- 
 
   // DRAM SOCKETS:
   tlm_utils::simple_initiator_socket<BramCtrl> dram_ctrl_socket;

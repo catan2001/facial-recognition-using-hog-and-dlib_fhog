@@ -18,27 +18,20 @@ SW::~SW()
 }
 
 void SW::process_img(){
-
-    //int rows = 623;
-    //int cols = 492;
-    //int height = rows/CELL_SIZE;
-    //int width = cols/CELL_SIZE;
-    int steps = floor((UPPER_BOUNDARY-LOWER_BOUNDARY)/10);
-    
+    int steps = floor((UPPER_BOUNDARY-LOWER_BOUNDARY)/10); // parameter for face_recognition_range
     double *gray = new double[ROWS*COLS];
-    
-    FILE * gray_f = fopen("gray.txt", "rb");
+    FILE * gray_f = fopen("250_350/gray.txt", "rb");
     double tmp_gray;
-      for (int i = 0; i < ROWS; ++i){
+
+    for (int i = 0; i < ROWS; ++i){
           for (int j = 0; j < COLS; ++j){
               fscanf(gray_f, "%lf", &tmp_gray);
               gray[i * COLS + j] = tmp_gray;
           }
-      }
+    }
     fclose(gray_f);
     
     face_recognition_range(&gray[0], steps);
-    
 }
 
 void SW::read_dram(sc_dt::uint64 addr, num_t2& val)
@@ -53,7 +46,6 @@ void SW::read_dram(sc_dt::uint64 addr, num_t2& val)
     interconnect_socket->b_transport(pl, offset);
 
     val = to_fixed(buf);
-    //definisi vrijednost koju citas iz brama
 }
 
 void SW::write_dram(sc_dt::uint64 addr, num_t2 val)
@@ -246,11 +238,9 @@ void SW::build_histogram(int rows, int cols, double *grad_mag, double *grad_angl
             double hist[nBINS]={0, 0, 0, 0, 0, 0};
 
             for(int k = 0; k < CELL_POW; ++k){
-                //magROI[k]=grad_mag[i-CELL_SIZE+(int)(k/CELL_SIZE)][j-CELL_SIZE+(k%CELL_SIZE)];
                 magROI[k]= *(grad_mag + (i-CELL_SIZE+(int)(k/CELL_SIZE))*cols + j-CELL_SIZE+(k%CELL_SIZE));
                 if(magROI[k] != magROI[k]) cout << "NAN! -> " << k << " = " << magROI[k] << endl;
 
-                //angleROI[k]=grad_angle[i-CELL_SIZE+(int)(k/CELL_SIZE)][j-CELL_SIZE+(k%CELL_SIZE)];
                 angleROI[k]= *(grad_angle + (i-CELL_SIZE+(int)(k/CELL_SIZE))*cols + j-CELL_SIZE+(k%CELL_SIZE));
                 angleInDeg = angleROI[k]*(180.0 / PI);
                 if(angleInDeg != angleInDeg) cout << "NAN angleInDeg!" << endl;
@@ -269,8 +259,8 @@ void SW::build_histogram(int rows, int cols, double *grad_mag, double *grad_angl
                 }  
             } 
 
-            for(int k=0; k<nBINS; ++k) //ori_histo[(int)(i-CELL_SIZE)/CELL_SIZE][(int)(j-CELL_SIZE)/CELL_SIZE][k] = hist[k]; 
-                                       *(ori_histo + ((int)(i-CELL_SIZE)/CELL_SIZE) * nBINS * (int)(cols/CELL_SIZE) + ((int)(j-CELL_SIZE)/CELL_SIZE)*nBINS + k) = hist[k]; 
+            for(int k=0; k<nBINS; ++k) 
+                *(ori_histo + ((int)(i-CELL_SIZE)/CELL_SIZE) * nBINS * (int)(cols/CELL_SIZE) + ((int)(j-CELL_SIZE)/CELL_SIZE)*nBINS + k) = hist[k]; 
 
         }
     } 
@@ -309,7 +299,6 @@ void SW::get_block_descriptor(int rows, int cols, double *ori_histo, double *ori
     }
 }
 
-//changed so it accepts both filtered by x and y filter
 void SW::extract_hog(int rows, int cols, double *im, double *hog) { 
     
     double im_min = *(im + 0)/255.00000000;
@@ -385,24 +374,16 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
     write_hard(ADDR_CMD, 1);
     
     for(int i = 0; i<rows; ++i){
-        //cout << "I = " << i << endl;
       for(int j = 0; j<cols; ++j){
         read_dram((rows+2)*(cols+2) + 2*cols*i +j, matrix_im_filtered_x[i][j]);
-        //cout<<matrix_im_filtered_x[i][j]<<" ";
         read_dram((rows+2)*(cols+2) + (2*i+1)*cols +j, matrix_im_filtered_y[i][j]);
-        //cout<<matrix_im_filtered_y[i][j]<<" ";
       }
-      //cout<<endl;
     }
     
-    cout << "HARDWARE FINISHED!!!" << endl << endl;
-
-
     double *im_dx = new double[rows * cols];
     double *im_dy = new double[rows * cols];
     double *grad_mag = new double[rows * cols];
     double *grad_angle = new double[rows * cols];
-   
  
    for(int i=0; i<rows; ++i){
    	for(int j=0; j<cols; ++j){
@@ -552,8 +533,6 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
                 thresholded_boxes[tb*3 + 0] = *(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 0); 
                 thresholded_boxes[tb*3 + 1] = *(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 1); 
                 thresholded_boxes[tb*3 + 2] = *(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 2);
-          
-		 //       cout << "x: " << thresholded_boxes[tb*3 + 0] << " y: " << thresholded_boxes[tb*3 + 1] << " score: " << thresholded_boxes[tb*3 + 2] << endl;
 		        tb++;
             }
         }
@@ -613,14 +592,17 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
 
 
 void SW::face_recognition_range(double *I_target, int step) {
-   
+    
+    cout << "Upper Boundary: " << UPPER_BOUNDARY << endl;
+    cout << "Lower Boundary: " << LOWER_BOUNDARY << endl;
+    cout << "Step: " << step << endl;
     double *found_faces = (double *) malloc(sizeof(double)*3);
     num_faces = 0;
 
     for(int width = UPPER_BOUNDARY; width >= LOWER_BOUNDARY; width -= step) {
      	cout << "current template: " << width << endl;
         
-        char gray_template[50] = "fixed_point_analysis/template/template_";
+        char gray_template[50] = "250_350/template_";
         char size_gray[4];
         snprintf(size_gray, sizeof(size_gray), "%d", width);
         strcat(gray_template, size_gray);
@@ -644,9 +626,6 @@ void SW::face_recognition_range(double *I_target, int step) {
         num_faces += num_thresholded;   
         found_faces = (double *) realloc(found_faces, sizeof(double)*num_faces*3);
 
-   //     cout << "number_thresholded: " << num_thresholded << " at " << width << endl;
-     //   cout << "number_faces: " << num_faces << endl;
-        
         for(int i = 0; i < num_thresholded; i++) {
             found_faces[(i+(num_faces-num_thresholded))*3 + 0] = found_boxes[i*3 + 0];
             found_faces[(i+(num_faces-num_thresholded))*3 + 1] = found_boxes[i*3 + 1];

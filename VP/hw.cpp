@@ -37,8 +37,6 @@ void HW::filter_image_t(void){
     //tier 2:
     mem18[i] = temp[0]+temp[1]+temp[2];
 
-    //cout << "f_x["<<i<<"]: " << mem18[i] << " ";
- 
     //FILTER_Y
     //tier 1:
     temp[3] = mem33[1+i*3]*2 + mem33[0+i*3];
@@ -46,7 +44,6 @@ void HW::filter_image_t(void){
     temp[5] = mem33[6+i*3]*(-1) - mem33[8+i*3];
     //tier 2:
     mem18[i+NUM_PARALLEL_POINTS] = temp[3]+temp[4]+temp[5];
-    //cout << "f_y["<<i<<"]: " << mem18[i+NUM_PARALLEL_POINTS] << " ";
   }  
 }
  
@@ -68,12 +65,10 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
             height = to_int(buf);
             pixel_batch_cnt = 0;
             row_batch_cnt = 0;
-            //cout << "HEIGHT HW: " << height << endl;
             pl.set_response_status(tlm::TLM_OK_RESPONSE);
             break;
         case ADDR_WIDTH: // set width register
             width = to_int(buf);
-            cout << "WIDTH HW: " << width << endl;
             pl.set_response_status(tlm::TLM_OK_RESPONSE);
             break;
         case ADDR_INPUT_REG: //write pixels into the registers
@@ -91,20 +86,12 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
 
         //write REG18 pixels to DRAM:
           for(int i=0; i<2*NUM_PARALLEL_POINTS; ++i){
-            //cout << "hw i = " << i << endl;
             if(i<9){
-              //(height)*(width) -> offset start of filtered img in DRAM by the biggest allowed size of the original picture
-              //row_batch_cnt*NUM_PARALLEL_POINTS*2*(width - 2) -> offset by rows when the first batch of 18 rows has been filtered
-              //i*(width - 2)*2 -> place the first 9 pixels in the even rows
-              //pixel_batch_cnt -> starting point within row for each new batch of parallel points
                 reg_to_dram(i, (height)*(width) + row_batch_cnt*NUM_PARALLEL_POINTS*2*(width-2) + i*2*(width-2) + pixel_batch_cnt, offset);
 
             }else{
-              //(2*(i-9)+1)*(width-2) -> place the first 9 pixels in the odd rows
               reg_to_dram(i, (height)*(width) + row_batch_cnt*NUM_PARALLEL_POINTS*2*(width-2) + (2*(i-9)+1)*(width-2)  + pixel_batch_cnt, offset);
-
             }
-      
           }
 
           pixel_batch_cnt++;
@@ -125,8 +112,6 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
         case ADDR_STATUS:
           to_uchar(buf,ready);
           break;
-        //case ADDR_OUTPUT_REG:
-          //TODO: finish reading from output registers
         default:
           pl.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE );
         }
@@ -141,16 +126,11 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
 
 
 void HW:: reg_to_dram(sc_dt::uint64 i, int dram_addr, sc_core::sc_time &offset){
-  //cout << "Entered reg_to_dram" << endl;
   //WRITE TO DRAM:
   pl_t pl_dram;
   unsigned char buf_dram[LEN_IN_BYTES];
 
   to_uchar(buf_dram, mem18[i]);
-
-  //cout << "mem: " << mem18[i] << endl;
-  //cout << to_fixed(buf_dram) << endl;
-  //cout << "DRAM ADDR: " << dram_addr << endl;
   pl_dram.set_address(dram_addr);
   pl_dram.set_data_length(LEN_IN_BYTES);
   pl_dram.set_data_ptr(buf_dram);
@@ -158,20 +138,5 @@ void HW:: reg_to_dram(sc_dt::uint64 i, int dram_addr, sc_core::sc_time &offset){
   pl_dram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
  
   dram_ctrl_socket -> b_transport(pl_dram, offset);
-  //if (pl_bram.is_response_error()) SC_REPORT_ERROR("Bram CTRL",pl_bram.get_response_string().c_str());
-  //cout << "Exited reg_to_dram" << endl;
 }
  
-/*
-num_t2 HW::read_bram(int addr){
-    pl_t pl;
-    unsigned char buf[LEN_IN_BYTES];
-    pl.set_address(addr * LEN_IN_BYTES); 
-    pl.set_data_length(LEN_IN_BYTES);
-    pl.set_data_ptr(buf);
-    pl.set_command(tlm::TLM_READ_COMMAND);
-    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-    sc_core::sc_time offset = sc_core::SC_ZERO_TIME;
-    bram_ctrl_socket->b_transport(pl, offset);
-    return to_fixed(buf); 
-} */
