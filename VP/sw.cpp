@@ -6,8 +6,6 @@ SW::SW(sc_core::sc_module_name name)
     : sc_module(name)
     , offset(sc_core::SC_ZERO_TIME)
 {
-    num_thresholded = 0;
-    num_faces = 0;
     SC_THREAD(process_img);
     SC_REPORT_INFO("Soft", "Constructed.");
 }
@@ -20,7 +18,7 @@ SW::~SW()
 void SW::process_img(){
     int steps = floor((UPPER_BOUNDARY-LOWER_BOUNDARY)/10); // parameter for face_recognition_range
     double *gray = new double[ROWS*COLS];
-    FILE * gray_f = fopen("250_350/gray.txt", "rb");
+    FILE * gray_f = fopen("rachel.txt", "rb");
     double tmp_gray;
 
     for (int i = 0; i < ROWS; ++i){
@@ -32,177 +30,6 @@ void SW::process_img(){
     fclose(gray_f);
     
     face_recognition_range(&gray[0], steps);
-}
-
-void SW::read_dram(sc_dt::uint64 addr, num_t2& val)
-{
-    pl_t pl;
-    unsigned char buf[LEN_IN_BYTES];
-    pl.set_address(addr | DRAM_BASE_ADDR);
-    pl.set_data_length(LEN_IN_BYTES);
-    pl.set_data_ptr(buf);
-    pl.set_command(tlm::TLM_READ_COMMAND);
-    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-    interconnect_socket->b_transport(pl, offset);
-
-    val = to_fixed(buf);
-}
-
-void SW::write_dram(sc_dt::uint64 addr, num_t2 val)
-{
-    pl_t pl;
-    unsigned char buf[LEN_IN_BYTES];
-    to_uchar(buf, val);
-    pl.set_address(addr | DRAM_BASE_ADDR);
-    pl.set_data_length(LEN_IN_BYTES);
-    pl.set_data_ptr(buf);
-    pl.set_command(tlm::TLM_WRITE_COMMAND);
-    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-    interconnect_socket->b_transport(pl, offset);
-}
-
-int SW::read_hard(sc_dt::uint64 addr)
-{
-    pl_t pl;
-    unsigned char buf[LEN_IN_BYTES];
-    pl.set_address(addr | HARD_BASE_ADDR);
-    pl.set_data_length(LEN_IN_BYTES);
-    pl.set_data_ptr(buf);
-    pl.set_command(tlm::TLM_READ_COMMAND);
-    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-    sc_core::sc_time offset = sc_core::SC_ZERO_TIME;
-    interconnect_socket->b_transport(pl, offset);
-    
-    return to_int(buf);
-}
-
-void SW::write_hard(sc_dt::uint64 addr, int val)
-{
-    pl_t pl;
-    unsigned char buf[LEN_IN_BYTES];
-    int_to_uchar(buf, val); // NOTE: only for int...
-    pl.set_address(addr | HARD_BASE_ADDR);
-    pl.set_data_length(LEN_IN_BYTES);
-    pl.set_data_ptr(buf);
-    pl.set_command(tlm::TLM_WRITE_COMMAND);
-    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-    interconnect_socket->b_transport(pl, offset);
-}
-
-void SW::cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src) {
-    for(int i = 0; i != rows; ++i) {
-        for (int j = 0; j != cols; ++j) {
-            num_t d(W, I);
-            d = src[i][j];
-            if(d.overflow_flag())
-                std::cout << "Overflow!" << endl;
-            dest[i][j] = d;
-        }
-    }
-}
-
-double SW::mean_subtract(int len, double *array) {
-    double mean = 0;
-
-    for(int i = 0; i < len; ++i) {
-        mean += *(array + i);
-    }
-    return (mean/len);
-}
-
-double SW::array_norm(int len, double *array) {
-    double norm = 0;
-
-    for(int i = 0; i < len; ++i)
-        norm += ((*(array + i)) * (*(array + i)));
-    return sqrt(norm);
-}
-
-double SW::array_dot(int len, double *array1, double *array2) {
-    double dot = 0;
-
-    for(int i = 0; i < len; ++i){ 
-        dot += (*(array1 + i)) * (*(array2 + i));
-	}
-    return dot;
-}
-
-void SW::sort_bounded_boxes(int x, int y, int z, double *array) {
-    double tmp[3] = {0};
-
-    #ifdef DEBUG
-        cout << "array is being sorted..." << endl;
-    #endif
-
-    for(int i = 0; i < x; ++i){
-        for(int j = 0; j < y; ++j){
-            for(int ii = 0; ii < x; ++ii)
-                for(int jj = 0; jj < y; ++jj) {
-                    if(*(array + i*y*z + j*z + 2) > *(array + ii*y*z + jj*z + 2)) {
-                        tmp[0] = *(array + ii*y*z + jj*z + 0);
-                        tmp[1] = *(array + ii*y*z + jj*z + 1);
-                        tmp[2] = *(array + ii*y*z + jj*z + 2);
-
-                        *(array + ii*y*z + jj*z + 0) = *(array + i*y*z + j*z + 0);
-                        *(array + ii*y*z + jj*z + 1) = *(array + i*y*z + j*z + 1);
-                        *(array + ii*y*z + jj*z + 2) = *(array + i*y*z + j*z + 2);
-                        
-                        *(array + i*y*z + j*z + 0) = tmp[0];
-                        *(array + i*y*z + j*z + 1) = tmp[1];
-                        *(array + i*y*z + j*z + 2) = tmp[2];
-                   }
-                }
-        }
-    }
-
-    #ifdef DEBUG
-        cout << "array is sorted..." << endl;
-        for(int i = x-1; i >= 0; --i){
-            for(int j = y-1; j >= 0; --j){
-                cout << "x: " << *(array + i*y*z + j*z + 0);
-                cout << " y: " << *(array + i*y*z + j*z + 1);
-                cout << " score: " << *(array + i*y*z + j*z + 2);
-                cout << endl;
-            }
-            cout << endl;
-        }
-        cout << endl;
-    #endif
-   
-}
-
-double SW::min(double num1, double num2) {
-    return (num1 < num2 ? num1 : num2);
-}
-
-double SW::max(double num1, double num2) {
-    return (num1 > num2 ? num1 : num2);
-}
-double SW::box_iou(double box1_x, double box1_y, double box2_x, double box2_y, double boxSize) {
-    double sumOfAreas = 2*(boxSize*boxSize);
-    double box_1[4] = {box1_x, box1_y, box1_x+boxSize, box1_y+boxSize}; 
-    double box_2[4] = {box2_x, box2_y, box2_x+boxSize, box2_y+boxSize};
-    double intersectionArea = ((min(box_1[2], box_2[2]) - max(box_1[0], box_2[0])) * (min(box_1[3], box_2[3]) - max(box_1[1], box_2[1]))); 
-
-    return (intersectionArea / (sumOfAreas - intersectionArea)); 
-}
-
-
-void SW::find_max(int rows, int cols, double *matrix) {
-    // TODO: implement faster algorithm
-    double tmp_max = *matrix;
-    int row, col;
-
-    for(int i = 0; i < rows; ++i)
-        for(int j = 0; j < cols; ++j) {
-            if(*(matrix + i*cols + j) >= tmp_max) {
-                tmp_max = *(matrix+i*cols + j);
-                row = i;
-                col = j;
-            }
-        }
-     cout << "max: "<< tmp_max << endl;
-     cout << "x = " << row *3 << " y= " << col*3 << endl;
 }
 
 void SW::get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad_mag, double *grad_angle){
@@ -218,7 +45,7 @@ void SW::get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *
             *(grad_mag + i*cols + j) = sqrt(pow(dX,2)+pow(dY,2));
 
             //determining the phase matrix:
-            if(fabs(dX)>0.00001){
+            if(fabs(dX)>0.001){
                 *(grad_angle + i*cols + j) = atan(dY/dX) + PI/2;
             }else if(dY<0 && dX<0){
                 *(grad_angle + i*cols + j) = 0;
@@ -233,6 +60,7 @@ void SW::build_histogram(int rows, int cols, double *grad_mag, double *grad_angl
 
     double magROI[CELL_POW], angleROI[CELL_POW];
     double angleInDeg;
+
     for(int i = CELL_SIZE; i <= rows; i+=CELL_SIZE){
         for(int j = CELL_SIZE; j <= cols; j+=CELL_SIZE){
             double hist[nBINS]={0, 0, 0, 0, 0, 0};
@@ -323,7 +151,6 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
 
 
     //HARDWARE PART OF CODE:
-    //Pad image:
     orig_array_t orig_gray(rows, vector<double>(cols));
     
     for (int i=0; i<rows; ++i){
@@ -360,7 +187,7 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
         }
     }
   
-    // 1 WRITE IMAGE TO DRAM:
+    //write image to DRAM:
     for(int i=0; i<rows+2; ++i){
       for(int j=0; j<cols+2; ++j){
         //cout<<padded_img[i][j]<<" ";
@@ -368,18 +195,22 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
       }
     }
 
-    // 2 CONFIGURE HW REGISTERS AND SEND START CMD:
+    //configure hardware registers and send start command:
     write_hard(ADDR_WIDTH, cols+2);
     write_hard(ADDR_HEIGHT, rows+2);
     write_hard(ADDR_CMD, 1);
     
+    //read filtered images from DRAM:
     for(int i = 0; i<rows; ++i){
       for(int j = 0; j<cols; ++j){
         read_dram((rows+2)*(cols+2) + 2*cols*i +j, matrix_im_filtered_x[i][j]);
         read_dram((rows+2)*(cols+2) + (2*i+1)*cols +j, matrix_im_filtered_y[i][j]);
       }
     }
+    //END OF HARDWARE PART OF CODE
     
+    //GET_GRADIENT:
+    //define variables and containers
     double *im_dx = new double[rows * cols];
     double *im_dy = new double[rows * cols];
     double *grad_mag = new double[rows * cols];
@@ -394,14 +225,16 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
  
     get_gradient(rows, cols, &im_dx[0], &im_dy[0], &grad_mag[0], &grad_angle[0]);
 
+    //BUILD_HISTOGRAM:
+    //define variables and containers
     int height = rows/CELL_SIZE;
     int width = cols/CELL_SIZE;
- 
     double *ori_histo = new double[(int)height * (int)width * nBINS];
 
     build_histogram(rows, cols, &grad_mag[0], &grad_angle[0], &ori_histo[0]);
     
-    // TODO: Make makro to replace underneath
+    //GET_BLOCK_DESCRIPTOR:
+    //define variables and containers
     double *ori_histo_normalized = new double[(height-(BLOCK_SIZE-1)) * (width-(BLOCK_SIZE-1)) * nBINS*(BLOCK_SIZE*BLOCK_SIZE)];   
 
     get_block_descriptor(rows, cols, &ori_histo[0], &ori_histo_normalized[0]);
@@ -426,15 +259,27 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
 }
 
 
-double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double *I_target, double *I_template) {
+double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double *I_target, double *I_template, int *num_thresholded_ptr) {
     
-    int hog_len = ((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24;    
-    double *template_HOG = new double[((int)(box_h/8)-1)*((int)(box_w/8)-1)*24];
+    int num_thresholded = 0;
 
-    extract_hog(box_h, box_w, &(I_template[0]), template_HOG);
+    int hog_len = ((int)(box_h/8) - 1)*((int)(box_w/8)-1)*24; 
 
+    double *template_HOG = new double[hog_len];
     double template_HOG_norm = 0;
     double template_HOG_mean = 0;
+
+    double *img_window = new double[box_h * box_w];
+    double img_HOG_norm = 0;
+    double img_HOG_mean = 0;
+
+    double *all_scores = new double[((img_h-box_h)/3 + 1) * ((img_w-box_w)/3 + 1)];
+    double *all_bounding_boxes = new double[((img_h-box_h)/3 + 1) * ((img_w-box_w)/3 + 1) * 3];
+    int x = 0;
+    int y = 0;
+    double score = 0;
+
+    extract_hog(box_h, box_w, &(I_template[0]), template_HOG);
     
     template_HOG_mean = mean_subtract(hog_len, &template_HOG[0]);
 
@@ -447,24 +292,13 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
         cout << "Template Mean: " << template_HOG_mean << endl;  
         cout << "Template Norm: " << template_HOG_norm << endl;   
     #endif
-   
-    int x = 0;
-    int y = 0;
         
     #ifdef DEBUG
         cout << "Calculating HOG for parts of image: " << endl;
     #endif
-
-    double *img_window = new double[box_h * box_w];
-    double score = 0;
-    double img_HOG_norm = 0;
-    double img_HOG_mean = 0;              
-    double *all_scores = new double[((img_h-box_h)/3 + 1) * ((img_w-box_w)/3 + 1)];
-    double *all_bounding_boxes = new double[((img_h-box_h)/3 + 1) * ((img_w-box_w)/3 + 1) * 3]; // 3 for: x, y and score  
     
     for (x = x+box_h; x <= img_h; x+=3){
         for(y = y+box_w; y <= img_w; y+=3) {
-            int ll = 0;
             for(int i = 0; i < box_h; ++i) {
                 for(int j = 0; j < box_w; ++j) {
                     img_window[i * box_w + j] = *(I_target +(i+x-box_h)*img_w + (j+y-box_w));
@@ -513,8 +347,7 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
      
     // sorting array [Bubble Sort(slower version)]
     sort_bounded_boxes((img_h-box_h)/3 + 1, (img_w-box_w)/3 + 1, 3, all_bounding_boxes);
-    num_thresholded = 0;
-
+    
     for(int i = ((img_h-box_h)/3 + 1) - 1; i >= 0; --i){
         for(int j = ((img_w-box_w)/3 + 1) - 1; j >= 0; --j){
             if(*(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 2) > THRESHOLD*100) {
@@ -524,8 +357,9 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
     }
     
     double *thresholded_boxes = new double[num_thresholded*3];
-
+    double *bounding_boxes = new double[num_thresholded * 3];
     int tb = 0; // thresholded_box
+
     for(int i = ((img_h-box_h)/3 + 1) - 1; i >= 0; --i) {
         for(int j = ((img_w-box_w)/3 + 1) - 1; j >= 0; --j) {
             if(*(all_bounding_boxes + i * ((img_w-box_w)/3 + 1) * 3 + j*3 + 2) > THRESHOLD*100) 
@@ -538,7 +372,6 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
         }
     }     
  
-    
     #ifdef DEBUG
         cout << "Number of thresholded boxes with score > " << THRESHOLD*100 << " is: " << num_thresholded << endl << endl;
         for(int i = 0; i < num_thresholded; ++i) {
@@ -546,17 +379,14 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
         }
     #endif
 
-    double *bounding_boxes = new double[num_thresholded * 3];
-
     tb = 0;
-    int kk = 0;
     for(int i = num_thresholded-1; i >= 0; --i) {
         if(thresholded_boxes[i*3 + 2] <= 100) {
             double currBox[3] = {thresholded_boxes[i*3 + 0], thresholded_boxes[i*3 + 1], thresholded_boxes[i*3 + 2]};
-            bounding_boxes[kk*3 + 0] = currBox[0];
-            bounding_boxes[kk*3 + 1] = currBox[1];
-            bounding_boxes[kk*3 + 2] = currBox[2];
-            kk++;
+            bounding_boxes[tb*3 + 0] = currBox[0];
+            bounding_boxes[tb*3 + 1] = currBox[1];
+            bounding_boxes[tb*3 + 2] = currBox[2];
+            tb++;
             double nextBox[3];
             for(int j = num_thresholded-1; j >= 0; --j) {
                 if(thresholded_boxes[j*3 + 2] <= 100) {
@@ -571,10 +401,10 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
         }
     }
     
-    num_thresholded = kk;
+    num_thresholded = tb;
 
     #ifdef DEBUG
-        for(int i = 0; i < kk; ++i) {
+        for(int i = 0; i < tb; ++i) {
             cout << "after x: " << bounding_boxes[i*3 + 0] << " y: " << bounding_boxes[i*3 + 1] << " score: " << bounding_boxes[i*3 + 2] << endl;
         }
         cout << endl << "face_recognition finished..." << endl << endl;
@@ -587,6 +417,8 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
     delete [] all_bounding_boxes;
     delete [] thresholded_boxes;
 
+    *num_thresholded_ptr = num_thresholded;
+
     return bounding_boxes;
 }
 
@@ -596,19 +428,19 @@ void SW::face_recognition_range(double *I_target, int step) {
     cout << "Upper Boundary: " << UPPER_BOUNDARY << endl;
     cout << "Lower Boundary: " << LOWER_BOUNDARY << endl;
     cout << "Step: " << step << endl;
+
     double *found_faces = (double *) malloc(sizeof(double)*3);
-    num_faces = 0;
+    int num_faces = 0;
+    int num_thresholded = 0;
 
     for(int width = UPPER_BOUNDARY; width >= LOWER_BOUNDARY; width -= step) {
      	cout << "current template: " << width << endl;
         
-        char gray_template[50] = "250_350/template_";
+        char gray_template[50] = "template/template_";
         char size_gray[4];
         snprintf(size_gray, sizeof(size_gray), "%d", width);
         strcat(gray_template, size_gray);
         strcat(gray_template, ".txt");
-
-        cout << gray_template << endl;
             
         double *I_template = new double[width * width];
 
@@ -622,7 +454,7 @@ void SW::face_recognition_range(double *I_target, int step) {
             }
         }
 
-        double *found_boxes = face_recognition(ROWS, COLS, width, width, I_target, I_template);
+        double *found_boxes = face_recognition(ROWS, COLS, width, width, I_target, I_template, &num_thresholded);
         num_faces += num_thresholded;   
         found_faces = (double *) realloc(found_faces, sizeof(double)*num_faces*3);
 
@@ -649,4 +481,59 @@ void SW::face_recognition_range(double *I_target, int step) {
 	write_txt(found_faces, num_faces, faces_width);
     
     free(found_faces);
+}
+
+void SW::read_dram(sc_dt::uint64 addr, num_t2& val)
+{
+    pl_t pl;
+    unsigned char buf[LEN_IN_BYTES];
+    pl.set_address(addr | DRAM_BASE_ADDR);
+    pl.set_data_length(LEN_IN_BYTES);
+    pl.set_data_ptr(buf);
+    pl.set_command(tlm::TLM_READ_COMMAND);
+    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    interconnect_socket->b_transport(pl, offset);
+
+    val = to_fixed(buf);
+}
+
+void SW::write_dram(sc_dt::uint64 addr, num_t2 val)
+{
+    pl_t pl;
+    unsigned char buf[LEN_IN_BYTES];
+    to_uchar(buf, val);
+    pl.set_address(addr | DRAM_BASE_ADDR);
+    pl.set_data_length(LEN_IN_BYTES);
+    pl.set_data_ptr(buf);
+    pl.set_command(tlm::TLM_WRITE_COMMAND);
+    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    interconnect_socket->b_transport(pl, offset);
+}
+
+int SW::read_hard(sc_dt::uint64 addr)
+{
+    pl_t pl;
+    unsigned char buf[LEN_IN_BYTES];
+    pl.set_address(addr | HARD_BASE_ADDR);
+    pl.set_data_length(LEN_IN_BYTES);
+    pl.set_data_ptr(buf);
+    pl.set_command(tlm::TLM_READ_COMMAND);
+    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    sc_core::sc_time offset = sc_core::SC_ZERO_TIME;
+    interconnect_socket->b_transport(pl, offset);
+    
+    return to_int(buf);
+}
+
+void SW::write_hard(sc_dt::uint64 addr, int val)
+{
+    pl_t pl;
+    unsigned char buf[LEN_IN_BYTES];
+    int_to_uchar(buf, val); // NOTE: only for int...
+    pl.set_address(addr | HARD_BASE_ADDR);
+    pl.set_data_length(LEN_IN_BYTES);
+    pl.set_data_ptr(buf);
+    pl.set_command(tlm::TLM_WRITE_COMMAND);
+    pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    interconnect_socket->b_transport(pl, offset);
 }

@@ -123,83 +123,118 @@ void write_txt(double* found_faces, int len, char *name_txt){
 
 }
 
-/*
-void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src, int width, int integer) {
+void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src) {
     for(int i = 0; i != rows; ++i) {
         for (int j = 0; j != cols; ++j) {
-            num_t d(width, integer);
+            num_t d(W, I);
             d = src[i][j];
             if(d.overflow_flag())
                 std::cout << "Overflow!" << endl;
             dest[i][j] = d;
         }
     }
-} */
-/*
-void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, double *ori_histo){
-
-    double magROI[CELL_POW], angleROI[CELL_POW];
-    double angleInDeg;
-    for(int i = CELL_SIZE; i <= rows; i+=CELL_SIZE){
-        for(int j = CELL_SIZE; j <= cols; j+=CELL_SIZE){
-            double hist[nBINS]={0, 0, 0, 0, 0, 0};
-
-            for(int k = 0; k < CELL_POW; ++k){
-                magROI[k]= *(grad_mag + (i-CELL_SIZE+(int)(k/CELL_SIZE))*cols + j-CELL_SIZE+(k%CELL_SIZE));
-                if(magROI[k] != magROI[k]) cout << "NAN! -> " << k << " = " << magROI[k] << endl;
-
-                angleROI[k]= *(grad_angle + (i-CELL_SIZE+(int)(k/CELL_SIZE))*cols + j-CELL_SIZE+(k%CELL_SIZE));
-                angleInDeg = angleROI[k]*(180.0 / PI);
-                if(angleInDeg != angleInDeg) cout << "NAN angleInDeg!" << endl;
-                if(angleInDeg >=0.0 && angleInDeg < 30.0){
-                    hist[0] += magROI[k];
-                }else if(angleInDeg >=30.0 && angleInDeg < 60.0){
-                    hist[1] += magROI[k];
-                }else if(angleInDeg >=60.0 && angleInDeg < 90.0){
-                    hist[2] += magROI[k];
-                }else if(angleInDeg >=90.0 && angleInDeg < 120.0){
-                    hist[3] += magROI[k];
-                }else if(angleInDeg >=120.0 && angleInDeg < 150.0){
-                    hist[4] += magROI[k];
-                }else{
-                    hist[5] += magROI[k];
-                }  
-            } 
-
-            for(int k=0; k<nBINS; ++k){
-                                       *(ori_histo + ((int)(i-CELL_SIZE)/CELL_SIZE) * nBINS * (int)(cols/CELL_SIZE) + ((int)(j-CELL_SIZE)/CELL_SIZE)*nBINS + k) = hist[k]; 
-                                       cout<<hist[k]<<" ";}
-
-        }
-    } 
 }
 
-void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_histo_normalized){
-    int height = rows/CELL_SIZE;
-    int width = cols/CELL_SIZE;
-    
-    for(int i = 0; i < ((rows/CELL_SIZE-(BLOCK_SIZE-1)) * (cols/CELL_SIZE-(BLOCK_SIZE-1)) * nBINS*(BLOCK_SIZE*BLOCK_SIZE)); ++i)
-        ori_histo_normalized[i] = 0;
+double mean_subtract(int len, double *array) {
+    double mean = 0;
 
-    for(int i = BLOCK_SIZE; i <= height; i+=BLOCK_SIZE){
-        for(int j = BLOCK_SIZE; j <= width; j+=BLOCK_SIZE){
-            double concatednatedHist[HIST_SIZE];
-            double concatednatedHist2[HIST_SIZE];
-            double histNorm = 0.0;
+    for(int i = 0; i < len; ++i) {
+        mean += *(array + i);
+    }
+    return (mean/len);
+}
 
-            for(int k=0; k<HIST_SIZE; ++k) {
-                concatednatedHist[k] = *(ori_histo + (i-BLOCK_SIZE+(int)k/12)*nBINS*((int)cols/CELL_SIZE) + (j-BLOCK_SIZE+((int)k/6)%2)*nBINS + (k%6));
-                concatednatedHist2[k]=concatednatedHist[k]*concatednatedHist[k];
-                histNorm+=concatednatedHist2[k];
-            }
-           
-            histNorm+=0.001;
-            histNorm = sqrt(histNorm);
+double array_norm(int len, double *array) {
+    double norm = 0;
 
-            for(int k = 0; k < HIST_SIZE; ++k) *(ori_histo_normalized + (i-BLOCK_SIZE)*((cols/CELL_SIZE)-(BLOCK_SIZE-1))*nBINS*BLOCK_SIZE*BLOCK_SIZE 
-                                               + (j-BLOCK_SIZE)*nBINS*BLOCK_SIZE*BLOCK_SIZE + k )= concatednatedHist[k] / histNorm;  
+    for(int i = 0; i < len; ++i)
+        norm += ((*(array + i)) * (*(array + i)));
+    return sqrt(norm);
+}
 
+double array_dot(int len, double *array1, double *array2) {
+    double dot = 0;
+
+    for(int i = 0; i < len; ++i){ 
+        dot += (*(array1 + i)) * (*(array2 + i));
+	}
+    return dot;
+}
+
+void sort_bounded_boxes(int x, int y, int z, double *array) {
+    double tmp[3] = {0};
+
+    #ifdef DEBUG
+        cout << "array is being sorted..." << endl;
+    #endif
+
+    for(int i = 0; i < x; ++i){
+        for(int j = 0; j < y; ++j){
+            for(int ii = 0; ii < x; ++ii)
+                for(int jj = 0; jj < y; ++jj) {
+                    if(*(array + i*y*z + j*z + 2) > *(array + ii*y*z + jj*z + 2)) {
+                        tmp[0] = *(array + ii*y*z + jj*z + 0);
+                        tmp[1] = *(array + ii*y*z + jj*z + 1);
+                        tmp[2] = *(array + ii*y*z + jj*z + 2);
+
+                        *(array + ii*y*z + jj*z + 0) = *(array + i*y*z + j*z + 0);
+                        *(array + ii*y*z + jj*z + 1) = *(array + i*y*z + j*z + 1);
+                        *(array + ii*y*z + jj*z + 2) = *(array + i*y*z + j*z + 2);
+                        
+                        *(array + i*y*z + j*z + 0) = tmp[0];
+                        *(array + i*y*z + j*z + 1) = tmp[1];
+                        *(array + i*y*z + j*z + 2) = tmp[2];
+                   }
+                }
         }
     }
+
+    #ifdef DEBUG
+        cout << "array is sorted..." << endl;
+        for(int i = x-1; i >= 0; --i){
+            for(int j = y-1; j >= 0; --j){
+                cout << "x: " << *(array + i*y*z + j*z + 0);
+                cout << " y: " << *(array + i*y*z + j*z + 1);
+                cout << " score: " << *(array + i*y*z + j*z + 2);
+                cout << endl;
+            }
+            cout << endl;
+        }
+        cout << endl;
+    #endif
+   
 }
-*/
+
+double min(double num1, double num2) {
+    return (num1 < num2 ? num1 : num2);
+}
+
+double max(double num1, double num2) {
+    return (num1 > num2 ? num1 : num2);
+}
+double box_iou(double box1_x, double box1_y, double box2_x, double box2_y, double boxSize) {
+    double sumOfAreas = 2*(boxSize*boxSize);
+    double box_1[4] = {box1_x, box1_y, box1_x+boxSize, box1_y+boxSize}; 
+    double box_2[4] = {box2_x, box2_y, box2_x+boxSize, box2_y+boxSize};
+    double intersectionArea = ((min(box_1[2], box_2[2]) - max(box_1[0], box_2[0])) * (min(box_1[3], box_2[3]) - max(box_1[1], box_2[1]))); 
+
+    return (intersectionArea / (sumOfAreas - intersectionArea)); 
+}
+
+
+void find_max(int rows, int cols, double *matrix) {
+    // TODO: implement faster algorithm
+    double tmp_max = *matrix;
+    int row, col;
+
+    for(int i = 0; i < rows; ++i)
+        for(int j = 0; j < cols; ++j) {
+            if(*(matrix + i*cols + j) >= tmp_max) {
+                tmp_max = *(matrix+i*cols + j);
+                row = i;
+                col = j;
+            }
+        }
+     cout << "max: "<< tmp_max << endl;
+     cout << "x = " << row *3 << " y= " << col*3 << endl;
+}
