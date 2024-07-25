@@ -18,19 +18,18 @@ static const int CHAR_LEN = 8;
 static const int CHARS_AMOUNT = DATA_WIDTH / CHAR_LEN;
 
 void to_char (unsigned char *, string);
-void to_uchar (unsigned char *buf, num_t2 d);
+void to_uchar (unsigned char *buf, output_t d);
 double to_fixed (unsigned char *buf);
 int to_int (unsigned char *);
 void int_to_uchar(unsigned char *buf, int num);
 
 void write_txt(double* found_faces, int len, char *name_txt);
 
-void mat_txt(const char * name_txt,  matrix_t * matrix, int rows, int cols);
 double mean_subtract(int len, double *array);
 double array_norm(int len, double *array); 
 double array_dot(int len, double *array1, double *array2);
 void sort(int x, int y, int z, double *array);
-void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src);
+//void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src);
 void cast_to_fix(int rows, int cols, out_matrix_t& dest, orig_array_t& src);
 void find_max(int rows, int cols, double *matrix);
 double min(double num1, double num2);

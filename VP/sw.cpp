@@ -149,6 +149,7 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
         }
     }
 
+    cout << "START OF HW: " << offset << endl;
     //HARDWARE PART OF CODE:
     orig_array_t orig_gray(rows, vector<double>(cols));
     
@@ -193,12 +194,25 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
       }
     }
 
+    write_hard(ADDR_RESET, 1);
+
     int accumulated_loss = floor((rows+2)/(BRAM_HEIGHT*floor(BRAM_WIDTH/(cols+2))))*(BRAM_HEIGHT - ((int)((floor(BRAM_WIDTH/(cols+2))*BRAM_HEIGHT/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS)%BRAM_HEIGHT));
     //configure hardware registers and send start command:
     write_hard(ADDR_WIDTH, cols+2);
     write_hard(ADDR_HEIGHT, rows+2);
     write_hard(ADDR_ACC_LOSS, accumulated_loss);
-    write_hard(ADDR_CMD, 1);
+    write_hard(ADDR_START, 1);
+
+    int ready = 1;
+    while(ready){
+        ready = read_hard(ADDR_STATUS);
+    }
+    write_hard(ADDR_START, 0);
+
+    while(!ready){
+        ready = read_hard(ADDR_STATUS);
+    }
+
     
     //read filtered images from DRAM:
     for(int i = 0; i<rows; ++i){
@@ -208,6 +222,8 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
       }
     }
     //END OF HARDWARE PART OF CODE
+    cout << "END OF HW: " << offset << endl;
+    cout << "Time in secs: " << offset/1000000000 << endl;
     
     //GET_GRADIENT:
     //define variables and containers

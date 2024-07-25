@@ -11,6 +11,7 @@ BramCtrl::BramCtrl(sc_core::sc_module_name name) :
     width(0),
     height(0),
     start(0),
+    reset(0),
     ready(1)
 {
     interconnect_socket.register_b_transport(this, &BramCtrl::b_transport);
@@ -50,7 +51,13 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           accumulated_loss = to_int(buf);
           break;
 
-        case ADDR_CMD:
+        case ADDR_RESET:
+          reset = to_int(buf);
+
+          if(reset) ready = 1;
+          break;
+
+        case ADDR_START:
           start = to_int(buf);
   
           if(width > BRAM_WIDTH) {
@@ -87,10 +94,17 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
       pl.set_response_status( tlm::TLM_COMMAND_ERROR_RESPONSE );
     
     }
-  offset += sc_core::sc_time(10, sc_core::SC_NS);  
+  offset += sc_core::sc_time(DELAY, sc_core::SC_NS);  
 }
 
 void BramCtrl:: initialisation(u1_t init){
+
+    //initial time lag for 
+    //DRAM to BRAM 11 (100-110ns)
+    //FILTER_BLOCKS 4 clk
+    //REG to DRAM 11 (100-110ns)
+    offset += sc_core::sc_time(26*DELAY, sc_core::SC_NS);
+
     for(int i = 0; i < floor(BRAM_WIDTH/width); ++i) { //maximum number of rows that can fit in a single BRAM BLOCK
         for(int j = 0; j < BRAM_HEIGHT; ++j) {         //number of BRAM BLOCKS
             dram_row_ptr++;
@@ -105,49 +119,49 @@ void BramCtrl:: initialisation(u1_t init){
 void BramCtrl:: control_logic(void){
 
   if (start == 1 && ready == 1){
+    
     ready = 0;
-		//offset += sc_core::sc_time(10, sc_core::SC_NS);
-	}else{
 
+		offset += sc_core::sc_time(10, sc_core::SC_NS);
+	}else if(start == 0 && ready == 0){
 
-  }
+    initialisation(1);
 
-  initialisation(1);
-
-  for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS + accumulated_loss; i+=NUM_PARALLEL_POINTS){ ++//the number of times we will repeat a single cycle
-      
-    cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
-    bram_block_ptr = i%BRAM_HEIGHT;  // bram_block_ptr++ -> bram_block_ptr == BRAM_HEIGHT ? bram_ptr = 0
-
-    if(cycle_number == (floor(BRAM_WIDTH/width)-1) && (bram_block_ptr >= (BRAM_HEIGHT-10) && bram_block_ptr <= (BRAM_HEIGHT-1))){
-      if(dram_row_ptr<height){ //do we have more rows in DRAM?
+    for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS + accumulated_loss; i+=NUM_PARALLEL_POINTS){ ++//the number of times we will repeat a single cycle
         
-        counter_init++; // counts how many times it's initialized, it's used to multiply dram_row_ptr
-        dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr)) * counter_init;
+      cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
+      bram_block_ptr = i%BRAM_HEIGHT;  // bram_block_ptr++ -> bram_block_ptr == BRAM_HEIGHT ? bram_ptr = 0
 
-        i+=(BRAM_HEIGHT-bram_block_ptr);
-        cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
-        bram_block_ptr = i%BRAM_HEIGHT;
+      if(cycle_number == (floor(BRAM_WIDTH/width)-1) && (bram_block_ptr >= (BRAM_HEIGHT-10) && bram_block_ptr <= (BRAM_HEIGHT-1))){
+        if(dram_row_ptr<height){ //do we have more rows in DRAM?
+          
+          counter_init++; // counts how many times it's initialized, it's used to multiply dram_row_ptr
+          dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr)) * counter_init;
 
-        initialisation(0);
+          i+=(BRAM_HEIGHT-bram_block_ptr);
+          cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
+          bram_block_ptr = i%BRAM_HEIGHT;
+
+          initialisation(0);
+        }
+      }
+        
+      for(int j=0; j < width - 2; ++j){ 
+      
+      //PHASE I -> WRITE TO REG33:
+        bram_to_reg(bram_block_ptr, cycle_number, j, ADDR_INPUT_REG, offset);
+
+      //PHASE II -> FILTER REG33 INTO REG18:
+        pl_t pl_filter;
+        pl_filter.set_address(ADDR_START);
+        pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
+        pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+
+        filter_socket -> b_transport(pl_filter, offset);
       }
     }
-      
-    for(int j=0; j < width - 2; ++j){ 
-    
-    //PHASE I -> WRITE TO REG36:
-      bram_to_reg(bram_block_ptr, cycle_number, j, ADDR_INPUT_REG, offset);
-
-    //PHASE II -> FILTER REG36 INTO REG10:
-      pl_t pl_filter;
-      pl_filter.set_address(ADDR_CMD);
-      pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
-      pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-
-      filter_socket -> b_transport(pl_filter, offset);
-    }
+    ready = 1;
   }
-
 }
  
 void BramCtrl:: dram_to_bram(u1_t init, sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, sc_core::sc_time &offset){
@@ -183,13 +197,13 @@ void BramCtrl:: dram_to_bram(u1_t init, sc_dt::uint64 i, sc_dt::uint64 j, sc_dt:
   pl_bram.set_command(tlm::TLM_WRITE_COMMAND);
   pl_bram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
  
-  bram_socket0 -> b_transport(pl_bram, offset);
+  bram_socket -> b_transport(pl_bram, offset);
 }
  
 void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_position, sc_dt::uint64 addr_filter, sc_core::sc_time &offset){
  
   //READ FROM BRAM:
-  pl_t pl_bram0;
+  pl_t pl_bram;
   output_t buf[(NUM_PARALLEL_POINTS+2)*3];
   unsigned char buf_bram[LEN_IN_BYTES*(NUM_PARALLEL_POINTS+2)*3];
   unsigned char buf_bram0[LEN_IN_BYTES];
@@ -199,13 +213,13 @@ void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_pos
     for(int i = 0; i < (BRAM_HEIGHT-bram_block_ptr); ++i){
  
       for(int j = 0; j < 3; ++j) {
-      pl_bram0.set_address((bram_block_ptr+i)*BRAM_WIDTH + row_position + cycle_num*width + j);
-      pl_bram0.set_data_length(LEN_IN_BYTES);
-      pl_bram0.set_data_ptr(buf_bram0);
-      pl_bram0.set_command(tlm::TLM_READ_COMMAND);
-      pl_bram0.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+      pl_bram.set_address((bram_block_ptr+i)*BRAM_WIDTH + row_position + cycle_num*width + j);
+      pl_bram.set_data_length(LEN_IN_BYTES);
+      pl_bram.set_data_ptr(buf_bram0);
+      pl_bram.set_command(tlm::TLM_READ_COMMAND);
+      pl_bram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
  
-      bram_socket0->b_transport(pl_bram0, offset);
+      bram_socket->b_transport(pl_bram, offset);
  
       buf[i*3 + j] = to_fixed(buf_bram0); 
       }
@@ -214,13 +228,13 @@ void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_pos
     for(int i = 0; i < (NUM_PARALLEL_POINTS + 2 - (BRAM_HEIGHT-bram_block_ptr)); ++i){
  
       for(int j = 0; j < 3; ++j) {
-        pl_bram0.set_address(i*BRAM_WIDTH + row_position + ((cycle_num+1)%((int)(BRAM_WIDTH/width)))*width + j);
-        pl_bram0.set_data_length(LEN_IN_BYTES);
-        pl_bram0.set_data_ptr(buf_bram0);
-        pl_bram0.set_command(tlm::TLM_READ_COMMAND);
-        pl_bram0.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+        pl_bram.set_address(i*BRAM_WIDTH + row_position + ((cycle_num+1)%((int)(BRAM_WIDTH/width)))*width + j);
+        pl_bram.set_data_length(LEN_IN_BYTES);
+        pl_bram.set_data_ptr(buf_bram0);
+        pl_bram.set_command(tlm::TLM_READ_COMMAND);
+        pl_bram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
  
-        bram_socket0->b_transport(pl_bram0, offset);
+        bram_socket->b_transport(pl_bram, offset);
         buf[(i + (59-bram_block_ptr))*3 + j] = to_fixed(buf_bram0); 
       }
     }
@@ -229,13 +243,13 @@ void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_pos
  
     for(int i = 0; i < (NUM_PARALLEL_POINTS+2); ++i){
       for(int j = 0; j < 3; ++j) {   
-      pl_bram0.set_address(cycle_num*width + row_position + (bram_block_ptr+i)*BRAM_WIDTH + j);
-      pl_bram0.set_data_length(LEN_IN_BYTES);
-      pl_bram0.set_data_ptr(buf_bram0);
-      pl_bram0.set_command(tlm::TLM_READ_COMMAND);
-      pl_bram0.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+      pl_bram.set_address(cycle_num*width + row_position + (bram_block_ptr+i)*BRAM_WIDTH + j);
+      pl_bram.set_data_length(LEN_IN_BYTES);
+      pl_bram.set_data_ptr(buf_bram0);
+      pl_bram.set_command(tlm::TLM_READ_COMMAND);
+      pl_bram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
  
-      bram_socket0->b_transport(pl_bram0, offset);
+      bram_socket->b_transport(pl_bram, offset);
 
       buf[i*3 + j] = to_fixed(buf_bram0); 
       }

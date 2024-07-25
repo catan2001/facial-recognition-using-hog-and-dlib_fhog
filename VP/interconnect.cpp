@@ -36,5 +36,5 @@ void Interconnect::b_transport(pl_t& pl, sc_core::sc_time& offset)
         pl.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
     }
 
-    offset += sc_core::sc_time(10, sc_core::SC_NS); 
+    offset += sc_core::sc_time(DELAY, sc_core::SC_NS); 
 }

@@ -45,6 +45,9 @@ void HW::filter_image_t(void){
     //tier 2:
     mem18[i+NUM_PARALLEL_POINTS] = temp[3]+temp[4]+temp[5];
   }  
+
+  offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
+
 }
  
 void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
@@ -65,19 +68,20 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
             row_batch_cnt = 0;
             pl.set_response_status(tlm::TLM_OK_RESPONSE);
             break;
+
         case ADDR_WIDTH: // set width register
             width = to_int(buf);
             pl.set_response_status(tlm::TLM_OK_RESPONSE);
             break;
+
         case ADDR_INPUT_REG: //write pixels into the registers
 
           mem33_ptr = (mem33_ptr == 33 ? (u6_t)0 : mem33_ptr);
           mem33[mem33_ptr++] = to_fixed(buf);
-
           pl.set_response_status(tlm::TLM_OK_RESPONSE); 
           break;
  
-        case ADDR_CMD:
+        case ADDR_START:
 
         //take REG33 pixels and filter them into REG18:
           filter_image_t();
@@ -94,6 +98,8 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
 
           pixel_batch_cnt++;
           if(pixel_batch_cnt>=(width-2)) {pixel_batch_cnt=0; row_batch_cnt++;}
+
+          //offset += sc_core::sc_time(3*DELAY, sc_core::SC_NS);
 
           pl.set_response_status(tlm::TLM_OK_RESPONSE); 
           break;
@@ -119,7 +125,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
       pl.set_response_status( tlm::TLM_COMMAND_ERROR_RESPONSE );
     }
  
-    offset += sc_core::sc_time(10, sc_core::SC_NS);
+    offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
 }
 
 

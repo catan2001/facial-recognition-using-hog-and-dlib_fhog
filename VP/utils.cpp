@@ -10,14 +10,6 @@ int to_int (unsigned char *buf)
   return sum;
 }
 
-num_t2 concat (unsigned char buf_high, unsigned char buf_low)
-{
-  num_t2 sum = 0;
-  sum += ((num_t2)buf_high) << 8;
-  sum += ((num_t2)buf_low);
-  return sum;
-}
-
 char flip(char c) {return (c == '0')? '1': '0';}
 
 string twos_complement(string bin)
@@ -88,8 +80,8 @@ double to_fixed (unsigned char *buf)
 
 void to_char (unsigned char *buf, string s)
 {
-  s.erase(0,2);
-  s.erase(3, 1);
+  s.erase(0, 2);
+  s.erase(I, 1);
   char single_char[CHAR_LEN];
   for (int i = 0; i<CHARS_AMOUNT; ++i)
     {
@@ -99,7 +91,7 @@ void to_char (unsigned char *buf, string s)
     } 
 }
 
-void to_uchar(unsigned char *c, num_t2 d)
+void to_uchar(unsigned char *c, output_t d)
 {
   to_char(c,d.to_bin());
 }
@@ -123,7 +115,7 @@ void write_txt(double* found_faces, int len, char *name_txt){
 
 }
 
-void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src) {
+/*void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src) {
     for(int i = 0; i != rows; ++i) {
         for (int j = 0; j != cols; ++j) {
             num_t d(W, I);
@@ -133,7 +125,7 @@ void cast_to_fix(int rows, int cols, matrix_t& dest, orig_array_t& src) {
             dest[i][j] = d;
         }
     }
-}
+}*/
 
 void cast_to_fix(int rows, int cols, out_matrix_t& dest, orig_array_t& src) {
     for(int i = 0; i != rows; ++i) {

@@ -2,9 +2,7 @@
 
 Bram::Bram(sc_core::sc_module_name name) : sc_module(name)
 {
-    bram_ctrl_socket0.register_b_transport(this, &Bram::b_transport);
-    bram_ctrl_socket1.register_b_transport(this, &Bram::b_transport);
-    bram_ctrl_socket2.register_b_transport(this, &Bram::b_transport);
+    bram_ctrl_socket.register_b_transport(this, &Bram::b_transport);
 
     mem.reserve(RESERVED_MEM);
 
@@ -36,5 +34,5 @@ void Bram::b_transport(pl_t& pl, sc_core::sc_time& offset)
     default:
         pl.set_response_status(tlm::TLM_COMMAND_ERROR_RESPONSE);
     }
-    offset += sc_core::sc_time(10, sc_core::SC_NS);
+    offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
 }

@@ -21,9 +21,7 @@ public:
     tlm_utils::simple_initiator_socket<BramCtrl> dram_ctrl_socket;
 
     // BRAM SOCKETS:
-    tlm_utils::simple_initiator_socket<BramCtrl> bram_socket0; 
-    tlm_utils::simple_initiator_socket<BramCtrl> bram_socket1;
-    tlm_utils::simple_initiator_socket<BramCtrl> bram_socket2; 
+    tlm_utils::simple_initiator_socket<BramCtrl> bram_socket;
 
     //SW SOCKETS:
     tlm_utils::simple_target_socket<BramCtrl> interconnect_socket;
@@ -45,7 +43,7 @@ public:
     u16_t counter_init;
     u16_t accumulated_loss;
 
-    u1_t start, ready;
+    u1_t start, ready, reset;
 
     pl_t pl_bram;
 };

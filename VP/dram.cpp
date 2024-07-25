@@ -29,6 +29,8 @@ void DRAM::b_transport(pl_t &pl, sc_core::sc_time &offset) {
         default: 
             pl.set_response_status(tlm::TLM_COMMAND_ERROR_RESPONSE);    
     }
+
+    offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
 }
 
 
