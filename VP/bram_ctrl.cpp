@@ -4,6 +4,10 @@ BramCtrl::BramCtrl(sc_core::sc_module_name name) :
     sc_module(name), 
     offset(sc_core::SC_ZERO_TIME),
     dram_row_ptr(0),
+    cycle_number(0),
+    bram_block_ptr(0),
+    counter_init(0),
+    accumulated_loss(0),
     width(0),
     height(0),
     start(0),
@@ -42,6 +46,10 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           write_filter(ADDR_HEIGHT, height);
           break;
 
+        case ADDR_ACC_LOSS:
+          accumulated_loss = to_int(buf);
+          break;
+
         case ADDR_CMD:
           start = to_int(buf);
   
@@ -50,45 +58,8 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
               cout << "ERROR: Width of image is larger than BRAM_WIDTH[" << BRAM_WIDTH << "]" << endl;
               break;
           }
- 
-          initialisation(1);
 
-          skipped_rows = floor(height/(BRAM_HEIGHT*floor(BRAM_WIDTH/width)))*(BRAM_HEIGHT - ((int)((floor(BRAM_WIDTH/width)*BRAM_HEIGHT/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS)%BRAM_HEIGHT));
-
-          for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS + skipped_rows; i+=NUM_PARALLEL_POINTS){ ++//the number of times we will repeat a single cycle
-              
-              cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
-              bram_block_ptr = i%BRAM_HEIGHT;  // bram_block_ptr++ -> bram_block_ptr == BRAM_HEIGHT ? bram_ptr = 0
-
-              if(cycle_number == (floor(BRAM_WIDTH/width)-1) && (bram_block_ptr >= (BRAM_HEIGHT-10) && bram_block_ptr <= (BRAM_HEIGHT-1))){
-                if(dram_row_ptr<height){ //do we have more rows in DRAM?
-                  
-                  counter_init++; // counts how many times it's initialized, it's used to multiply dram_row_ptr
-                  dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr)) * counter_init;
-
-                  i+=(BRAM_HEIGHT-bram_block_ptr);
-                  cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
-                  bram_block_ptr = i%BRAM_HEIGHT;
-
-                  initialisation(0);
-                }
-              }
-                
-              for(int j=0; j < width - 2; ++j){ 
-              
-              //PHASE I -> WRITE TO REG36:
-                bram_to_reg(bram_block_ptr, cycle_number, j, ADDR_INPUT_REG, offset);
- 
-              //PHASE II -> FILTER REG36 INTO REG10:
-                pl_t pl_filter;
-                pl_filter.set_address(ADDR_CMD);
-                pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
-                pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-
-                filter_socket -> b_transport(pl_filter, offset);
-              }
-          }
-
+          control_logic();
           break;
 
         default:
@@ -129,6 +100,54 @@ void BramCtrl:: initialisation(u1_t init){
             if(dram_row_ptr==height) return;
         }
     }
+}
+
+void BramCtrl:: control_logic(void){
+
+  if (start == 1 && ready == 1){
+    ready = 0;
+		//offset += sc_core::sc_time(10, sc_core::SC_NS);
+	}else{
+
+
+  }
+
+  initialisation(1);
+
+  for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS + accumulated_loss; i+=NUM_PARALLEL_POINTS){ ++//the number of times we will repeat a single cycle
+      
+    cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
+    bram_block_ptr = i%BRAM_HEIGHT;  // bram_block_ptr++ -> bram_block_ptr == BRAM_HEIGHT ? bram_ptr = 0
+
+    if(cycle_number == (floor(BRAM_WIDTH/width)-1) && (bram_block_ptr >= (BRAM_HEIGHT-10) && bram_block_ptr <= (BRAM_HEIGHT-1))){
+      if(dram_row_ptr<height){ //do we have more rows in DRAM?
+        
+        counter_init++; // counts how many times it's initialized, it's used to multiply dram_row_ptr
+        dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr)) * counter_init;
+
+        i+=(BRAM_HEIGHT-bram_block_ptr);
+        cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
+        bram_block_ptr = i%BRAM_HEIGHT;
+
+        initialisation(0);
+      }
+    }
+      
+    for(int j=0; j < width - 2; ++j){ 
+    
+    //PHASE I -> WRITE TO REG36:
+      bram_to_reg(bram_block_ptr, cycle_number, j, ADDR_INPUT_REG, offset);
+
+    //PHASE II -> FILTER REG36 INTO REG10:
+      pl_t pl_filter;
+      pl_filter.set_address(ADDR_CMD);
+      pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
+      pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+
+      filter_socket -> b_transport(pl_filter, offset);
+    }
+  }
+
 }
  
 void BramCtrl:: dram_to_bram(u1_t init, sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, sc_core::sc_time &offset){

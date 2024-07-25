@@ -193,9 +193,11 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
       }
     }
 
+    int accumulated_loss = floor((rows+2)/(BRAM_HEIGHT*floor(BRAM_WIDTH/(cols+2))))*(BRAM_HEIGHT - ((int)((floor(BRAM_WIDTH/(cols+2))*BRAM_HEIGHT/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS)%BRAM_HEIGHT));
     //configure hardware registers and send start command:
     write_hard(ADDR_WIDTH, cols+2);
     write_hard(ADDR_HEIGHT, rows+2);
+    write_hard(ADDR_ACC_LOSS, accumulated_loss);
     write_hard(ADDR_CMD, 1);
     
     //read filtered images from DRAM:

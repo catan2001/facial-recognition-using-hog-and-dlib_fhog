@@ -33,15 +33,17 @@ public:
     void dram_to_bram(u1_t, sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &);
     void bram_to_reg(u16_t, u16_t, u16_t, sc_dt::uint64, sc_core::sc_time &);
     void write_filter(sc_dt::uint64, u16_t);
+    void control_logic(void);
 
     void initialisation(u1_t);
 
     sc_core::sc_time offset;
     u16_t width, height;
     u16_t dram_row_ptr;
-    u16_t cycle_number = 0, bram_block_ptr = 0;
-    u16_t counter_init = 0;
-    u16_t skipped_rows = 0;
+    u16_t cycle_number;
+    u16_t bram_block_ptr;
+    u16_t counter_init;
+    u16_t accumulated_loss;
 
     u1_t start, ready;
 
