@@ -19,18 +19,16 @@ public:
 protected:
 	pl_t pl;
 	sc_core::sc_time offset;
-	bit1_t start, ready;
+	u1_t start, ready;
 	void b_transport(pl_t& pl, sc_core::sc_time& offset);
 	void filter_image_t(void);
 	void reg_to_dram(sc_dt::uint64 i, sc_dt::uint64 dram_addr, sc_core::sc_time &offset);
-    const_t width, height; 
-	std::vector<output_t> mem33, mem18;
-	bit6_t mem33_ptr;
-
-	std::vector<num_t2>temp;
-
-	const_t pixel_batch_cnt = 0, row_batch_cnt = 0;
- 
+	std::vector<output_t> temp;
+    std::vector<output_t> mem33, mem18;
+	u6_t mem33_ptr;
+	u16_t pixel_batch_cnt = 0;
+    u16_t row_batch_cnt = 0; // TODO: bugs for some reason
+    u16_t width, height;  
 };
  
 #endif // HW_HPP_

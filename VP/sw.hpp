@@ -23,7 +23,7 @@ protected:
 
 	void process_img();
 	void read_dram(sc_dt::uint64 addr, output_t& val);
-	void write_dram(sc_dt::uint64 addr, input_t val);
+	void write_dram(sc_dt::uint64 addr, output_t val);
 	int read_hard(sc_dt::uint64 addr);
 	void write_hard(sc_dt::uint64 addr, int val);
 	

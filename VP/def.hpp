@@ -59,8 +59,6 @@
 #define I 3 // FIXED_POINT_WIDTH
 #define Q sc_dt::SC_RND // quantization methods
 #define O sc_dt::SC_SAT // overflow methods
-#define I_INPUT 1
-#define I_OUTPUT 4
 
 typedef sc_dt::sc_fix_fast num_t;
 typedef sc_dt::sc_fixed_fast <W, I ,Q ,O> num_t2;
@@ -70,17 +68,14 @@ typedef std::deque<array_t> matrix_t;
 typedef std::deque<array_t2> matrix_t2;
 typedef std::vector<std::vector<double>> orig_array_t;
 
-typedef sc_dt::sc_fixed_fast <W, I_INPUT, Q, O> input_t;
-typedef std::vector<input_t> in_array_t;
-typedef std::vector<in_array_t> in_matrix_t;
+typedef sc_dt::sc_fixed_fast <W, 4, Q, O> output_t; // bit-width 16, INT part 4
+typedef std::deque<output_t> out_array_t;           // array of 16,4
+typedef std::deque<out_array_t> out_matrix_t;       // matrix of 16,4
 
-typedef sc_dt::sc_fixed_fast <W, I_OUTPUT, Q, O> output_t;
-typedef std::vector<output_t> out_array_t;
-typedef std::vector<out_array_t> out_matrix_t;
-
-typedef sc_dt::sc_fixed <W, W, Q, O> const_t;
-typedef sc_dt::sc_int <1> bit1_t;
-typedef sc_dt::sc_int <6> bit6_t; 
+typedef sc_dt::sc_int  <32> s32_t;  // bit_width 32
+typedef sc_dt::sc_uint <32> u32_t;  // bit_width 32
+typedef sc_dt::sc_uint <W>  u16_t;  // bit-width 16
+typedef sc_dt::sc_uint <6>  u6_t;   // bit-width 6
+typedef sc_dt::sc_uint <1>  u1_t;   // bit-width 1
 typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
-
 #endif

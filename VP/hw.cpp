@@ -54,8 +54,6 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
     unsigned char *buf = pl.get_data_ptr(); 
     unsigned int len = pl.get_data_length();
  
-    num_t pom;
- 
     switch(cmd)
     {
     case tlm::TLM_WRITE_COMMAND:
@@ -73,7 +71,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
             break;
         case ADDR_INPUT_REG: //write pixels into the registers
 
-          mem33_ptr = (mem33_ptr == 33 ? (bit6_t)0 : mem33_ptr);
+          mem33_ptr = (mem33_ptr == 33 ? (u6_t)0 : mem33_ptr);
           mem33[mem33_ptr++] = to_fixed(buf);
 
           pl.set_response_status(tlm::TLM_OK_RESPONSE); 

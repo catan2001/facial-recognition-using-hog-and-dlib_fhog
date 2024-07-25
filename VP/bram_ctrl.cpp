@@ -4,12 +4,8 @@ BramCtrl::BramCtrl(sc_core::sc_module_name name) :
     sc_module(name), 
     offset(sc_core::SC_ZERO_TIME),
     dram_row_ptr(0),
-    skipped_rows(0),
-    counter_init(0),
-    cycle_number(0),
-    bram_block_ptr(0),
-    height(0),
     width(0),
+    height(0),
     start(0),
     ready(1)
 {
@@ -23,11 +19,12 @@ BramCtrl::~BramCtrl(){
  
 void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 {
-  tlm::tlm_command cmd = pl.get_command();
-  sc_dt::uint64 addr = pl.get_address();
-  unsigned int len = pl.get_data_length();
-  unsigned char *buf = pl.get_data_ptr();
-  
+    tlm::tlm_command cmd = pl.get_command();
+    sc_dt::uint64 addr = pl.get_address();
+    unsigned int len = pl.get_data_length();
+    unsigned char *buf = pl.get_data_ptr();
+    counter_init = 0;
+
   switch(cmd)
     {
     case tlm::TLM_WRITE_COMMAND:
@@ -36,6 +33,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
         {
         case ADDR_WIDTH:
           width = to_int(buf);  
+          dram_row_ptr = 0;
           write_filter(ADDR_WIDTH, width);
           break;
 
@@ -46,17 +44,51 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 
         case ADDR_CMD:
           start = to_int(buf);
-       
-         dram_row_ptr = 0;
-         skipped_rows = floor(height/(BRAM_HEIGHT*floor(BRAM_WIDTH/width)))*(BRAM_HEIGHT - ((int)((floor(BRAM_WIDTH/width)*BRAM_HEIGHT/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS)%BRAM_HEIGHT));
+  
           if(width > BRAM_WIDTH) {
               pl.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
               cout << "ERROR: Width of image is larger than BRAM_WIDTH[" << BRAM_WIDTH << "]" << endl;
               break;
           }
+ 
+          initialisation(1);
 
-          control_logic();
-         
+          skipped_rows = floor(height/(BRAM_HEIGHT*floor(BRAM_WIDTH/width)))*(BRAM_HEIGHT - ((int)((floor(BRAM_WIDTH/width)*BRAM_HEIGHT/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS)%BRAM_HEIGHT));
+
+          for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS + skipped_rows; i+=NUM_PARALLEL_POINTS){ ++//the number of times we will repeat a single cycle
+              
+              cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
+              bram_block_ptr = i%BRAM_HEIGHT;  // bram_block_ptr++ -> bram_block_ptr == BRAM_HEIGHT ? bram_ptr = 0
+
+              if(cycle_number == (floor(BRAM_WIDTH/width)-1) && (bram_block_ptr >= (BRAM_HEIGHT-10) && bram_block_ptr <= (BRAM_HEIGHT-1))){
+                if(dram_row_ptr<height){ //do we have more rows in DRAM?
+                  
+                  counter_init++; // counts how many times it's initialized, it's used to multiply dram_row_ptr
+                  dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr)) * counter_init;
+
+                  i+=(BRAM_HEIGHT-bram_block_ptr);
+                  cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
+                  bram_block_ptr = i%BRAM_HEIGHT;
+
+                  initialisation(0);
+                }
+              }
+                
+              for(int j=0; j < width - 2; ++j){ 
+              
+              //PHASE I -> WRITE TO REG36:
+                bram_to_reg(bram_block_ptr, cycle_number, j, ADDR_INPUT_REG, offset);
+ 
+              //PHASE II -> FILTER REG36 INTO REG10:
+                pl_t pl_filter;
+                pl_filter.set_address(ADDR_CMD);
+                pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
+                pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+
+                filter_socket -> b_transport(pl_filter, offset);
+              }
+          }
+
           break;
 
         default:
@@ -87,64 +119,24 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
   offset += sc_core::sc_time(10, sc_core::SC_NS);  
 }
 
-void BramCtrl::control_logic(void) {
-    initialisation(1);
-
-    for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS + skipped_rows; i+=NUM_PARALLEL_POINTS){ //the number of times we will repeat a single cycle
-      
-      cycle_number = ((int)i/BRAM_HEIGHT)%((int)(BRAM_WIDTH/width));  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
-      bram_block_ptr = i%BRAM_HEIGHT;  // bram_block_ptr++ -> bram_block_ptr == BRAM_HEIGHT ? bram_ptr = 0
-
-      if(cycle_number == (floor(BRAM_WIDTH/width)-1) && (bram_block_ptr >= (BRAM_HEIGHT-10) && bram_block_ptr <= (BRAM_HEIGHT-1))){
-        if(dram_row_ptr<height){ //do we have more rows in DRAM?
-          
-          counter_init++; // counts how many times it's initialized, it's used to multiply dram_row_ptr
-          dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr)) * counter_init;
-
-          i+=(BRAM_HEIGHT-bram_block_ptr);
-          cycle_number = ((int)i/BRAM_HEIGHT)%((int)(BRAM_WIDTH/width));  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
-          bram_block_ptr = i%BRAM_HEIGHT;
-
-          initialisation(0);
-        }
-      }
-      // TODO: IMPLEMENT signals for BRAM->HW 
-      for(int j=0; j < width - 2; ++j){ 
-      
-      //PHASE I -> WRITE TO REG36:
-        bram_to_reg(bram_block_ptr, cycle_number, j, ADDR_INPUT_REG, offset);
-
-      //PHASE II -> FILTER REG36 INTO REG10:
-        pl_t pl_filter;
-        pl_filter.set_address(ADDR_CMD);
-        pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
-        pl_filter.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-
-        filter_socket -> b_transport(pl_filter, offset);
-      }
-    }
-}
-
-void BramCtrl:: initialisation(bit1_t init){
-
+void BramCtrl:: initialisation(u1_t init){
     for(int i = 0; i < floor(BRAM_WIDTH/width); ++i) { //maximum number of rows that can fit in a single BRAM BLOCK
         for(int j = 0; j < BRAM_HEIGHT; ++j) {         //number of BRAM BLOCKS
             dram_row_ptr++;
             for(int k = 0; k < width; ++k) {
-              dram_to_bram(init, i, j, k, offset); // load from DRAM to BRAM from 0th position
+                dram_to_bram(init, i, j, k, offset); // load from DRAM to BRAM from 0th position
             }
             if(dram_row_ptr==height) return;
         }
     }
 }
  
-void BramCtrl:: dram_to_bram(bit1_t init, sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, sc_core::sc_time &offset){
+void BramCtrl:: dram_to_bram(u1_t init, sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, sc_core::sc_time &offset){
  
   //READ FROM DRAM:
   pl_t pl_dram;
   sc_dt::uint64 dram_addr;
   sc_dt::uint64 bram_addr;
-  
   if(init){
     dram_addr = i*(BRAM_HEIGHT*(this->width)) + j*(this->width) + k;
     bram_addr = i*(this->width) + j*BRAM_WIDTH + k;
@@ -175,11 +167,11 @@ void BramCtrl:: dram_to_bram(bit1_t init, sc_dt::uint64 i, sc_dt::uint64 j, sc_d
   bram_socket0 -> b_transport(pl_bram, offset);
 }
  
-void BramCtrl:: bram_to_reg(bit6_t bram_block_ptr, const_t cycle_num, const_t row_position, sc_dt::uint64 addr_filter, sc_core::sc_time &offset){
+void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_position, sc_dt::uint64 addr_filter, sc_core::sc_time &offset){
  
   //READ FROM BRAM:
   pl_t pl_bram0;
-  input_t buf[(NUM_PARALLEL_POINTS+2)*3];
+  output_t buf[(NUM_PARALLEL_POINTS+2)*3];
   unsigned char buf_bram[LEN_IN_BYTES*(NUM_PARALLEL_POINTS+2)*3];
   unsigned char buf_bram0[LEN_IN_BYTES];
  
@@ -203,7 +195,7 @@ void BramCtrl:: bram_to_reg(bit6_t bram_block_ptr, const_t cycle_num, const_t ro
     for(int i = 0; i < (NUM_PARALLEL_POINTS + 2 - (BRAM_HEIGHT-bram_block_ptr)); ++i){
  
       for(int j = 0; j < 3; ++j) {
-        pl_bram0.set_address(i*BRAM_WIDTH + row_position + ((int)(cycle_num+1)%((int)(BRAM_WIDTH/width)))*width + j);
+        pl_bram0.set_address(i*BRAM_WIDTH + row_position + ((cycle_num+1)%((int)(BRAM_WIDTH/width)))*width + j);
         pl_bram0.set_data_length(LEN_IN_BYTES);
         pl_bram0.set_data_ptr(buf_bram0);
         pl_bram0.set_command(tlm::TLM_READ_COMMAND);
@@ -232,8 +224,7 @@ void BramCtrl:: bram_to_reg(bit6_t bram_block_ptr, const_t cycle_num, const_t ro
   }
  
   for(int i=0; i<(NUM_PARALLEL_POINTS+2)*3; ++i){
-      to_uchar(buf_bram0, buf[i]);
- 
+      to_uchar(buf_bram0, buf[i]); 
       pl_t pl_filter;
       pl_filter.set_address(addr_filter);
       pl_filter.set_data_length(LEN_IN_BYTES);
@@ -245,12 +236,11 @@ void BramCtrl:: bram_to_reg(bit6_t bram_block_ptr, const_t cycle_num, const_t ro
   }
 }
 
-void BramCtrl::write_filter(sc_dt::uint64 addr, const_t val)
+void BramCtrl::write_filter(sc_dt::uint64 addr, u16_t val)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];
-    //int_to_uchar(buf, val); // NOTE: only for int...
-    to_uchar(buf, val);
+    int_to_uchar(buf, val); // NOTE: only for int...
     pl.set_address(addr);
     pl.set_data_length(LEN_IN_BYTES);
     pl.set_data_ptr(buf);

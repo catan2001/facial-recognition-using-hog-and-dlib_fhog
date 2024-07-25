@@ -149,7 +149,6 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
         }
     }
 
-
     //HARDWARE PART OF CODE:
     orig_array_t orig_gray(rows, vector<double>(cols));
     
@@ -162,11 +161,11 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
     delete [] im_c;
     
     out_matrix_t matrix_gray(rows, out_array_t(cols));
-    out_matrix_t padded_img(rows+2, out_array_t(cols+2));
     out_matrix_t matrix_im_filtered_y(rows, out_array_t(cols));
     out_matrix_t matrix_im_filtered_x(rows, out_array_t(cols));
+    out_matrix_t padded_img(rows+2, out_array_t(cols+2));
     cast_to_fix(rows, cols, matrix_gray, orig_gray);
-
+    
     //pad the image on the outer edges with zeros:
     for(int i=0; i<rows+2; ++i) {
         padded_img[i][0]=0;
@@ -290,9 +289,6 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
     #ifdef DEBUG
         cout << "Template Mean: " << template_HOG_mean << endl;  
         cout << "Template Norm: " << template_HOG_norm << endl;   
-    #endif
-        
-    #ifdef DEBUG
         cout << "Calculating HOG for parts of image: " << endl;
     #endif
     
@@ -344,7 +340,6 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
         }
     #endif
      
-    // sorting array [Bubble Sort(slower version)]
     sort_bounded_boxes((img_h-box_h)/3 + 1, (img_w-box_w)/3 + 1, 3, all_bounding_boxes);
     
     for(int i = ((img_h-box_h)/3 + 1) - 1; i >= 0; --i){
@@ -432,7 +427,7 @@ void SW::face_recognition_range(double *I_target, int step) {
     int num_faces = 0;
     int num_thresholded = 0;
 
-    for(int width = UPPER_BOUNDARY; width >= LOWER_BOUNDARY; width -= step) {
+    for(int width = UPPER_BOUNDARY; width >= LOWER_BOUNDARY; width -= step) { //TODO: change back to UPPER_BOUNDARY
      	cout << "current template: " << width << endl;
         
         char gray_template[50] = "template/template_";
@@ -444,6 +439,13 @@ void SW::face_recognition_range(double *I_target, int step) {
         double *I_template = new double[width * width];
 
         FILE * rach = fopen(gray_template, "rb");
+        if(rach == NULL) {
+            cout << "ERROR: could not read a file: " << gray_template << endl;
+            free(found_faces);
+            delete [] I_template;
+            return;
+        }
+            
         double val = 0;
 
         for (int i = 0; i < width; ++i){
@@ -468,7 +470,6 @@ void SW::face_recognition_range(double *I_target, int step) {
 
         delete [] found_boxes;
         delete [] I_template;
-
     }
 
     char faces_width[20] = "orig_";
@@ -496,7 +497,7 @@ void SW::read_dram(sc_dt::uint64 addr, output_t& val)
     val = to_fixed(buf);
 }
 
-void SW::write_dram(sc_dt::uint64 addr, input_t val)
+void SW::write_dram(sc_dt::uint64 addr, output_t val)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];

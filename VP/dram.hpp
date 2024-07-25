@@ -6,8 +6,6 @@
 #include <tlm_utils/simple_target_socket.h>
 #include "utils.hpp"
 
-//TODO: define DRAM interface
-
 #define DMEM_SIZE 1024*1024 // 1/2GB DRAM
 
 class DRAM : public sc_core::sc_module {
