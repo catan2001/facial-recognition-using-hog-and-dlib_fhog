@@ -30,16 +30,20 @@ public:
 
 protected:
   void b_transport (pl_t &, sc_core::sc_time &);
-  void dram_to_bram(int, sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &);
-  void bram_to_reg(int, int, int, sc_dt::uint64, sc_core::sc_time &);
-  void write_filter(sc_dt::uint64 , int );
-
-  void initialisation(bool);
+  void dram_to_bram(bit1_t, sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &);
+  void bram_to_reg(bit6_t, const_t, const_t, sc_dt::uint64, sc_core::sc_time &);
+  void write_filter(sc_dt::uint64 , const_t);
+  void control_logic(void);
+  void initialisation(bit1_t);
 
   sc_core::sc_time offset;
-  int width, height, start, ready;
-  int dram_row_ptr;
-  int cycle_number = 0, bram_block_ptr = 0;
+  const_t width, height;
+  const_t skipped_rows;
+  const_t counter_init;
+  const_t dram_row_ptr;
+  const_t cycle_number;
+  bit6_t bram_block_ptr;
+  bit1_t start, ready;
   pl_t pl_bram;
 };
 

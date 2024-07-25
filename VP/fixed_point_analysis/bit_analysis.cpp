@@ -35,11 +35,18 @@ using namespace sc_dt;
 #define I_CONST 3
 #define I_OUTPUT 4
 
-
 typedef const sc_dt::sc_int<I_CONST> const_t;
 
 int num_thresholded = 0;
 int num_faces = 0;
+
+struct score_struct {
+    int x;
+    int y;
+    double score;
+};
+
+typedef struct score_struct score_st;
 
 typedef sc_dt::sc_fix_fast num_t;
 typedef std::deque<num_t> array_t;
@@ -76,14 +83,18 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, int W, doub
 
 void face_recognition_range(int W, double *I_target, int step); 
 
+void analysis_score(char *, char *, int len);
+
 int sc_main(int, char*[]) {
-    int W = 32; 
+    int W = 8; 
     
     #ifdef DEBUG
         cout << endl << "        NOTE: DEBUG preprocessor directive is on!" << endl << endl;
     #else
         cout << endl << "        NOTE: Compiled program without DEBUG!" << endl << "        To use it, compile with -DDEBUG" << endl << endl;
     #endif 
+
+    //analysis_score(28);
 
     // loop to find minimal bitwidth
     do {
@@ -94,7 +105,7 @@ int sc_main(int, char*[]) {
         cout << "Fixed point for filter constants: " << I_CONST << endl;
         
         FILE * rach;
-        rach = fopen("template/gray.txt", "rb");
+        rach = fopen("template/rachel.txt", "rb"); // TODO: change back to gray.txt
         if(rach == NULL) {
             cout << "ERROR! could not open file!" << endl;
             return 101;
@@ -115,7 +126,7 @@ int sc_main(int, char*[]) {
 
         delete [] gray; // deallocates whole array in memory
     
-        W -= 1; // decrease width
+        W -= 8; // decrease width
     }
     while (W > 8);
   
@@ -275,7 +286,7 @@ void get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad
             *(grad_mag + i*cols + j) = sqrt(pow(dX,2)+pow(dY,2));
 
             //determining the phase matrix:
-            if(fabs(dX)>0.00001){
+            if(fabs(dX)>0.001){
                 *(grad_angle + i*cols + j) = atan(dY/dX) + PI/2;
             }else if(dY<0 && dX<0){
                 *(grad_angle + i*cols + j) = 0;
@@ -709,5 +720,80 @@ void face_recognition_range(int W, double *I_target, int step) {
 
 	write_txt(found_faces, num_faces, faces_width);
     
-    free(found_faces);
+    free(found_faces);  
+    char py_path[100] = "/home/catic/Documents/project/final_version/copy/VP/fixed_point_analysis/ideal_faces.txt";
+    analysis_score(py_path, faces_width, W);
+}
+
+void analysis_score(char *py_path, char *sc_path, int len) {
+    int x, y;
+    int row_python, row_systemc;
+    double score;
+    FILE *fp = fopen(py_path, "rb");
+    score_st python_score[50];
+    score_st systemc_score[50];
+    double output_score;
+    char width[4];
+    
+    row_python = 0;
+    
+    // Reading Python Scores:
+    while (fscanf(fp, "x: %d y: %d score: %lf\n", &x, &y, &score) != EOF) // expect 1 successful conversion
+    {
+        python_score[row_python].x = x;
+        python_score[row_python].y = y;
+        python_score[row_python++].score = score;
+    }
+    if (feof(fp)) 
+    {
+        cout << "Python file is read" << endl;
+    }
+    else
+    {
+        cout << "ERROR: could not read from file" << endl;
+    }
+    fclose(fp);
+    
+    //char path[100] = "/home/catic/Documents/project/final_version/copy/bitwitdh_optimization/orig_";    
+    //snprintf(width, sizeof(width), "%d", len);
+    //strcat(path, width);
+    //strcat(path, ".txt");
+    //cout << "path: " << path << endl;
+    FILE *fd = fopen(sc_path, "r");
+    if(fd == NULL) {
+        cout << "ERROR: Could not open a file" << endl;
+        perror("Error");
+        return;
+    }
+    // Reading Computed SystemC Scores:
+    row_systemc = 0;
+    while (fscanf(fd, "x: %d y: %d score: %lf\n", &x, &y, &score) != EOF) // expect 1 successful conversion
+    {
+        systemc_score[row_systemc].x = x;
+        systemc_score[row_systemc].y = y;
+        systemc_score[row_systemc++].score = score;
+    }
+    if (feof(fd)) 
+    {
+        cout << "SystemC file is read" << endl;
+    }
+    else
+    {
+        cout << "ERROR: could not read from file" << endl;
+    }
+    fclose(fd);
+    for(int i = 0; i < (row_python > row_systemc ? row_systemc : row_python); ++i)
+        for(int j = 0; j < (row_python > row_systemc ? row_systemc : row_python); ++j) {
+            if(python_score[i].x == systemc_score[j].x && python_score[i].y == systemc_score[j].y) {
+                output_score += (fabs(python_score[i].score - systemc_score[j].score)/python_score[i].score) * 100; // calculate the difference between two scores
+                break;
+            }
+        }
+
+    output_score = output_score / (row_python > row_systemc ? row_systemc : row_python);
+    cout << "Difference between original and calculated scores for width W = " << len << " is: " << output_score << endl; 
+        
+    fd = fopen("analysis_output.txt", "a");
+    fprintf(fd, "W = %d, Difference between ideal score and score from SystemC = %lf%\n", len, output_score);
+    fclose(fd);
 }

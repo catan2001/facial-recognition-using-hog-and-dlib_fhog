@@ -1,0 +1,10 @@
+x: 24 y: 18 score: 60.4411 
+x: 27 y: 24 score: 66.3972 
+x: 30 y: 30 score: 69.0318 
+x: 30 y: 36 score: 60.2900 
+x: 51 y: 45 score: 63.5530 
+x: 36 y: 42 score: 70.3113 
+x: 54 y: 48 score: 67.0412 
+x: 75 y: 42 score: 65.7925 
+x: 6 y: 48 score: 62.4895 
+x: 21 y: 33 score: 61.5993 

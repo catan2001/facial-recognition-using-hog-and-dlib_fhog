@@ -1,0 +1,4 @@
+W = 32, Difference between ideal score and score from SystemC = 0.219227%
+W = 24, Difference between ideal score and score from SystemC = 0.154022%
+W = 16, Difference between ideal score and score from SystemC = 1.821776%
+W = 8, Difference between ideal score and score from SystemC = 1.040029%

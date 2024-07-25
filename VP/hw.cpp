@@ -73,7 +73,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
             break;
         case ADDR_INPUT_REG: //write pixels into the registers
 
-          mem33_ptr = (mem33_ptr == 33 ? 0 : mem33_ptr);
+          mem33_ptr = (mem33_ptr == 33 ? (bit6_t)0 : mem33_ptr);
           mem33[mem33_ptr++] = to_fixed(buf);
 
           pl.set_response_status(tlm::TLM_OK_RESPONSE); 
@@ -110,7 +110,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
       switch(addr)
         {
         case ADDR_STATUS:
-          to_uchar(buf,ready);
+          int_to_uchar(buf,ready);
           break;
         default:
           pl.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE );
@@ -125,7 +125,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
 }
 
 
-void HW:: reg_to_dram(sc_dt::uint64 i, int dram_addr, sc_core::sc_time &offset){
+void HW:: reg_to_dram(sc_dt::uint64 i, sc_dt::uint64 dram_addr, sc_core::sc_time &offset){
   //WRITE TO DRAM:
   pl_t pl_dram;
   unsigned char buf_dram[LEN_IN_BYTES];

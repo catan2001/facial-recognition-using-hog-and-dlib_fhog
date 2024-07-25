@@ -19,18 +19,17 @@ public:
 protected:
 	pl_t pl;
 	sc_core::sc_time offset;
-	int start, ready;
+	bit1_t start, ready;
 	void b_transport(pl_t& pl, sc_core::sc_time& offset);
 	void filter_image_t(void);
-	num_t2 read_bram(int addr);
-	void reg_to_dram(sc_dt::uint64 i, int dram_addr, sc_core::sc_time &offset);
-    int width, height; 
-	std::vector<num_t2> mem33, mem18;
-	int mem33_ptr;
+	void reg_to_dram(sc_dt::uint64 i, sc_dt::uint64 dram_addr, sc_core::sc_time &offset);
+    const_t width, height; 
+	std::vector<output_t> mem33, mem18;
+	bit6_t mem33_ptr;
 
 	std::vector<num_t2>temp;
 
-	int pixel_batch_cnt = 0, row_batch_cnt = 0;
+	const_t pixel_batch_cnt = 0, row_batch_cnt = 0;
  
 };
  

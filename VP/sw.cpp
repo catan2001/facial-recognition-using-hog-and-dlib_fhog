@@ -161,13 +161,12 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
 
     delete [] im_c;
     
-    matrix_t matrix_gray(rows, array_t(cols, num_t(W, I, Q, O)));
-    matrix_t matrix_im_filtered_y(rows, array_t(cols, num_t(W,I,Q,O)));
-    matrix_t matrix_im_filtered_x(rows, array_t(cols, num_t(W,I,Q,O)));
-    matrix_t padded_img(rows+2, array_t(cols+2, num_t(W,I,Q,O)));
+    out_matrix_t matrix_gray(rows, out_array_t(cols));
+    out_matrix_t padded_img(rows+2, out_array_t(cols+2));
+    out_matrix_t matrix_im_filtered_y(rows, out_array_t(cols));
+    out_matrix_t matrix_im_filtered_x(rows, out_array_t(cols));
     cast_to_fix(rows, cols, matrix_gray, orig_gray);
 
-    
     //pad the image on the outer edges with zeros:
     for(int i=0; i<rows+2; ++i) {
         padded_img[i][0]=0;
@@ -483,7 +482,7 @@ void SW::face_recognition_range(double *I_target, int step) {
     free(found_faces);
 }
 
-void SW::read_dram(sc_dt::uint64 addr, num_t2& val)
+void SW::read_dram(sc_dt::uint64 addr, output_t& val)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];
@@ -497,7 +496,7 @@ void SW::read_dram(sc_dt::uint64 addr, num_t2& val)
     val = to_fixed(buf);
 }
 
-void SW::write_dram(sc_dt::uint64 addr, num_t2 val)
+void SW::write_dram(sc_dt::uint64 addr, input_t val)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];

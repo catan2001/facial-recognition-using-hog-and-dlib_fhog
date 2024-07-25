@@ -5,22 +5,6 @@
 #include <systemc>
 #include <tlm>
 
-#define LEN_IN_BYTES 2
-#define W 16 // DATA_WIDTH
-#define I 3 // FIXED_POINT_WIDTH
-#define Q sc_dt::SC_RND // quantization methods
-#define O sc_dt::SC_SAT // overflow methods
-
-typedef sc_dt::sc_fix_fast num_t;
-typedef sc_dt::sc_fixed_fast <W, I ,Q ,O> num_t2;
-typedef std::vector<num_t> array_t2;
-typedef std::deque<num_t2> array_t;
-typedef std::deque<array_t> matrix_t;
-typedef std::deque<array_t2> matrix_t2;
-typedef std::vector<std::vector<double>> orig_array_t;
-
-typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
-
 //BRAM & BRAM_CTRL
 #define BRAM_BASE_ADDR 0x40000000 // PL AXI Slave port 0 starts at 0x40000000   
 #define BRAM_LOW_ADDR 0x40000000
@@ -69,5 +53,34 @@ typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 #define PI 3.14159265358979323846
 
 #define RESERVED_MEM 2048*59//100000
+
+#define LEN_IN_BYTES 2
+#define W 16 // DATA_WIDTH
+#define I 3 // FIXED_POINT_WIDTH
+#define Q sc_dt::SC_RND // quantization methods
+#define O sc_dt::SC_SAT // overflow methods
+#define I_INPUT 1
+#define I_OUTPUT 4
+
+typedef sc_dt::sc_fix_fast num_t;
+typedef sc_dt::sc_fixed_fast <W, I ,Q ,O> num_t2;
+typedef std::vector<num_t> array_t2;
+typedef std::deque<num_t2> array_t;
+typedef std::deque<array_t> matrix_t;
+typedef std::deque<array_t2> matrix_t2;
+typedef std::vector<std::vector<double>> orig_array_t;
+
+typedef sc_dt::sc_fixed_fast <W, I_INPUT, Q, O> input_t;
+typedef std::vector<input_t> in_array_t;
+typedef std::vector<in_array_t> in_matrix_t;
+
+typedef sc_dt::sc_fixed_fast <W, I_OUTPUT, Q, O> output_t;
+typedef std::vector<output_t> out_array_t;
+typedef std::vector<out_array_t> out_matrix_t;
+
+typedef sc_dt::sc_fixed <W, W, Q, O> const_t;
+typedef sc_dt::sc_int <1> bit1_t;
+typedef sc_dt::sc_int <6> bit6_t; 
+typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 
 #endif

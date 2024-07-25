@@ -17,7 +17,7 @@ class DRAM : public sc_core::sc_module {
         tlm_utils::simple_target_socket<DRAM> dram_ctrl_socket;
     protected:
         void b_transport(pl_t &, sc_core::sc_time &);
-        std::vector<num_t2> dmem;
+        std::vector<output_t> dmem;
 };
 
 #endif //DRAM_HPP_

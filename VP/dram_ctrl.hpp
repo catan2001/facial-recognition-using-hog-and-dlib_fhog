@@ -20,7 +20,6 @@ public:
 
 protected:
   void b_transport (pl_t &, sc_core::sc_time &);
-
   pl_t pl_dram;
 };
 
