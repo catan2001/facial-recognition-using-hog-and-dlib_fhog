@@ -21,7 +21,7 @@ protected:
 	sc_core::sc_time offset;
 	u1_t start, ready;
 	void b_transport(pl_t& pl, sc_core::sc_time& offset);
-	void filter_image_t(void);
+	void filter_image_t(sc_core::sc_time& offset);
 	void reg_to_dram(sc_dt::uint64 i, sc_dt::uint64 dram_addr, sc_core::sc_time &offset);
 	std::vector<output_t> temp;
     std::vector<output_t> mem33, mem18;
