@@ -2,7 +2,7 @@
  
 BramCtrl::BramCtrl(sc_core::sc_module_name name) : 
     sc_module(name), 
-    //offset(sc_core::SC_ZERO_TIME),
+    offset(sc_core::SC_ZERO_TIME),
     dram_row_ptr(0),
     cycle_number(0),
     bram_block_ptr(0),
@@ -39,23 +39,19 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
         case ADDR_WIDTH:
           width = to_int(buf);  
           dram_row_ptr = 0;
-          write_filter(ADDR_WIDTH, width, offset);
-          //cout << "Time ADDR_WIDTH: " << offset << endl;
+          write_filter(ADDR_WIDTH, width);
           break;
 
         case ADDR_HEIGHT:
           height = to_int(buf);
-          write_filter(ADDR_HEIGHT, height, offset);
-          //cout << "Time ADDR_HEIGHT: " << offset << endl;
+          write_filter(ADDR_HEIGHT, height);
           break;
 
         case ADDR_ACC_LOSS:
           accumulated_loss = to_int(buf);
-          //cout << "Time ADDR_ACC_LOSS: " << offset << endl;
           break;
 
         case ADDR_RESET:
-          //cout << "Time ADDR_RESET: " << offset << endl;
           reset = to_int(buf);
 
           if(reset) ready = 1;
@@ -69,10 +65,8 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
               cout << "ERROR: Width of image is larger than BRAM_WIDTH[" << BRAM_WIDTH << "]" << endl;
               break;
           }
-        
-          //cout << "Time before control logic " << offset << endl;
-          control_logic(offset);
-          //cout << "Time after control logic " << offset << endl;
+
+          control_logic();
           break;
 
         default:
@@ -103,7 +97,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
   offset += sc_core::sc_time(DELAY, sc_core::SC_NS);  
 }
 
-void BramCtrl::initialisation(u1_t init, sc_core::sc_time &offset){
+void BramCtrl:: initialisation(u1_t init){
 
     //initial time lag for 
     //DRAM to BRAM 11 (100-110ns)
@@ -122,7 +116,7 @@ void BramCtrl::initialisation(u1_t init, sc_core::sc_time &offset){
     }
 }
 
-void BramCtrl::control_logic(sc_core::sc_time &offset){
+void BramCtrl:: control_logic(void){
 
   if (start == 1 && ready == 1){
     
@@ -130,9 +124,8 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
 
 		offset += sc_core::sc_time(10, sc_core::SC_NS);
 	}else if(start == 0 && ready == 0){
-    //cout << "Time before initialization 1" << offset << endl;
-    initialisation(1, offset);
-    //cout << "Time after initialization 1" << offset << endl;
+
+    initialisation(1);
 
     for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS + accumulated_loss; i+=NUM_PARALLEL_POINTS){ ++//the number of times we will repeat a single cycle
         
@@ -149,7 +142,7 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
           cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);  //i == BRAM_HEIGHT ? cycle_num++ cycle_num == floor(BRAM_WIDTH/width) ? cycle_num = 0
           bram_block_ptr = i%BRAM_HEIGHT;
 
-          initialisation(0, offset);
+          initialisation(0);
         }
       }
         
@@ -276,7 +269,7 @@ void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_pos
   }
 }
 
-void BramCtrl::write_filter(sc_dt::uint64 addr, u16_t val, sc_core::sc_time &offset)
+void BramCtrl::write_filter(sc_dt::uint64 addr, u16_t val)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];

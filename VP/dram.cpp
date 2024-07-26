@@ -24,14 +24,13 @@ void DRAM::b_transport(pl_t &pl, sc_core::sc_time &offset) {
             break;
         case tlm::TLM_READ_COMMAND:
             to_uchar(buf, dmem[addr]);
-
-            offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
             pl.set_response_status(tlm::TLM_OK_RESPONSE);
             break;
         default: 
             pl.set_response_status(tlm::TLM_COMMAND_ERROR_RESPONSE);    
     }
 
+    offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
 }
 
 

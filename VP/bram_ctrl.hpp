@@ -30,10 +30,10 @@ public:
     void b_transport (pl_t &, sc_core::sc_time &);
     void dram_to_bram(u1_t, sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &);
     void bram_to_reg(u16_t, u16_t, u16_t, sc_dt::uint64, sc_core::sc_time &);
-    void write_filter(sc_dt::uint64, u16_t, sc_core::sc_time &);
-    void control_logic(sc_core::sc_time &);
+    void write_filter(sc_dt::uint64, u16_t);
+    void control_logic(void);
 
-    void initialisation(u1_t, sc_core::sc_time &);
+    void initialisation(u1_t);
 
     sc_core::sc_time offset;
     u16_t width, height;

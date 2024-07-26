@@ -21,11 +21,11 @@ protected:
 	sc_core::sc_time offset;
 	int img_width, img_height;
 
-	void process_img(void);
-	void read_dram(sc_dt::uint64 addr, output_t& val, sc_core::sc_time &offset);
-	void write_dram(sc_dt::uint64 addr, output_t val, sc_core::sc_time &offset);
-	int read_hard(sc_dt::uint64 addr, sc_core::sc_time &offset);
-	void write_hard(sc_dt::uint64 addr, int val, sc_core::sc_time &offset);
+	void process_img();
+	void read_dram(sc_dt::uint64 addr, output_t& val);
+	void write_dram(sc_dt::uint64 addr, output_t val);
+	int read_hard(sc_dt::uint64 addr);
+	void write_hard(sc_dt::uint64 addr, int val);
 	
 	void get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad_mag, double *grad_angle);
 	void build_histogram(int rows, int cols, double *grad_mag, double *grad_angle, double *ori_histo);

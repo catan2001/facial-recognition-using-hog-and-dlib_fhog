@@ -25,7 +25,7 @@ HW::~HW()
     SC_REPORT_INFO("Hard", "Destroyed.");
 }
  
-void HW::filter_image_t(sc_core::sc_time& offset){
+void HW::filter_image_t(void){
 
   for (int i=0; i<NUM_PARALLEL_POINTS; ++i){ 
 
@@ -45,10 +45,9 @@ void HW::filter_image_t(sc_core::sc_time& offset){
     //tier 2:
     mem18[i+NUM_PARALLEL_POINTS] = temp[3]+temp[4]+temp[5];
   }  
-    
-  //cout << "TIME BEFORE IN FILTER: " << offset << endl;
+
   offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
-  //cout << "TIME AFTER IN FILTER: " << offset << endl;
+
 }
  
 void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
@@ -85,7 +84,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
         case ADDR_START:
 
         //take REG33 pixels and filter them into REG18:
-          filter_image_t(offset);
+          filter_image_t();
 
         //write REG18 pixels to DRAM:
           for(int i=0; i<2*NUM_PARALLEL_POINTS; ++i){
@@ -126,7 +125,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
       pl.set_response_status( tlm::TLM_COMMAND_ERROR_RESPONSE );
     }
  
-    //offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
+    offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
 }
 
 

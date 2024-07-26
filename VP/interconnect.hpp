@@ -19,7 +19,7 @@ public:
 
 protected:
 	pl_t pl;
-	//sc_core::sc_time offset;
+	sc_core::sc_time offset;
 	void b_transport(pl_t& pl, sc_core::sc_time& offset);
 };
 
