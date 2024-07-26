@@ -15,6 +15,7 @@ class DRAM : public sc_core::sc_module {
         tlm_utils::simple_target_socket<DRAM> dram_ctrl_socket;
     protected:
         void b_transport(pl_t &, sc_core::sc_time &);
+        u6_t read_transaction_cnt;
         std::vector<output_t> dmem;
 };
 

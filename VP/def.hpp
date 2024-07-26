@@ -53,6 +53,7 @@
 
 #define RESERVED_MEM 2048*59//100000
 
+#define DELAY_IC 2
 #define DELAY 10
 #define LEN_IN_BYTES 2
 #define W 16 // DATA_WIDTH

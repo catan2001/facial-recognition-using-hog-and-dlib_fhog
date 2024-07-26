@@ -2,7 +2,7 @@
 
 Interconnect::Interconnect(sc_core::sc_module_name name)
     : sc_module(name)
-    , offset(sc_core::SC_ZERO_TIME)
+    //, offset(sc_core::SC_ZERO_TIME)
 {
     soft_socket.register_b_transport(this, &Interconnect::b_transport);
     SC_REPORT_INFO("Interconnect", "Constructed.");
@@ -22,13 +22,11 @@ void Interconnect::b_transport(pl_t& pl, sc_core::sc_time& offset)
     {
         pl.set_address(taddr);
         dram_ctrl_socket->b_transport(pl, offset);
-        pl.set_address(addr);
     }
     else if (addr >= HARD_LOW_ADDR && addr <= HARD_HIGH_ADDR)
     {
         pl.set_address(taddr);
         hw_socket->b_transport(pl, offset);
-        pl.set_address(addr);
     }
     else
     {
@@ -36,5 +34,5 @@ void Interconnect::b_transport(pl_t& pl, sc_core::sc_time& offset)
         pl.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
     }
 
-    offset += sc_core::sc_time(DELAY, sc_core::SC_NS); 
+    offset += sc_core::sc_time(DELAY_IC, sc_core::SC_NS); 
 }

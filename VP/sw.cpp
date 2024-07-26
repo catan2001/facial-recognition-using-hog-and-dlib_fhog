@@ -15,7 +15,7 @@ SW::~SW()
     SC_REPORT_INFO("Soft", "Destroyed.");
 }
 
-void SW::process_img(){
+void SW::process_img(void){
     int steps = floor((UPPER_BOUNDARY-LOWER_BOUNDARY)/10); // parameter for face_recognition_range
     double *gray = new double[ROWS*COLS];
     FILE * gray_f = fopen("rachel.txt", "rb");
@@ -149,7 +149,7 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
         }
     }
 
-    //cout << "START OF HW: " << offset << endl;
+    cout << "START OF HW: " << offset << endl;
     //HARDWARE PART OF CODE:
     orig_array_t orig_gray(rows, vector<double>(cols));
     
@@ -185,45 +185,46 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
             padded_img[i+1][j+1]=matrix_gray[i][j];
         }
     }
-  
+    sc_core::sc_time temp = offset;
     //write image to DRAM:
     for(int i=0; i<rows+2; ++i){
       for(int j=0; j<cols+2; ++j){
         //cout<<padded_img[i][j]<<" ";
-        write_dram(DRAM_LOW_ADDR | i*(cols+2)+j ,padded_img[i][j]);
+        write_dram(DRAM_LOW_ADDR | i*(cols+2)+j ,padded_img[i][j], offset);
       }
     }
-
-    write_hard(ADDR_RESET, 1);
+    offset = temp;
+    //cout << "Time after writing in image" << offset << endl;
+    write_hard(ADDR_RESET, 1, offset);
 
     int accumulated_loss = floor((rows+2)/(BRAM_HEIGHT*floor(BRAM_WIDTH/(cols+2))))*(BRAM_HEIGHT - ((int)((floor(BRAM_WIDTH/(cols+2))*BRAM_HEIGHT/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS)%BRAM_HEIGHT));
     //configure hardware registers and send start command:
-    write_hard(ADDR_WIDTH, cols+2);
-    write_hard(ADDR_HEIGHT, rows+2);
-    write_hard(ADDR_ACC_LOSS, accumulated_loss);
-    write_hard(ADDR_START, 1);
+    write_hard(ADDR_WIDTH, cols+2, offset);
+    write_hard(ADDR_HEIGHT, rows+2, offset);
+    write_hard(ADDR_ACC_LOSS, accumulated_loss, offset);
+    write_hard(ADDR_START, 1, offset);
 
     int ready = 1;
     while(ready){
-        ready = read_hard(ADDR_STATUS);
+        ready = read_hard(ADDR_STATUS, offset);
     }
-    write_hard(ADDR_START, 0);
+    write_hard(ADDR_START, 0, offset);
 
     while(!ready){
-        ready = read_hard(ADDR_STATUS);
+        ready = read_hard(ADDR_STATUS, offset);
     }
 
-    
+    temp =  offset;
     //read filtered images from DRAM:
     for(int i = 0; i<rows; ++i){
       for(int j = 0; j<cols; ++j){
-        read_dram((rows+2)*(cols+2) + 2*cols*i +j, matrix_im_filtered_x[i][j]);
-        read_dram((rows+2)*(cols+2) + (2*i+1)*cols +j, matrix_im_filtered_y[i][j]);
+        read_dram((rows+2)*(cols+2) + 2*cols*i +j, matrix_im_filtered_x[i][j], offset);
+        read_dram((rows+2)*(cols+2) + (2*i+1)*cols +j, matrix_im_filtered_y[i][j], offset);
       }
     }
+    offset = temp;
     //END OF HARDWARE PART OF CODE
-    //cout << "END OF HW: " << offset << endl;
-    //cout << "Time in secs: " << offset/1000000000 << endl;
+    cout << "END OF HW: " << offset << endl;
     
     //GET_GRADIENT:
     //define variables and containers
@@ -232,11 +233,11 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
     double *grad_mag = new double[rows * cols];
     double *grad_angle = new double[rows * cols];
  
-   for(int i=0; i<rows; ++i){
-   	for(int j=0; j<cols; ++j){
-		*(im_dx + i*cols + j) = matrix_im_filtered_x[i][j];
-	        *(im_dy + i*cols + j) = matrix_im_filtered_y[i][j];	
-	}
+    for(int i=0; i<rows; ++i){
+   	    for(int j=0; j<cols; ++j){
+		    *(im_dx + i*cols + j) = matrix_im_filtered_x[i][j];
+	            *(im_dy + i*cols + j) = matrix_im_filtered_y[i][j];	
+	    }
     }
  
     get_gradient(rows, cols, &im_dx[0], &im_dy[0], &grad_mag[0], &grad_angle[0]);
@@ -501,7 +502,7 @@ void SW::face_recognition_range(double *I_target, int step) {
     free(found_faces);
 }
 
-void SW::read_dram(sc_dt::uint64 addr, output_t& val)
+void SW::read_dram(sc_dt::uint64 addr, output_t& val, sc_core::sc_time &offset)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];
@@ -515,7 +516,7 @@ void SW::read_dram(sc_dt::uint64 addr, output_t& val)
     val = to_fixed(buf);
 }
 
-void SW::write_dram(sc_dt::uint64 addr, output_t val)
+void SW::write_dram(sc_dt::uint64 addr, output_t val, sc_core::sc_time &offset)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];
@@ -528,7 +529,7 @@ void SW::write_dram(sc_dt::uint64 addr, output_t val)
     interconnect_socket->b_transport(pl, offset);
 }
 
-int SW::read_hard(sc_dt::uint64 addr)
+int SW::read_hard(sc_dt::uint64 addr, sc_core::sc_time &offset)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];
@@ -537,13 +538,13 @@ int SW::read_hard(sc_dt::uint64 addr)
     pl.set_data_ptr(buf);
     pl.set_command(tlm::TLM_READ_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-    sc_core::sc_time offset = sc_core::SC_ZERO_TIME;
+    //sc_core::sc_time offset = sc_core::SC_ZERO_TIME;
     interconnect_socket->b_transport(pl, offset);
     
     return to_int(buf);
 }
 
-void SW::write_hard(sc_dt::uint64 addr, int val)
+void SW::write_hard(sc_dt::uint64 addr, int val, sc_core::sc_time &offset)
 {
     pl_t pl;
     unsigned char buf[LEN_IN_BYTES];
