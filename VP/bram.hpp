@@ -21,6 +21,7 @@ public:
 protected:
 	void b_transport(pl_t&, sc_core::sc_time&);
 	std::vector<output_t> mem; //num_t
+	u6_t write_transaction_cnt;
 };
 
 #endif // BRAM_HPP

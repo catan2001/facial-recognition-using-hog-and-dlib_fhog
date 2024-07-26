@@ -1,6 +1,8 @@
 #include "bram.hpp"
 
-Bram::Bram(sc_core::sc_module_name name) : sc_module(name)
+Bram::Bram(sc_core::sc_module_name name) : 
+    sc_module(name),
+    write_transaction_cnt(0)
 {
     bram_ctrl_socket.register_b_transport(this, &Bram::b_transport);
 
@@ -26,7 +28,13 @@ void Bram::b_transport(pl_t& pl, sc_core::sc_time& offset)
     case tlm::TLM_WRITE_COMMAND:
         mem[addr] = to_fixed(data);
 
-        offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
+        write_transaction_cnt++;
+        //dual time delay to DRAM read
+        if(write_transaction_cnt==16){
+            offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
+            write_transaction_cnt = 0;
+        }
+    
         pl.set_response_status(tlm::TLM_OK_RESPONSE); 
         break;
     case tlm::TLM_READ_COMMAND:
