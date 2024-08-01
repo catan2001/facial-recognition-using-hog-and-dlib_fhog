@@ -48,18 +48,24 @@ begin
 
     stim_gen1: process
     begin
-        --0 3 3 0 0 1.5 1.3 0.7 2.4
-        pix1_s <= X"0873", ("01" & X"8000") after 100 ns, ("00" & X"0000") after 300 ns, ("00" & X"C000") after 500 ns, ("00" & X"A666") after 600 ns, ("00" & X"59AA") after 700 ns, ("01" & X"3333") after 800ns;
-        --0 1 -2 -0.25 0.7
-        pix2_s <= X"056F", ("00" & X"8000") after 200 ns, ("11" & X"0000") after 400 ns, ("11" & X"E000") after 600 ns, ("00" & X"59AA") after 800 ns;
-        --0 -2 -1.25
-        pix3_s <= X"0609", ("11" & X"0000") after 300 ns, ("11" & X"6000") after 600 ns;
-        --0 3 3 0 0 1.5 1.3 0.7 2.4
-        pix4_s <= ("00" & X"0000"), ("01" & X"8000") after 100 ns, ("00" & X"0000") after 300 ns, ("00" & X"C000") after 500 ns, ("00" & X"A666") after 600 ns, ("00" & X"59AA") after 700 ns, ("01" & X"3333") after 800ns;
-        --0 1 -2 -0.25 0.7
-        pix5_s <= ("00" & X"0000"), ("00" & X"8000") after 200 ns, ("11" & X"0000") after 400 ns, ("11" & X"E000") after 600 ns, ("00" & X"59AA") after 800 ns;
-        --0 -2 -1.25
-        pix6_s <= ("00" & X"0000"), ("11" & X"0000") after 300 ns, ("11" & X"6000") after 600 ns;
+        --two
+        pix1_s <= X"0000", X"056F" after 100ns, X"0609" after 200ns, X"04D4" after 300ns, X"0609" after 400ns,
+        X"039F" after 500ns, X"039F" after 600ns, X"056F" after 700ns, X"06A4" after 800ns;
+        --two
+        pix2_s <= X"0000";
+        
+        --negative two
+        pix3_s <= X"0609", X"04D4" after 100ns, X"0609" after 200ns, X"039F" after 300ns, X"039F" after 400ns,
+        X"056F" after 500ns, X"06A4" after 600ns, X"0609" after 700ns, X"0609" after 800ns;
+        --negative two
+        pix4_s <= X"0000", X"0873" after 100ns, X"0439" after 200ns, X"0609" after 300ns, X"0609" after 400ns,
+        X"056F" after 500ns, X"0609" after 600ns, X"06A4" after 700ns, X"0609" after 800ns;
+        
+        --negative one
+        pix5_s <= X"0000";
+        --negative one
+        pix6_s <= X"0439", X"0609" after 100ns, X"0609" after 200ns, X"056F" after 300ns, X"0609" after 400ns,
+        X"06A4" after 500ns, X"0609" after 600ns, X"0609" after 700ns, X"056F" after 800ns;
         wait;
     end process;
     
