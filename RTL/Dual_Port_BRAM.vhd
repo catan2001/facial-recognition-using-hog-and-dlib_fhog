@@ -48,11 +48,19 @@ begin
     if(rising_edge(clk_a)) then
 
         if(en_a = '1') then
-            if(we_a /= "0000") then
-            bram_block(to_integer(unsigned(addr_a))) <= data_input_a;
-            else
+            for i in 0 to 3  loop
+                if we_a(i) = '1' then
+                    --31 24 23 16 15 8 7 0  15 8 7 0
+                    bram_block(to_integer(unsigned(addr_a)))(((i+1)*8-1) downto i*8) <= data_input_a(((i+1)*8-1) downto i*8); 
+                end if;
+            end loop;
+        
             data_output_a <= bram_block(to_integer(unsigned(addr_a)));
-            end if;
+            --if(we_a /= "0000") then
+            --bram_block(to_integer(unsigned(addr_a))) <= data_input_a;
+            --else
+            --data_output_a <= bram_block(to_integer(unsigned(addr_a)));
+            --end if;
         end if;
     end if;
 
@@ -64,11 +72,22 @@ begin
     if(rising_edge(clk_b)) then
 
         if(en_b = '1') then
-            if(we_b /= "0000") then
-            bram_block(to_integer(unsigned(addr_b))) <= data_input_b;
-            else
-            data_output_b <= bram_block(to_integer(unsigned(addr_b)));
-            end if;
+            for i in 0 to 3  loop
+                    if we_b(i) = '1' then
+                        --31 24 23 16 15 8 7 0 
+                        bram_block(to_integer(unsigned(addr_b)))(((i+1)*8-1) downto i*8) <= data_input_b(((i+1)*8-1) downto i*8); 
+                    end if;
+                end loop;
+            
+                data_output_b <= bram_block(to_integer(unsigned(addr_b)));
+            
+        
+        
+            --if(we_b /= "0000") then
+            --bram_block(to_integer(unsigned(addr_b))) <= data_input_b;
+            --else
+            --data_output_b <= bram_block(to_integer(unsigned(addr_b)));
+            --end if;
         end if;
     end if;
 
