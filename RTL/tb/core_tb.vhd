@@ -94,7 +94,7 @@ impure function bram_init return bram_type is
     variable data : std_logic_vector(WIDTH - 1 downto 0);
     variable bram_rows : rows_type;
     variable bram : bram_type;
-    file text_file : text open read_mode is "C:\Users\cata\Documents\rachel_files\gray_normalised.txt";
+    file text_file : text open read_mode is "C:\Users\Andjela\Desktop\RTL\tb\input_file\gray_normalised.txt";
 begin
     for row in 0 to IMG_HEIGHT - 1 loop
         readline(text_file, row_text);
@@ -172,16 +172,49 @@ begin
 
     stim_gen1: process
     begin
-        for i in 0 to 0 loop
-            for j in 0 to 10 loop
-                for k in 0 to 9 loop
-                    reg30(0 + k*3) <= bram(i*9 + k)(j)      after (i*149+ j)*100 ns;
-                    reg30(1 + k*3) <= bram(i*9 + k)(j + 1)    after (i*149+ j)*100 ns;
-                    reg30(2 + k*3) <= bram(i*9 + k)(j + 2)    after (i*149+ j)*100 ns;
-                end loop;
-            end loop;
-        end loop;
-        wait;
+        --for i in 0 to 0 loop
+            --for j in 0 to 10 loop
+                --for k in 0 to 9 loop
+                    --reg30(0 + k*3) <= bram(i*9 + k)(j)      after (i*149+ j)*100 ns;
+                    --reg30(1 + k*3) <= bram(i*9 + k)(j + 1)    after (i*149+ j)*100 ns;
+                    --reg30(2 + k*3) <= bram(i*9 + k)(j + 2)    after (i*149+ j)*100 ns;
+                --end loop;
+            --end loop;
+        --end loop;
+        --wait;
+        reg30(0) <= bram(0)(0), bram(0)(1) after 100 ns, bram(0)(2) after 200 ns;
+        reg30(1) <= bram(0)(1), bram(0)(2) after 100 ns, bram(0)(3) after 200 ns;
+        reg30(2) <= bram(0)(2), bram(0)(3) after 100 ns, bram(0)(4) after 200 ns;
+        reg30(3) <= bram(1)(0), bram(1)(1) after 100 ns, bram(1)(2) after 200 ns;
+        reg30(4) <= bram(1)(1), bram(1)(2) after 100 ns, bram(1)(3) after 200 ns;
+        reg30(5) <= bram(1)(2), bram(1)(3) after 100 ns, bram(1)(4) after 200 ns;
+        reg30(6) <= bram(2)(0), bram(2)(1) after 100 ns, bram(2)(2) after 200 ns;
+        reg30(7) <= bram(2)(1), bram(2)(2) after 100 ns, bram(2)(3) after 200 ns;
+        reg30(8) <= bram(2)(2), bram(2)(3) after 100 ns, bram(2)(4) after 200 ns;
+        reg30(9) <= bram(3)(0), bram(3)(1) after 100 ns, bram(3)(2) after 200 ns;
+        reg30(10) <= bram(3)(1), bram(3)(2) after 100 ns, bram(3)(3) after 200 ns;
+        reg30(11) <= bram(3)(2), bram(3)(3) after 100 ns, bram(3)(4) after 200 ns;        
+        reg30(12) <= bram(4)(0), bram(4)(1) after 100 ns, bram(4)(2) after 200 ns;
+        reg30(13) <= bram(4)(1), bram(4)(2) after 100 ns, bram(4)(3) after 200 ns;
+        reg30(14) <= bram(4)(2), bram(4)(3) after 100 ns, bram(4)(4) after 200 ns;
+        reg30(15) <= bram(5)(0), bram(5)(1) after 100 ns, bram(5)(2) after 200 ns;
+        reg30(16) <= bram(5)(1), bram(5)(2) after 100 ns, bram(5)(3) after 200 ns;
+        reg30(17) <= bram(5)(2), bram(5)(3) after 100 ns, bram(5)(4) after 200 ns;
+        reg30(18) <= bram(6)(0), bram(6)(1) after 100 ns, bram(6)(2) after 200 ns;
+        reg30(19) <= bram(6)(1), bram(6)(2) after 100 ns, bram(6)(3) after 200 ns;
+        reg30(20) <= bram(6)(2), bram(6)(3) after 100 ns, bram(6)(4) after 200 ns;
+        reg30(21) <= bram(7)(0), bram(7)(1) after 100 ns, bram(7)(2) after 200 ns;
+        reg30(22) <= bram(7)(1), bram(7)(2) after 100 ns, bram(7)(3) after 200 ns;
+        reg30(23) <= bram(7)(2), bram(7)(3) after 100 ns, bram(7)(4) after 200 ns;
+        reg30(24) <= bram(8)(0), bram(8)(1) after 100 ns, bram(8)(2) after 200 ns;
+        reg30(25) <= bram(8)(1), bram(8)(2) after 100 ns, bram(8)(3) after 200 ns;
+        reg30(26) <= bram(8)(2), bram(8)(3) after 100 ns, bram(8)(4) after 200 ns;        
+        reg30(27) <= bram(9)(0), bram(9)(1) after 100 ns, bram(9)(2) after 200 ns;
+        reg30(28) <= bram(9)(1), bram(9)(2) after 100 ns, bram(9)(3) after 200 ns;
+        reg30(29) <= bram(9)(2), bram(9)(3) after 100 ns, bram(9)(4) after 200 ns;
+        
+        
+       wait;
     end process;
     
     clk_gen: process
