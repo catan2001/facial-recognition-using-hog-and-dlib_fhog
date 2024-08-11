@@ -32,7 +32,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity mux4_1 is
-    generic(WIDTH:positive:=32);
+    generic(WIDTH:natural:=32);
     Port (x0: in std_logic_vector(WIDTH-1 downto 0);
           x1: in std_logic_vector(WIDTH-1 downto 0);
           x2: in std_logic_vector(WIDTH-1 downto 0);

@@ -32,7 +32,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity demux1_4 is
-    generic(WIDTH:positive:=32);
+    generic(WIDTH:natural:=32);
     Port (sel: in std_logic_vector(1 downto 0);
           x: in std_logic_vector(WIDTH-1 downto 0);
           y0: out std_logic_vector(WIDTH-1 downto 0);
