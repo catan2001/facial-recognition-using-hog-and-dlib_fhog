@@ -4,7 +4,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 entity data_path is
   generic(WIDTH:natural:=32;
           BRAM_SIZE:natural:=1024;
-          ADDR_WIDTH:natural:=10);
+          ADDR_WIDTH:natural:=10;
+          PIX_WIDTH:natural:=16);
   Port ( --data signals 
         bram_ctrl_in_0A: in std_logic_vector(WIDTH-1 downto 0);
         bram_ctrl_in_0B: in std_logic_vector(WIDTH-1 downto 0);
@@ -15,9 +16,9 @@ entity data_path is
         bram_ctrl_out_1A: out std_logic_vector(WIDTH-1 downto 0);
         bram_ctrl_out_1B: out std_logic_vector(WIDTH-1 downto 0);
         --control signals
-        clk, clk_a, clk_b: in std_logic;
-        en_a, en_b: in std_logic;
-        we_a, we_b: in std_logic_vector(3 downto 0);
+        clk: in std_logic;
+        en_a_in, en_b_in, en_a_out, en_b_out: in std_logic;
+        we_a_in, we_b_in, we_a_out, we_b_out: in std_logic_vector(3 downto 0);
         sel_bram_in: in std_logic_vector(2 downto 0);
         sel_bram_out: in std_logic_vector(1 downto 0);
         sel_filter: in std_logic_vector(1 downto 0);
@@ -26,14 +27,8 @@ entity data_path is
         bram_addr_1A_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
         bram_addr_0B_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
         bram_addr_1B_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-        bram_x_addr_A: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-        bram_x_addr_B: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-        bram_y_addr_A: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-        bram_y_addr_B: in std_logic_vector(ADDR_WIDTH - 1 downto 0)
-        --bram_x_addr_A_out
-        --bram_x_addr_B_out
-        --bram_y_addr_A_out
-        --bram_y_addr_B_out
+        bram_addr_A_out: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
+        bram_addr_B_out: in std_logic_vector(ADDR_WIDTH - 1 downto 0)
         );
 end data_path;
 
@@ -227,6 +222,7 @@ architecture Behavioral of data_path is
     end component;
 begin
 
+--demux before bram block
 demux_in_1: demux1_8
     generic map(WIDTH => WIDTH)
     port map(sel => sel_bram_in,
@@ -279,18 +275,19 @@ demux_in_4: demux1_8
              y6 => demux4_out_bram_in6,
              y7 => demux4_out_bram_in7);
              
+ --bram_block    
 bram_block0_in: Dual_Port_BRAM
     generic map(
          WIDTH => WIDTH,
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block0A_out_mux_in, 
          data_input_a => demux1_out_bram_in0,
          addr_a => bram_addr_0A_in,
@@ -305,18 +302,18 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block1A_out_mux_in, 
          data_input_a => demux3_out_bram_in0,
-         addr_a => bram_addr_0A_in,
+         addr_a => bram_addr_1A_in,
          data_output_b => bram_block1B_out_mux_in,
          data_input_b => demux4_out_bram_in0, 
-         addr_b => bram_addr_0B_in
+         addr_b => bram_addr_1B_in
          );
          
  bram_block2_in: Dual_Port_BRAM
@@ -325,12 +322,12 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block2A_out_mux_in, 
          data_input_a => demux1_out_bram_in1,
          addr_a => bram_addr_0A_in,
@@ -345,18 +342,18 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block3A_out_mux_in, 
          data_input_a => demux3_out_bram_in1,
-         addr_a => bram_addr_0A_in,
+         addr_a => bram_addr_1A_in,
          data_output_b => bram_block3B_out_mux_in,
          data_input_b => demux4_out_bram_in1, 
-         addr_b => bram_addr_0B_in
+         addr_b => bram_addr_1B_in
          );
          
    bram_block4_in: Dual_Port_BRAM
@@ -365,12 +362,12 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block4A_out_mux_in, 
          data_input_a => demux1_out_bram_in2,
          addr_a => bram_addr_0A_in,
@@ -385,18 +382,18 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block5A_out_mux_in, 
          data_input_a => demux3_out_bram_in2,
-         addr_a => bram_addr_0A_in,
+         addr_a => bram_addr_1A_in,
          data_output_b => bram_block5B_out_mux_in,
          data_input_b => demux4_out_bram_in2, 
-         addr_b => bram_addr_0B_in
+         addr_b => bram_addr_1B_in
          );
          
     bram_block6_in: Dual_Port_BRAM
@@ -405,12 +402,12 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block6A_out_mux_in, 
          data_input_a => demux1_out_bram_in3,
          addr_a => bram_addr_0A_in,
@@ -425,18 +422,18 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block7A_out_mux_in, 
          data_input_a => demux3_out_bram_in3,
-         addr_a => bram_addr_0A_in,
+         addr_a => bram_addr_1A_in,
          data_output_b => bram_block7B_out_mux_in,
          data_input_b => demux4_out_bram_in3, 
-         addr_b => bram_addr_0B_in
+         addr_b => bram_addr_1B_in
          );
          
    bram_block8_in: Dual_Port_BRAM
@@ -445,12 +442,12 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block8A_out_mux_in, 
          data_input_a => demux1_out_bram_in4,
          addr_a => bram_addr_0A_in,
@@ -465,18 +462,18 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block9A_out_mux_in, 
          data_input_a => demux3_out_bram_in4,
-         addr_a => bram_addr_0A_in,
+         addr_a => bram_addr_1A_in,
          data_output_b => bram_block9B_out_mux_in,
          data_input_b => demux4_out_bram_in4, 
-         addr_b => bram_addr_0B_in
+         addr_b => bram_addr_1B_in
          );
          
    bram_block10_in: Dual_Port_BRAM
@@ -485,12 +482,12 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block10A_out_mux_in, 
          data_input_a => demux1_out_bram_in5,
          addr_a => bram_addr_0A_in,
@@ -505,18 +502,18 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block11A_out_mux_in, 
          data_input_a => demux3_out_bram_in5,
-         addr_a => bram_addr_0A_in,
+         addr_a => bram_addr_1A_in,
          data_output_b => bram_block11B_out_mux_in,
-         data_input_b => demux3_out_bram_in5, 
-         addr_b => bram_addr_0B_in
+         data_input_b => demux4_out_bram_in5, 
+         addr_b => bram_addr_1B_in
          );
          
     bram_block12_in: Dual_Port_BRAM
@@ -525,12 +522,12 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block12A_out_mux_in, 
          data_input_a => demux1_out_bram_in6,
          addr_a => bram_addr_0A_in,
@@ -545,18 +542,18 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block13A_out_mux_in, 
          data_input_a => demux3_out_bram_in6,
-         addr_a => bram_addr_0A_in,
+         addr_a => bram_addr_1A_in,
          data_output_b => bram_block13B_out_mux_in,
          data_input_b => demux4_out_bram_in6, 
-         addr_b => bram_addr_0B_in
+         addr_b => bram_addr_1B_in
          );
          
     bram_block14_in: Dual_Port_BRAM
@@ -565,12 +562,12 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block14A_out_mux_in, 
          data_input_a => demux1_out_bram_in7,
          addr_a => bram_addr_0A_in,
@@ -585,20 +582,21 @@ bram_block1_in: Dual_Port_BRAM
          BRAM_SIZE  => BRAM_SIZE,
          ADDR_WIDTH => ADDR_WIDTH)
     Port map(
-         clk_a => clk_a,
-         clk_b => clk_b,
-         en_a => en_a,
-         en_b => en_b,
-         we_a => we_a,
-         we_b => we_b,
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_in,
+         en_b => en_b_in,
+         we_a => we_a_in,
+         we_b => we_b_in,
          data_output_a => bram_block15A_out_mux_in, 
          data_input_a => demux3_out_bram_in7,
-         addr_a => bram_addr_0A_in,
+         addr_a => bram_addr_1A_in,
          data_output_b => bram_block15B_out_mux_in,
          data_input_b => demux4_out_bram_in7, 
-         addr_b => bram_addr_0B_in
+         addr_b => bram_addr_1B_in
          );
-         
+  
+  --mux before core       
     mux0A_in: mux4_1
     generic map(WIDTH => WIDTH)
     Port map(
@@ -719,9 +717,9 @@ bram_block1_in: Dual_Port_BRAM
           sel => sel_bram_out,
           y => muxB5_out_core_in);
           
-
+--core
      core: core_top  
-     generic map(WIDTH => 16)
+     generic map(WIDTH => PIX_WIDTH)
           Port map(
                clk => clk,
 
@@ -752,8 +750,8 @@ bram_block1_in: Dual_Port_BRAM
 
                pix_20 => muxA5_out_core_in(31 downto 16),
                pix_21 => muxA5_out_core_in(15 downto 0),
-               pix_22 => muxB5_out_core_in(15 downto 0),
-               pix_23 => muxB5_out_core_in(31 downto 16),
+               pix_22 => muxB5_out_core_in(31 downto 16),
+               pix_23 => muxB5_out_core_in(15 downto 0),
        
                res_x_0 => filter_x01_to_demux(31 downto 16),
                res_x_1 => filter_x01_to_demux(15 downto 0),
@@ -774,7 +772,7 @@ bram_block1_in: Dual_Port_BRAM
                res_y_7 => filter_y67_to_demux(15 downto 0)
           );
 
-
+    --demux after bram_block
     demux_x0: demux1_4
     generic map(WIDTH => WIDTH)
     Port map(
@@ -855,6 +853,647 @@ bram_block1_in: Dual_Port_BRAM
           y2 => demux_y_bram11,
           y3 => demux_y_bram15);
           
+    ---bram_block_x                
+    bram_block_x0_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block0A_x, 
+         data_input_a => demux_x_bram0,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block0B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+          
+    bram_block_x1_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block1A_x, 
+         data_input_a => demux_x_bram1,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block1B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+         
+    bram_block_x2_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block2A_x, 
+         data_input_a => demux_x_bram2,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block2B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+         
+    bram_block_x3_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block3A_x, 
+         data_input_a => demux_x_bram3,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block3B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+         
+    bram_block_x4_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block4A_x, 
+         data_input_a => demux_x_bram4,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block4B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+    bram_block_x5_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block5A_x, 
+         data_input_a => demux_x_bram5,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block5B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );     
+         
+    bram_block_x6_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block6A_x, 
+         data_input_a => demux_x_bram6,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block6B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+         
+    bram_block_x7_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block7A_x, 
+         data_input_a => demux_x_bram7,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block7B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+         
+    bram_block_x8_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block8A_x, 
+         data_input_a => demux_x_bram8,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block8B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         ); 
+         
+    bram_block_x9_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block9A_x, 
+         data_input_a => demux_x_bram9,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block9B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );   
+         
+    bram_block_x10_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block10A_x, 
+         data_input_a => demux_x_bram10,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block10B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );   
+          
+    bram_block_x11_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block11A_x, 
+         data_input_a => demux_x_bram11,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block11B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );  
+     
+    bram_block_x12_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block12A_x, 
+         data_input_a => demux_x_bram12,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block12B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );  
+         
+    bram_block_x13_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block13A_x, 
+         data_input_a => demux_x_bram13,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block13B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );  
+         
+    bram_block_x14_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block14A_x, 
+         data_input_a => demux_x_bram14,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block14B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );  
+         
+    bram_block_x15_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block15A_x, 
+         data_input_a => demux_x_bram15,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block15B_x,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );  
+         
+    ---bram_block_y               
+    bram_block_y0_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block0A_y, 
+         data_input_a => demux_y_bram0,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block0B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+          
+    bram_block_y1_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block1A_y, 
+         data_input_a => demux_y_bram1,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block1B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+         
+    bram_block_y2_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block2A_y, 
+         data_input_a => demux_y_bram2,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block2B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+         
+    bram_block_y3_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block3A_y, 
+         data_input_a => demux_y_bram3,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block3B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+         
+    bram_block_y4_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block4A_y, 
+         data_input_a => demux_y_bram4,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block4B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+    bram_block_y5_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block5A_y, 
+         data_input_a => demux_y_bram5,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block5B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );     
+         
+    bram_block_y6_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block6A_y, 
+         data_input_a => demux_y_bram6,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block6B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+         
+    bram_block_y7_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block7A_y, 
+         data_input_a => demux_y_bram7,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block7B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );
+         
+    bram_block_y8_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block8A_y, 
+         data_input_a => demux_y_bram8,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block8B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         ); 
+         
+    bram_block_y9_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block9A_y, 
+         data_input_a => demux_y_bram9,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block9B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );   
+         
+    bram_block_y10_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block10A_y, 
+         data_input_a => demux_y_bram10,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block10B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );   
+          
+    bram_block_y11_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block11A_y, 
+         data_input_a => demux_y_bram11,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block11B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );  
+     
+    bram_block_y12_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block12A_y, 
+         data_input_a => demux_y_bram12,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block12B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );  
+         
+    bram_block_y13_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block13A_y, 
+         data_input_a => demux_y_bram13,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block13B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );  
+         
+    bram_block_y14_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block14A_y, 
+         data_input_a => demux_y_bram14,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block14B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );  
+         
+    bram_block_y15_out: Dual_Port_BRAM
+    generic map(
+         WIDTH => WIDTH,
+         BRAM_SIZE  => BRAM_SIZE,
+         ADDR_WIDTH => ADDR_WIDTH)
+    Port map(
+         clk_a => clk,
+         clk_b => clk,
+         en_a => en_a_out,
+         en_b => en_b_out,
+         we_a => we_a_out,
+         we_b => we_b_out,
+         data_output_a => bram_block15A_y, 
+         data_input_a => demux_y_bram15,
+         addr_a => bram_addr_A_out,
+         data_output_b => bram_block15B_y,
+         data_input_b => (others => '0'), 
+         addr_b => bram_addr_B_out
+         );  
+    
+ --mux out    
     mux_xA: mux16_1
         generic map(WIDTH => WIDTH)
         Port map(
