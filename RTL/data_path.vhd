@@ -65,7 +65,7 @@ architecture Behavioral of data_path is
     
     --core to demux
     signal filter_x01_to_demux, filter_x23_to_demux, filter_x45_to_demux, filter_x67_to_demux: std_logic_vector(WIDTH-1 downto 0);
-    signal filter_y01_to_demux, filter_y23_to_demux, filter_y45_to_demux, filter_67_to_demux: std_logic_vector(WIDTH-1 downto 0);
+    signal filter_y01_to_demux, filter_y23_to_demux, filter_y45_to_demux, filter_y67_to_demux: std_logic_vector(WIDTH-1 downto 0);
     
     --demux to bram_block
     signal demux_x_bram0, demux_x_bram1, demux_x_bram2, demux_x_bram3, demux_x_bram4, demux_x_bram5, demux_x_bram6, demux_x_bram7:std_logic_vector(WIDTH-1 downto 0);
@@ -147,55 +147,49 @@ architecture Behavioral of data_path is
         ------------------- control signals ------------------
         clk: in std_logic;
         ------------------- input signals --------------------
-        pix_0: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_1: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_2: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_3: in std_logic_vector(WIDTH - 1 downto 0); 
-        pix_4: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_5: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_6: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_7: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_8: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_9: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_10: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_11: in std_logic_vector(WIDTH - 1 downto 0); 
-        pix_12: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_13: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_14: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_15: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_16: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_17: in std_logic_vector(WIDTH - 1 downto 0); 
-        pix_18: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_19: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_20: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_21: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_22: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_23: in std_logic_vector(WIDTH - 1 downto 0); 
-        pix_24: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_25: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_26: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_27: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_28: in std_logic_vector(WIDTH - 1 downto 0);
-        pix_29: in std_logic_vector(WIDTH - 1 downto 0); 
+        pix_0: in std_logic_vector(WIDTH - 1 downto 0); -- red 1
+        pix_1: in std_logic_vector(WIDTH - 1 downto 0); -- red 1
+        pix_2: in std_logic_vector(WIDTH - 1 downto 0); -- red 1
+        pix_3: in std_logic_vector(WIDTH - 1 downto 0); -- red 1
+        pix_4: in std_logic_vector(WIDTH - 1 downto 0); -- red 2
+        pix_5: in std_logic_vector(WIDTH - 1 downto 0); -- red 2
+        pix_6: in std_logic_vector(WIDTH - 1 downto 0); -- red 2
+        pix_7: in std_logic_vector(WIDTH - 1 downto 0); -- red 2
+        pix_8: in std_logic_vector(WIDTH - 1 downto 0); -- red 3
+        pix_9: in std_logic_vector(WIDTH - 1 downto 0); -- red 3
+        pix_10: in std_logic_vector(WIDTH - 1 downto 0); -- red 3
+        pix_11: in std_logic_vector(WIDTH - 1 downto 0); -- red 3
+        pix_12: in std_logic_vector(WIDTH - 1 downto 0); -- red 4
+        pix_13: in std_logic_vector(WIDTH - 1 downto 0); -- red 4
+        pix_14: in std_logic_vector(WIDTH - 1 downto 0); -- red 4
+        pix_15: in std_logic_vector(WIDTH - 1 downto 0); -- red 4
+        pix_16: in std_logic_vector(WIDTH - 1 downto 0); -- red 5
+        pix_17: in std_logic_vector(WIDTH - 1 downto 0); -- red 5
+        pix_18: in std_logic_vector(WIDTH - 1 downto 0); -- red 5
+        pix_19: in std_logic_vector(WIDTH - 1 downto 0); -- red 5
+        pix_20: in std_logic_vector(WIDTH - 1 downto 0); -- red 6
+        pix_21: in std_logic_vector(WIDTH - 1 downto 0); -- red 6
+        pix_22: in std_logic_vector(WIDTH - 1 downto 0); -- red 6
+        pix_23: in std_logic_vector(WIDTH - 1 downto 0); -- red 6
 
         ------------------- output signals -------------------    
-        res_x_0: out std_logic_vector(WIDTH - 1 downto 0);
-        res_x_1: out std_logic_vector(WIDTH - 1 downto 0);
-        res_x_2: out std_logic_vector(WIDTH - 1 downto 0);
-        res_x_3: out std_logic_vector(WIDTH - 1 downto 0);
-        res_x_4: out std_logic_vector(WIDTH - 1 downto 0);
-        res_x_5: out std_logic_vector(WIDTH - 1 downto 0);
-        res_x_6: out std_logic_vector(WIDTH - 1 downto 0);
-        res_x_7: out std_logic_vector(WIDTH - 1 downto 0);
+        res_x_0: out std_logic_vector(WIDTH - 1 downto 0); -- red 1
+        res_x_1: out std_logic_vector(WIDTH - 1 downto 0); -- red 1
+        res_x_2: out std_logic_vector(WIDTH - 1 downto 0); -- red 2
+        res_x_3: out std_logic_vector(WIDTH - 1 downto 0); -- red 2
+        res_x_4: out std_logic_vector(WIDTH - 1 downto 0); -- red 3
+        res_x_5: out std_logic_vector(WIDTH - 1 downto 0); -- red 3
+        res_x_6: out std_logic_vector(WIDTH - 1 downto 0); -- red 4
+        res_x_7: out std_logic_vector(WIDTH - 1 downto 0); -- red 4
 
-        res_y_0: out std_logic_vector(WIDTH - 1 downto 0);
-        res_y_1: out std_logic_vector(WIDTH - 1 downto 0);
-        res_y_2: out std_logic_vector(WIDTH - 1 downto 0);
-        res_y_3: out std_logic_vector(WIDTH - 1 downto 0);
-        res_y_4: out std_logic_vector(WIDTH - 1 downto 0);
-        res_y_5: out std_logic_vector(WIDTH - 1 downto 0);
-        res_y_6: out std_logic_vector(WIDTH - 1 downto 0);
-        res_y_7: out std_logic_vector(WIDTH - 1 downto 0)
+        res_y_0: out std_logic_vector(WIDTH - 1 downto 0); -- red 1
+        res_y_1: out std_logic_vector(WIDTH - 1 downto 0); -- red 1
+        res_y_2: out std_logic_vector(WIDTH - 1 downto 0); -- red 2
+        res_y_3: out std_logic_vector(WIDTH - 1 downto 0); -- red 2
+        res_y_4: out std_logic_vector(WIDTH - 1 downto 0); -- red 3
+        res_y_5: out std_logic_vector(WIDTH - 1 downto 0); -- red 3
+        res_y_6: out std_logic_vector(WIDTH - 1 downto 0); -- red 4
+        res_y_7: out std_logic_vector(WIDTH - 1 downto 0)  -- red 4
         );
     end component;
     
@@ -725,6 +719,62 @@ bram_block1_in: Dual_Port_BRAM
           sel => sel_bram_out,
           y => muxB5_out_core_in);
           
+
+     core: core_top  
+     generic map(WIDTH => 16)
+          Port map(
+               clk => clk,
+
+               pix_0 => muxA0_out_core_in(31 downto 16),
+               pix_1 => muxA0_out_core_in(15 downto 0),
+               pix_2 => muxB0_out_core_in(31 downto 16),
+               pix_3 => muxB0_out_core_in(15 downto 0),
+
+               pix_4 => muxA1_out_core_in(31 downto 16),
+               pix_5 => muxA1_out_core_in(15 downto 0),
+               pix_6 => muxB1_out_core_in(31 downto 16),
+               pix_7 => muxB1_out_core_in(15 downto 0),
+
+               pix_8 => muxA2_out_core_in(31 downto 16),
+               pix_9 => muxA2_out_core_in(15 downto 0),
+               pix_10 => muxB2_out_core_in(31 downto 16),
+               pix_11 => muxB2_out_core_in(15 downto 0),
+
+               pix_12 => muxA3_out_core_in(31 downto 16),
+               pix_13 => muxA3_out_core_in(15 downto 0),
+               pix_14 => muxB3_out_core_in(31 downto 16),
+               pix_15 => muxB3_out_core_in(15 downto 0),
+
+               pix_16 => muxA4_out_core_in(31 downto 16),
+               pix_17 => muxA4_out_core_in(15 downto 0),
+               pix_18 => muxB4_out_core_in(31 downto 16),
+               pix_19 => muxB4_out_core_in(15 downto 0),
+
+               pix_20 => muxA5_out_core_in(31 downto 16),
+               pix_21 => muxA5_out_core_in(15 downto 0),
+               pix_22 => muxB5_out_core_in(15 downto 0),
+               pix_23 => muxB5_out_core_in(31 downto 16),
+       
+               res_x_0 => filter_x01_to_demux(31 downto 16),
+               res_x_1 => filter_x01_to_demux(15 downto 0),
+               res_x_2 => filter_x23_to_demux(31 downto 16),
+               res_x_3 => filter_x23_to_demux(15 downto 0),
+               res_x_4 => filter_x45_to_demux(31 downto 16),
+               res_x_5 => filter_x45_to_demux(15 downto 0),
+               res_x_6 => filter_x67_to_demux(31 downto 16),
+               res_x_7 => filter_x67_to_demux(15 downto 0),
+       
+               res_y_0 => filter_y01_to_demux(31 downto 16),
+               res_y_1 => filter_y01_to_demux(15 downto 0),
+               res_y_2 => filter_y23_to_demux(31 downto 16),
+               res_y_3 => filter_y23_to_demux(15 downto 0),
+               res_y_4 => filter_y45_to_demux(31 downto 16),
+               res_y_5 => filter_y45_to_demux(15 downto 0),
+               res_y_6 => filter_y67_to_demux(31 downto 16),
+               res_y_7 => filter_y67_to_demux(15 downto 0)
+          );
+
+
     demux_x0: demux1_4
     generic map(WIDTH => WIDTH)
     Port map(
@@ -779,7 +829,7 @@ bram_block1_in: Dual_Port_BRAM
     generic map(WIDTH => WIDTH)
     Port map(
           sel => sel_filter,
-          x => filter_x23_to_demux,
+          x => filter_y23_to_demux,
           y0 => demux_y_bram1,
           y1 => demux_y_bram5,
           y2 => demux_y_bram9,
@@ -789,7 +839,7 @@ bram_block1_in: Dual_Port_BRAM
     generic map(WIDTH => WIDTH)
     Port map(
           sel => sel_filter,
-          x => filter_x45_to_demux,
+          x => filter_y45_to_demux,
           y0 => demux_y_bram2,
           y1 => demux_y_bram6,
           y2 => demux_y_bram10,
@@ -799,7 +849,7 @@ bram_block1_in: Dual_Port_BRAM
     generic map(WIDTH => WIDTH)
     Port map(
           sel => sel_filter,
-          x => filter_x67_to_demux,
+          x => filter_y67_to_demux,
           y0 => demux_y_bram3,
           y1 => demux_y_bram7,
           y2 => demux_y_bram11,
