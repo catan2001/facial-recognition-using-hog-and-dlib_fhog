@@ -24,8 +24,10 @@ entity data_path is
         sel_bram_out: in std_logic_vector(2 downto 0);
         sel_filter: in std_logic_vector(2 downto 0);
         sel_dram: in std_logic_vector(4 downto 0);
-        bram_addrA_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-        bram_addrB_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
+        bram_addrA_l_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
+        bram_addrB_l_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
+        bram_addrA_h_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
+        bram_addrB_h_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
         bram_addr_A_out: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
         bram_addr_B_out: in std_logic_vector(ADDR_WIDTH - 1 downto 0)
         );
@@ -290,10 +292,10 @@ bram_block0_in: Dual_Port_BRAM
          we_b => we_in(3 downto 0),
          data_output_a => bram_block0A_out_mux_in, 
          data_input_a => demux1_out_bram_in0,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_l_in,
          data_output_b => bram_block0B_out_mux_in,
          data_input_b => demux2_out_bram_in0, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_l_in
          );
         
 bram_block1_in: Dual_Port_BRAM
@@ -310,10 +312,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(3 downto 0),
          data_output_a => bram_block1A_out_mux_in, 
          data_input_a => demux3_out_bram_in0,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_l_in,
          data_output_b => bram_block1B_out_mux_in,
          data_input_b => demux4_out_bram_in0, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_l_in
          );
          
  bram_block2_in: Dual_Port_BRAM
@@ -330,10 +332,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(7 downto 4),
          data_output_a => bram_block2A_out_mux_in, 
          data_input_a => demux1_out_bram_in1,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block2B_out_mux_in,
          data_input_b => demux2_out_bram_in1, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
 
  bram_block3_in: Dual_Port_BRAM
@@ -350,10 +352,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(7 downto 4),
          data_output_a => bram_block3A_out_mux_in, 
          data_input_a => demux3_out_bram_in1,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block3B_out_mux_in,
          data_input_b => demux4_out_bram_in1, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
    bram_block4_in: Dual_Port_BRAM
@@ -370,10 +372,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(11 downto 8),
          data_output_a => bram_block4A_out_mux_in, 
          data_input_a => demux1_out_bram_in2,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block4B_out_mux_in,
          data_input_b => demux2_out_bram_in2, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
     bram_block5_in: Dual_Port_BRAM
@@ -390,10 +392,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(11 downto 8),
          data_output_a => bram_block5A_out_mux_in, 
          data_input_a => demux3_out_bram_in2,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block5B_out_mux_in,
          data_input_b => demux4_out_bram_in2, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
     bram_block6_in: Dual_Port_BRAM
@@ -410,10 +412,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(15 downto 12),
          data_output_a => bram_block6A_out_mux_in, 
          data_input_a => demux1_out_bram_in3,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block6B_out_mux_in,
          data_input_b => demux2_out_bram_in3, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
    bram_block7_in: Dual_Port_BRAM
@@ -430,10 +432,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(15 downto 12),
          data_output_a => bram_block7A_out_mux_in, 
          data_input_a => demux3_out_bram_in3,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block7B_out_mux_in,
          data_input_b => demux4_out_bram_in3, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
    bram_block8_in: Dual_Port_BRAM
@@ -450,10 +452,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(19 downto 16),
          data_output_a => bram_block8A_out_mux_in, 
          data_input_a => demux1_out_bram_in4,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block8B_out_mux_in,
          data_input_b => demux2_out_bram_in4, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
     bram_block9_in: Dual_Port_BRAM
@@ -470,10 +472,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(19 downto 16),
          data_output_a => bram_block9A_out_mux_in, 
          data_input_a => demux3_out_bram_in4,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block9B_out_mux_in,
          data_input_b => demux4_out_bram_in4, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
    bram_block10_in: Dual_Port_BRAM
@@ -490,10 +492,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(23 downto 20),
          data_output_a => bram_block10A_out_mux_in, 
          data_input_a => demux1_out_bram_in5,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block10B_out_mux_in,
          data_input_b => demux2_out_bram_in5, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
    bram_block11_in: Dual_Port_BRAM
@@ -510,10 +512,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(23 downto 20),
          data_output_a => bram_block11A_out_mux_in, 
          data_input_a => demux3_out_bram_in5,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block11B_out_mux_in,
          data_input_b => demux4_out_bram_in5, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
     bram_block12_in: Dual_Port_BRAM
@@ -530,10 +532,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(27 downto 24),
          data_output_a => bram_block12A_out_mux_in, 
          data_input_a => demux1_out_bram_in6,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block12B_out_mux_in,
          data_input_b => demux2_out_bram_in6, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
     bram_block13_in: Dual_Port_BRAM
@@ -550,10 +552,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(27 downto 24),
          data_output_a => bram_block13A_out_mux_in, 
          data_input_a => demux3_out_bram_in6,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block13B_out_mux_in,
          data_input_b => demux4_out_bram_in6, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
     bram_block14_in: Dual_Port_BRAM
@@ -570,10 +572,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(31 downto 28),
          data_output_a => bram_block14A_out_mux_in, 
          data_input_a => demux1_out_bram_in7,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block14B_out_mux_in,
          data_input_b => demux2_out_bram_in7, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
          
     bram_block15_in: Dual_Port_BRAM
@@ -590,10 +592,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(31 downto 28),
          data_output_a => bram_block15A_out_mux_in, 
          data_input_a => demux3_out_bram_in7,
-         addr_a => bram_addrA_in,
+         addr_a => bram_addrA_h_in,
          data_output_b => bram_block15B_out_mux_in,
          data_input_b => demux4_out_bram_in7, 
-         addr_b => bram_addrB_in
+         addr_b => bram_addrB_h_in
          );
   
   --mux before core       
