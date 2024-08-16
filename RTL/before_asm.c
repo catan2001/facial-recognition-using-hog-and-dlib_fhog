@@ -1,5 +1,9 @@
 INIT:
 
+//na bram_in blokove uvijek en=1
+en_in = 1;
+en_out = 1;
+
 sel_bram_in = 0;
 sel_filter = 0;
 sel_bram_out = 0;
@@ -13,35 +17,39 @@ burst_len_read = width/4 - 1
 burst_len_write = width/4 - 2;
 
 -----------------------------------------------------------------------------------------------------------------------------
-DRAM_TO_BRAM: (dram_addr0, dram_addr1, en, sel_bram_in, bram_addr[0-1]_A/B, dram_row_ptr[0-1])
+DRAM_TO_BRAM: (we_in, dram_addr0, dram_addr1, en, sel_bram_in, sel_bram_addr_in, bram_addr[0...7]_A/B, dram_row_ptr[0-1]) //[0..7] -> isto se generisu ali se inkrementuju u razlicitim vrem trenucima
 
-(i, j, k, init)
+(i, j, k, init) (i, k -> shared between this and CONTROL_LOGIC)
 
+loop_bram_to_dram0:
 i = 0;
 sel_bram_in = 0;
+sel_bram_addr_in = 0;
 
-loop_dram_to_bram1: // zasto su i,j obrnuti?
+loop_dram_to_bram1:
   j = 0;
 
 loop_dram_to_bram2: 
     dram_addr0 = dram_row_ptr0*(this->width)/4;
     dram_addr1 = dram_row_ptr1*(this->width)/4;
 
-    while(en = 0); // od AXI
+    while(en_axi = 0); // od AXI valid
 
     k = 0;
+    we_in = 0x"0000000F";
 
 loop_dram_to_bram3:       
 
-      bram_addr0_A = i*(this->width)/2 + k<<1; //0 2 4 6
-      bram_addr0_B = i*(this->width)/2 + k<<1 + 1; //1 3 5 7
+      //staviti mux sa sel_bram_addr_in:
+      bram_addr0_A = i*(this->width)/2 + k; //0 2 4 6
+      bram_addr0_B = i*(this->width)/2 + k + 1; //1 3 5 7
 
-      bram_addr1_A = i*(this->width)/2 + k<<1;
-      bram_addr1_B = i*(this->width)/2 + k<<1 + 1; 
+      bram_addr1_A = i*(this->width)/2 + k;
+      bram_addr1_B = i*(this->width)/2 + k + 1; 
 
-      k = k + 1;
+      k = k + 2;
       //saljemo po 4 podatka odjednom po HP portu
-      if(k = width/4) then
+      if(k = width/2) then
         goto end_dram_to_bram3;
       else
         goto loop_dram_to_bram3;
@@ -53,9 +61,11 @@ end_dram_to_bram3:
     dram_row_ptr0 += 2;
     dram_row_ptr1 += 2;
     sel_bram_in += 1; // nojs
+    we_in = we_in << 4;
 
     if(sel_bram_in = 8) then
       sel_bram_in = 0; // nojs
+      we_in = 0X"0000000F";
     
     j = j + 2; 
     if(j = BRAM_HEIGHT) then
@@ -80,21 +90,24 @@ if(init){
 }
 
 ------------------------------------------------------------------------------------------------------
-CONTROL_LOGIC: (finished, row_position, cycle_num, dram_row_ptr[0-1], sel_filter, sel_bram_out)
+CONTROL_LOGIC: (we_in, finished, row_position, cycle_num, dram_row_ptr[0-1], sel_filter, sel_bram_out, sel_bram_addr_in)
 
 (i, cnt_init)
 
 i = 0;
 
 control_loop:
-  cycle_num = ((int)i/BRAM_HEIGHT)%((int)2*BRAM_WIDTH/width);    
 
-  if(cycle_num = (floor(2*BRAM_WIDTH/width)-1) && i%BRAM_HEIGHT = 12) then
+  //uzimamo gornjih 6 bita rezultata mnozenja jer je i siroko 6 bita
+  //1/BRAM_HEIGHT -> 10 bita sirine (6 cijeli dio i 4 decimalni)
+  cycle_num = ((int)i*(1/BRAM_HEIGHT));  //1  
+
+  if(cycle_num = (floor(2*BRAM_WIDTH/width)-1) && i = 12*cycle_num) then //2
     if(dram_row_ptr1<height) then
       
       cnt_init++;
-      dram_row_ptr0 = (floor(2*BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-i)) * cnt_init;
-      dram_row_ptr1 = (floor(2*BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-i)) * cnt_init + 1;
+      dram_row_ptr0 = (floor(2*BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-i)) * cnt_init;    //3
+      dram_row_ptr1 = (floor(2*BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-i)) * cnt_init + 1; //4
       
       //konstante ne mora se realizovati kao oduzimanje 16-12 = 4
       i = i + 4;
@@ -111,6 +124,9 @@ control_loop:
 RESUPPLY_FINISHED:
 
 row_position = 0; // position in row
+sel_bram_addr_in = 1;
+we_in = 0;
+we_out = 0x"000F";
 
 loop_row:      
     goto PIPELINE;
@@ -118,7 +134,7 @@ loop_row:
     END_PIPELINE:
 
     row_position = row_position + 2; // calculated 2 pixels
-    if(row_position = width/2 - 1) then
+    if(row_position = width/2) then
         goto end_row;
     else
         goto loop_row;
@@ -129,10 +145,13 @@ end_row:
     sel_filter = 0;
 
   sel_bram_out = sel_bram_out + 1;
+  we_out = we_out << 4;
   if(sel_bram_out = 4) then
     sel_bram_out = 0;
+    we_out = 0x"000F";
 
-  i = i + 1;
+  i = i + 4;
+
   if(i > floor(height/PTS_PER_ROWS) + accumulated_loss) then
     finished = 1;
     goto BRAM_TO_DRAM;
@@ -144,15 +163,24 @@ PIPELINE:
 ----------------------------------------------------------------------------------------------------------
 BRAM_TO_FILTER: (sel_filter, cycle_num, row_position)
 
-if(sel_filter = 3) then
-  bram_block_A[12..15][row_position + cycle_num*width/2]; // setting up the addresses
-  bram_block_B[12..15][row_position + 1 + cycle_num*width/2]; // setting up the addresses
+//signali BRAM BLOKA:
+//we_in -> ctrl logic
+//en -> ctrl logic
+//addr -> ctrl logic
+//data -> axi data
 
-  bram_block_A[0...1][row_position + (cycle_num+1)*width/2];
-  bram_block_B[0...1][row_position + 1 + (cycle_num+1)*width/2];
+//sel=0 -> 0 1 2 3 4 5 addr
+
+if(sel_filter = 3) then
+
+  bram_addr[12..15]_A = row_position + cycle_num*width/2; // setting up the addresses
+  bram_addr[12..15]_B = row_position + 1 + cycle_num*width/2; // setting up the addresses
+
+  bram_addr[0..1]_A = row_position + (cycle_num+1)*width/2;
+  bram_addr[0..1]_B = row_position + 1 + (cycle_num+1)*width/2;
 else
-  bram_block_A[0...11][row_position + cycle_num*width/2];
-  bram_block_B[0...11][row_position + 1 + cycle_num*width/2];
+  bram_addr[0..11]_A = row_position + cycle_num*width/2;
+  bram_addr[0..11]_B = row_position + 1 + cycle_num*width/2;
 
 ------------------------------------------------------------------------------------------------------
 FILTER: () // datapath
@@ -160,16 +188,18 @@ FILTER: () // datapath
 ---------------------------------------------------------------------------------------------------------
 FILTER_TO_BRAM: (sel_bram_out, cycle_num, row_position)
 
-bram_output_x_addr = row_position/2 + (width/2 - 1)*cycle_num;
-bram_output_y_addr = row_position/2 + (width/2 - 1)*cycle_num;
+bram_output_x_addr = row_position>>1 + (width/2 - 1)*cycle_num;
+bram_output_y_addr = row_position>>1 + (width/2 - 1)*cycle_num;
 
 goto END_PIPELINE;
 ------------------------------------------------------------------------------------------------------
-BRAM_TO_DRAM: (finished, sel_dram, dram_addr_x/y, bram_addr_x/y)
+BRAM_TO_DRAM: (finished, sel_dram, dram_addr_x/y, bram_addr_x/y, we_out)
 
 (i, k, row_cnt)
 
 i = 0;
+we_out = 0;
+
 loop_bram_to_dram1:
   sel_dram = 0;
 
@@ -180,7 +210,8 @@ loop_bram_to_dram2:
 
 loop_bram_to_dram3:
 
-      bram_addr_x/y[sel_dram] = i*(width/2 - 1) + k; // nadamo se da ce k biti AXI
+      bram_addrA_x/y[sel_dram] = i*(width/2 - 1) + k; // nadamo se da ce k biti AXI
+      bram_addrB_x/y[sel_dram] = i*(width/2 - 1) + 1 + k;
 
       k = k + 1; // molim te budi AXI
       if(k = (width/2 - 1)) then
