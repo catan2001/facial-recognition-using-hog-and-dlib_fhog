@@ -43,17 +43,17 @@
 #define HEIGHT (ROWS/CELL_SIZE)
 #define WIDTH (COLS/CELL_SIZE)
 
-#define BRAM_HEIGHT 59 //60th BRAM is used for registers //((ROWS > 128)? 128 : ROWS)
-#define BRAM_WIDTH 1024 // depth of one BRAM_block
+#define BRAM_HEIGHT 16 //60th BRAM is used for registers //((ROWS > 128)? 128 : ROWS)
+#define BRAM_WIDTH 2048 // depth of one BRAM_block
 
 #define NUM_PARALLEL_POINTS 8
-#define PTS_PER_COLS 2
-#define PTS_PER_ROWS 4
-#define REG33 30
+#define PTS_PER_ROW 2
+#define PTS_PER_COL 4
+#define REG24 24
 
 #define PI 3.14159265358979323846
 
-#define RESERVED_MEM 1024*59
+#define RESERVED_MEM BRAM_WIDTH*BRAM_HEIGHT
 
 #define DELAY_IC 2
 #define DELAY 10

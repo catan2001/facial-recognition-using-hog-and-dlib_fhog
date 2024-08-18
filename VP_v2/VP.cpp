@@ -7,6 +7,8 @@ Vp::Vp(sc_core::sc_module_name name)
 	dram_ctrl("Dram_Ctrl"),
 	dram("Dram"),
     bram("Bram"),
+	//bramX("BramX"),
+    //bramY("BramY"),
     bram_ctrl("Bram_Ctrl"),
 	hard("Hard")
 {

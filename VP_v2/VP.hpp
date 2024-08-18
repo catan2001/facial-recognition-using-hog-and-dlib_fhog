@@ -24,7 +24,7 @@ protected:
 	SW soft;
 	Interconnect interconnect;
 	HW hard;
-    Bram bram;
+    Bram bram, bramX, bramY;
     BramCtrl bram_ctrl;
 	DramCtrl dram_ctrl;
 	DRAM dram;

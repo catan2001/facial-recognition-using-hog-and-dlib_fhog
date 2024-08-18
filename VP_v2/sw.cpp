@@ -28,8 +28,11 @@ void SW::process_img(void){
           }
     }
     fclose(gray_f);
+    //debug
+    double *img_HOG = new double[((int)(ROWS/8) - 1)*((int)(COLS/8) - 1)*24];
+    extract_hog(ROWS, COLS, gray, img_HOG);
     
-    face_recognition_range(&gray[0], steps);
+    //face_recognition_range(&gray[0], steps);
 }
 
 void SW::get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad_mag, double *grad_angle){
@@ -198,7 +201,7 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
     write_hard(ADDR_RESET, 1, offset);
 
 //accumulated_loss = (ceel((rows+2)/(BRAM_HEIGHT*floor(BRAM_WIDTH/(cols+2))))-1)*(BRAM_HEIGHT-bram_block_ptr);
-    int accumulated_loss = floor((rows+2)/(BRAM_HEIGHT*floor(BRAM_WIDTH/(cols+2))))*(BRAM_HEIGHT - ((int)((floor(BRAM_WIDTH/(cols+2))*BRAM_HEIGHT/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS)%BRAM_HEIGHT));
+    int accumulated_loss = floor((rows+2)/(BRAM_HEIGHT*floor(BRAM_WIDTH/(cols+2))))*(BRAM_HEIGHT - ((int)((floor(BRAM_WIDTH/(cols+2))*BRAM_HEIGHT/PTS_PER_COL)*PTS_PER_COL)%BRAM_HEIGHT));
     //configure hardware registers and send start command:
     write_hard(ADDR_WIDTH, cols+2, offset);
     write_hard(ADDR_HEIGHT, rows+2, offset);
@@ -218,10 +221,14 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
     temp =  offset;
     //read filtered images from DRAM:
     for(int i = 0; i<rows; ++i){
+    cout << i+1 << ":" << endl; 
       for(int j = 0; j<cols; ++j){
         read_dram((rows+2)*(cols+2) + 2*cols*i +j, matrix_im_filtered_x[i][j], offset);
+        cout << matrix_im_filtered_x[i][j] << " ";
         read_dram((rows+2)*(cols+2) + (2*i+1)*cols +j, matrix_im_filtered_y[i][j], offset);
       }
+
+      cout << endl;
     }
     offset = temp;
     //END OF HARDWARE PART OF CODE

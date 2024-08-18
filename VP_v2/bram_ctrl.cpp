@@ -132,26 +132,26 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
    
     initialisation(offset);
 
-    for(int i = 0; i <= floor(height/NUM_PARALLEL_POINTS)*NUM_PARALLEL_POINTS + accumulated_loss; i+=NUM_PARALLEL_POINTS){ ++//the number of times we will repeat a single cycle
+    for(int i = 0; i <= floor(height/PTS_PER_COL)*PTS_PER_COL + accumulated_loss; i+=PTS_PER_COL){ //the number of times we will repeat a single cycle
         
-      cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width); 
+      cycle_number = ((int)i/BRAM_HEIGHT); 
       bram_block_ptr = i%BRAM_HEIGHT;
 
-      if(cycle_number == (floor(BRAM_WIDTH/width)-1) && (bram_block_ptr >= (BRAM_HEIGHT-10) && bram_block_ptr <= (BRAM_HEIGHT-1))){
+      if(cycle_number == (floor(BRAM_WIDTH/width)-1) && (bram_block_ptr == 12)){
         if(dram_row_ptr<height){ 
           
           counter_init++; 
           dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr)) * counter_init;
 
           i+=(BRAM_HEIGHT-bram_block_ptr);
-          cycle_number = ((int)i/BRAM_HEIGHT)%((int)BRAM_WIDTH/width);
-          bram_block_ptr = i%BRAM_HEIGHT;
+          cycle_number = 0;
+          bram_block_ptr = 0;
 
           initialisation(offset);
         }
       }
         
-      for(int j=0; j < width - 2; ++j){ 
+      for(int j=0; j < width - 2; j+=2){ 
       
       //PHASE I -> WRITE TO REG33:
         bram_to_reg(bram_block_ptr, cycle_number, j, ADDR_INPUT_REG, offset);
@@ -178,7 +178,7 @@ void BramCtrl:: dram_to_bram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, 
 
   dram_addr = (dram_row_ptr-1)*(this->width) + k;
   bram_addr = i*(this->width) + j*BRAM_WIDTH + k;
-
+      
   
   unsigned char buf_dram[LEN_IN_BYTES];
 
@@ -206,16 +206,16 @@ void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_pos
  
   //READ FROM BRAM:
   pl_t pl_bram;
-  output_t buf[(NUM_PARALLEL_POINTS+2)*3];
-  unsigned char buf_bram[LEN_IN_BYTES*(NUM_PARALLEL_POINTS+2)*3];
+  output_t buf[(PTS_PER_COL+2)*4];
+  unsigned char buf_bram[LEN_IN_BYTES*(PTS_PER_COL+2)*4];
   unsigned char buf_bram0[LEN_IN_BYTES];
  
  //PROMIJENI 10
-  if(bram_block_ptr >= (BRAM_HEIGHT-10) && bram_block_ptr <= (BRAM_HEIGHT-1)){
+  if(bram_block_ptr == 12){
  
     for(int i = 0; i < (BRAM_HEIGHT-bram_block_ptr); ++i){
  
-      for(int j = 0; j < 3; ++j) {
+      for(int j = 0; j < 4; ++j) {
       pl_bram.set_address((bram_block_ptr+i)*BRAM_WIDTH + row_position + cycle_num*width + j);
       pl_bram.set_data_length(LEN_IN_BYTES);
       pl_bram.set_data_ptr(buf_bram0);
@@ -224,13 +224,13 @@ void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_pos
  
       bram_socket->b_transport(pl_bram, offset);
  
-      buf[i*3 + j] = to_fixed(buf_bram0); 
+      buf[i*4 + j] = to_fixed(buf_bram0); 
       }
     }
  
-    for(int i = 0; i < (NUM_PARALLEL_POINTS + 2 - (BRAM_HEIGHT-bram_block_ptr)); ++i){
+    for(int i = 0; i < (PTS_PER_COL + 2 - (BRAM_HEIGHT-bram_block_ptr)); ++i){
  
-      for(int j = 0; j < 3; ++j) {
+      for(int j = 0; j < 4; ++j) {
         pl_bram.set_address(i*BRAM_WIDTH + row_position + ((cycle_num+1)%((int)(BRAM_WIDTH/width)))*width + j);
         pl_bram.set_data_length(LEN_IN_BYTES);
         pl_bram.set_data_ptr(buf_bram0);
@@ -238,14 +238,14 @@ void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_pos
         pl_bram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
  
         bram_socket->b_transport(pl_bram, offset);
-        buf[(i + (BRAM_HEIGHT-bram_block_ptr))*3 + j] = to_fixed(buf_bram0); 
+        buf[(i + (BRAM_HEIGHT-bram_block_ptr))*4 + j] = to_fixed(buf_bram0); 
       }
     }
  
   }else{
  
-    for(int i = 0; i < (NUM_PARALLEL_POINTS+2); ++i){
-      for(int j = 0; j < 3; ++j) {   
+    for(int i = 0; i < (PTS_PER_COL+2); ++i){
+      for(int j = 0; j < 4; ++j) {   
       pl_bram.set_address(cycle_num*width + row_position + (bram_block_ptr+i)*BRAM_WIDTH + j);
       pl_bram.set_data_length(LEN_IN_BYTES);
       pl_bram.set_data_ptr(buf_bram0);
@@ -254,12 +254,16 @@ void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_pos
  
       bram_socket->b_transport(pl_bram, offset);
 
-      buf[i*3 + j] = to_fixed(buf_bram0); 
+      buf[i*4 + j] = to_fixed(buf_bram0); 
+
+      cout << "i = " << i << " bram_block_ptr: " << bram_block_ptr << endl;
+      cout << "cycle_num = " << cycle_num << " row position: " << row_position << endl;
+
       }
     }
   }
  
-  for(int i=0; i<(NUM_PARALLEL_POINTS+2)*3; ++i){
+  for(int i=0; i<(PTS_PER_COL+2)*4; ++i){
       to_uchar(buf_bram0, buf[i]); 
       pl_t pl_filter;
       pl_filter.set_address(addr_filter);
