@@ -79,8 +79,6 @@ signal dram_addr1_s: std_logic_vector(31 downto 0);
 signal dram_out_addr_x_s: std_logic_vector(31 downto 0);
 signal dram_out_addr_y_s: std_logic_vector(31 downto 0);
 
-signal en_in_s, en_out_s: std_logic;
-
 component data_path is
   generic(WIDTH:natural:=32;
           BRAM_SIZE:natural:=1024;
@@ -97,7 +95,6 @@ component data_path is
         data_out4: out std_logic_vector(WIDTH-1 downto 0);
         --control signals
         clk: in std_logic;
-        en_in, en_out: in std_logic;
         we_in: in std_logic_vector(31 downto 0); 
         we_out:in std_logic_vector(15 downto 0);
         sel_bram_in: in std_logic_vector(3 downto 0);
@@ -181,8 +178,6 @@ data_path_l: data_path
       data_out4 => data_out4_s,
     
       clk => clk,
-      en_in => en_in_s, 
-      en_out => en_out_s,
       we_in => we_in_s,
       we_out => we_out_s,
       sel_bram_in => sel_bram_in_s,

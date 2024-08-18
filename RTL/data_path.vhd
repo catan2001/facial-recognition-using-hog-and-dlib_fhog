@@ -17,7 +17,6 @@ entity data_path is
         data_out4: out std_logic_vector(WIDTH-1 downto 0);
         --control signals
         clk: in std_logic;
-        en_in, en_out: in std_logic;
         we_in: in std_logic_vector(31 downto 0); 
         we_out:in std_logic_vector(15 downto 0);
         sel_bram_in: in std_logic_vector(3 downto 0);
@@ -34,6 +33,9 @@ entity data_path is
 end data_path;
 
 architecture Behavioral of data_path is
+
+    --en signal for bram block
+     signal en_s: std_logic:='1';
 
     --demux to bram_block
     signal demux1_out_bram_in0, demux1_out_bram_in1, demux1_out_bram_in2, demux1_out_bram_in3: std_logic_vector(WIDTH-1 downto 0);
@@ -80,6 +82,7 @@ architecture Behavioral of data_path is
     signal bram_block8B_y, bram_block9B_y, bram_block10B_y, bram_block11B_y, bram_block12B_y, bram_block13B_y, bram_block14B_y, bram_block15B_y:std_logic_vector(WIDTH-1 downto 0);
     
     signal data_out1_s, data_out2_s, data_out3_s, data_out4_s: std_logic_vector(WIDTH-1 downto 0);
+    
     component demux1_8 is
         generic (
             WIDTH: natural := 32);
@@ -286,8 +289,8 @@ bram_block0_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(3 downto 0),
          we_b => we_in(3 downto 0),
          data_output_a => bram_block0A_out_mux_in, 
@@ -306,8 +309,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(3 downto 0),
          we_b => we_in(3 downto 0),
          data_output_a => bram_block1A_out_mux_in, 
@@ -326,8 +329,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(7 downto 4),
          we_b => we_in(7 downto 4),
          data_output_a => bram_block2A_out_mux_in, 
@@ -346,8 +349,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(7 downto 4),
          we_b => we_in(7 downto 4),
          data_output_a => bram_block3A_out_mux_in, 
@@ -366,8 +369,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(11 downto 8),
          we_b => we_in(11 downto 8),
          data_output_a => bram_block4A_out_mux_in, 
@@ -386,8 +389,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(11 downto 8),
          we_b => we_in(11 downto 8),
          data_output_a => bram_block5A_out_mux_in, 
@@ -406,8 +409,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(15 downto 12),
          we_b => we_in(15 downto 12),
          data_output_a => bram_block6A_out_mux_in, 
@@ -426,8 +429,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(15 downto 12),
          we_b => we_in(15 downto 12),
          data_output_a => bram_block7A_out_mux_in, 
@@ -446,8 +449,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(19 downto 16),
          we_b => we_in(19 downto 16),
          data_output_a => bram_block8A_out_mux_in, 
@@ -466,8 +469,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(19 downto 16),
          we_b => we_in(19 downto 16),
          data_output_a => bram_block9A_out_mux_in, 
@@ -486,8 +489,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(23 downto 20),
          we_b => we_in(23 downto 20),
          data_output_a => bram_block10A_out_mux_in, 
@@ -506,8 +509,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(23 downto 20),
          we_b => we_in(23 downto 20),
          data_output_a => bram_block11A_out_mux_in, 
@@ -526,8 +529,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(27 downto 24),
          we_b => we_in(27 downto 24),
          data_output_a => bram_block12A_out_mux_in, 
@@ -546,8 +549,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(27 downto 24),
          we_b => we_in(27 downto 24),
          data_output_a => bram_block13A_out_mux_in, 
@@ -566,8 +569,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(31 downto 28),
          we_b => we_in(31 downto 28),
          data_output_a => bram_block14A_out_mux_in, 
@@ -586,8 +589,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_in,
-         en_b => en_in,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_in(31 downto 28),
          we_b => we_in(31 downto 28),
          data_output_a => bram_block15A_out_mux_in, 
@@ -864,8 +867,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(3 downto 0),
          we_b => (others => '0'),
          data_output_a => bram_block0A_x, 
@@ -884,8 +887,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(3 downto 0),
          we_b => (others => '0'),
          data_output_a => bram_block1A_x, 
@@ -904,8 +907,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(3 downto 0),
          we_b => (others => '0'),
          data_output_a => bram_block2A_x, 
@@ -924,8 +927,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(3 downto 0),
          we_b => (others => '0'),
          data_output_a => bram_block3A_x, 
@@ -944,8 +947,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(7 downto 4),
          we_b => (others => '0'),
          data_output_a => bram_block4A_x, 
@@ -963,8 +966,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(7 downto 4),
          we_b => (others => '0'),
          data_output_a => bram_block5A_x, 
@@ -983,8 +986,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(7 downto 4),
          we_b => (others => '0'),
          data_output_a => bram_block6A_x, 
@@ -1003,8 +1006,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(7 downto 4),
          we_b => (others => '0'),
          data_output_a => bram_block7A_x, 
@@ -1023,8 +1026,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(11 downto 8),
          we_b => (others => '0'),
          data_output_a => bram_block8A_x, 
@@ -1043,8 +1046,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(11 downto 8),
          we_b => (others => '0'),
          data_output_a => bram_block9A_x, 
@@ -1063,8 +1066,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(11 downto 8),
          we_b => (others => '0'),
          data_output_a => bram_block10A_x, 
@@ -1083,8 +1086,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(11 downto 8),
          we_b => (others => '0'),
          data_output_a => bram_block11A_x, 
@@ -1103,8 +1106,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(15 downto 12),
          we_b => (others => '0'),
          data_output_a => bram_block12A_x, 
@@ -1123,8 +1126,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(15 downto 12),
          we_b => (others => '0'),
          data_output_a => bram_block13A_x, 
@@ -1143,8 +1146,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(15 downto 12),
          we_b => (others => '0'),
          data_output_a => bram_block14A_x, 
@@ -1163,8 +1166,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(15 downto 12),
          we_b => (others => '0'),
          data_output_a => bram_block15A_x, 
@@ -1184,8 +1187,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(3 downto 0),
          we_b => (others => '0'),
          data_output_a => bram_block0A_y, 
@@ -1204,8 +1207,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(3 downto 0),
          we_b => (others => '0'),
          data_output_a => bram_block1A_y, 
@@ -1224,8 +1227,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(3 downto 0),
          we_b => (others => '0'),
          data_output_a => bram_block2A_y, 
@@ -1244,8 +1247,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(3 downto 0),
          we_b => (others => '0'),
          data_output_a => bram_block3A_y, 
@@ -1264,8 +1267,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(7 downto 4),
          we_b => (others => '0'),
          data_output_a => bram_block4A_y, 
@@ -1283,8 +1286,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(7 downto 4),
          we_b => (others => '0'),
          data_output_a => bram_block5A_y, 
@@ -1303,8 +1306,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(7 downto 4),
          we_b => (others => '0'),
          data_output_a => bram_block6A_y, 
@@ -1323,8 +1326,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(7 downto 4),
          we_b => (others => '0'),
          data_output_a => bram_block7A_y, 
@@ -1343,8 +1346,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(11 downto 8),
          we_b => (others => '0'),
          data_output_a => bram_block8A_y, 
@@ -1363,8 +1366,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(11 downto 8),
          we_b => (others => '0'),
          data_output_a => bram_block9A_y, 
@@ -1383,8 +1386,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(11 downto 8),
          we_b => (others => '0'),
          data_output_a => bram_block10A_y, 
@@ -1403,8 +1406,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(11 downto 8),
          we_b => (others => '0'),
          data_output_a => bram_block11A_y, 
@@ -1423,8 +1426,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(15 downto 12),
          we_b => (others => '0'),
          data_output_a => bram_block12A_y, 
@@ -1443,8 +1446,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(15 downto 12),
          we_b => (others => '0'),
          data_output_a => bram_block13A_y, 
@@ -1463,8 +1466,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(15 downto 12),
          we_b => (others => '0'),
          data_output_a => bram_block14A_y, 
@@ -1483,8 +1486,8 @@ bram_block1_in: Dual_Port_BRAM
     Port map(
          clk_a => clk,
          clk_b => clk,
-         en_a => en_out,
-         en_b => en_out,
+         en_a => en_s,
+         en_b => en_s,
          we_a => we_out(15 downto 12),
          we_b => (others => '0'),
          data_output_a => bram_block15A_y, 
