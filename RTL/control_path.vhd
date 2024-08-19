@@ -559,8 +559,8 @@ case state_bram_to_dram_r is
         end if;
 
     when end_bram_to_dram2 =>
-        z_next <= std_logic_vector(unsigned(z_reg)+1);
-        if(z_next = cycle_num_out_reg) then
+        y_next <= std_logic_vector(unsigned(y_reg)+1);
+        if(y_next = cycle_num_out_reg) then
             if(finished_reg6 = '0') then
                 state_control_logic_n <= init_loop_row;
             end if;
