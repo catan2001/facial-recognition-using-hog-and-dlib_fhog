@@ -92,15 +92,15 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
 
         //take REG24 pixels and filter them into REG16:
           filter_image_t(offset);
-
+        
         //write REG16 pixels to DRAM:
           for(int i=0; i<PTS_PER_COL*PTS_PER_ROW; ++i){
             if(i<4){
               reg_to_dram(2*i, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + i*2*(width-2) + pixel_batch_cnt, offset);
               reg_to_dram(2*i+1, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + i*2*(width-2) + pixel_batch_cnt+1, offset);
             }else{
-              reg_to_dram(2*i, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + (2*(i-PTS_PER_COL*PTS_PER_ROW)+1)*(width-2)  + pixel_batch_cnt, offset);
-              reg_to_dram(2*i+1, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + (2*(i-PTS_PER_COL*PTS_PER_ROW)+1)*(width-2)  + pixel_batch_cnt+1, offset);
+              reg_to_dram(2*i, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + (2*(i-PTS_PER_COL)+1)*(width-2)  + pixel_batch_cnt, offset);
+              reg_to_dram(2*i+1, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + (2*(i-PTS_PER_COL)+1)*(width-2)  + pixel_batch_cnt+1, offset);
 
             }
           }
@@ -143,7 +143,7 @@ void HW:: reg_to_dram(sc_dt::uint64 i, sc_dt::uint64 dram_addr, sc_core::sc_time
   //WRITE TO DRAM:
   pl_t pl_dram;
   unsigned char buf_dram[LEN_IN_BYTES];
-  cout << mem16[i] << " "; 
+  //cout << mem16[i] << " "; 
   to_uchar(buf_dram, mem16[i]);
   pl_dram.set_address(dram_addr);
   pl_dram.set_data_length(LEN_IN_BYTES);
@@ -153,4 +153,33 @@ void HW:: reg_to_dram(sc_dt::uint64 i, sc_dt::uint64 dram_addr, sc_core::sc_time
  
   dram_ctrl_socket -> b_transport(pl_dram, offset);
 }
+
+void HW:: reg_to_bramX(sc_dt::uint64 i, sc_dt::uint64 bram_addr, sc_core::sc_time &offset){
+  //WRITE TO DRAM:
+  pl_t pl_bram;
+  unsigned char buf_bram[LEN_IN_BYTES];
+  //cout << mem16[i] << " "; 
+  to_uchar(buf_bram, mem16[i]);
+  pl_bram.set_address(bram_addr);
+  pl_bram.set_data_length(LEN_IN_BYTES);
+  pl_bram.set_data_ptr(buf_bram);
+  pl_bram.set_command(tlm::TLM_WRITE_COMMAND);
+  pl_bram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
  
+  bramX_socket -> b_transport(pl_bram, offset);
+}
+
+void HW:: reg_to_bramY(sc_dt::uint64 i, sc_dt::uint64 bram_addr, sc_core::sc_time &offset){
+  //WRITE TO DRAM:
+  pl_t pl_bram;
+  unsigned char buf_bram[LEN_IN_BYTES];
+  //cout << mem16[i] << " "; 
+  to_uchar(buf_bram, mem16[i]);
+  pl_bram.set_address(bram_addr);
+  pl_bram.set_data_length(LEN_IN_BYTES);
+  pl_bram.set_data_ptr(buf_bram);
+  pl_bram.set_command(tlm::TLM_WRITE_COMMAND);
+  pl_bram.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+ 
+  bramY_socket -> b_transport(pl_bram, offset);
+}

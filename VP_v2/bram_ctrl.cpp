@@ -102,7 +102,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
   offset += sc_core::sc_time(DELAY, sc_core::SC_NS);  
 }
 
-void BramCtrl::initialisation(sc_core::sc_time &offset){
+void BramCtrl::Dram2BramBridge(sc_core::sc_time &offset){
 
     //initial time lag for 
     //DRAM to BRAM 11 (100-110ns)
@@ -121,6 +121,19 @@ void BramCtrl::initialisation(sc_core::sc_time &offset){
     }
 }
 
+void BramCtrl::Bram2DramBridge(sc_core::sc_time &offset){
+
+    for(int i = 0; i < floor(BRAM_WIDTH/(width-2)); ++i) { 
+        for(int j = 0; j < BRAM_HEIGHT; ++j) {         
+            for(int k = 0; k < width-2; ++k) {
+                bram_to_dram(i, j, k, offset);
+            }
+            dram_row_ptr_xy+=2;
+            if(dram_row_ptr_xy==(height-2)) return;
+        }
+    }
+}
+
 void BramCtrl::control_logic(sc_core::sc_time &offset){
 
   if (start == 1 && ready == 1){
@@ -130,7 +143,7 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
 
 	}else if(start == 0 && ready == 0){
    
-    initialisation(offset);
+    Dram2BramBridge(offset);
 
     for(int i = 0; i <= floor(height/PTS_PER_COL)*PTS_PER_COL + accumulated_loss; i+=PTS_PER_COL){ //the number of times we will repeat a single cycle
         
@@ -146,8 +159,9 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
           i+=(BRAM_HEIGHT-bram_block_ptr);
           cycle_number = 0;
           bram_block_ptr = 0;
+          // call output bram_ctrl
 
-          initialisation(offset);
+          Dram2BramBridge(offset);
         }
       }
         
@@ -255,10 +269,6 @@ void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_pos
       bram_socket->b_transport(pl_bram, offset);
 
       buf[i*4 + j] = to_fixed(buf_bram0); 
-
-      cout << "i = " << i << " bram_block_ptr: " << bram_block_ptr << endl;
-      cout << "cycle_num = " << cycle_num << " row position: " << row_position << endl;
-
       }
     }
   }
@@ -287,5 +297,62 @@ void BramCtrl::write_filter(sc_dt::uint64 addr, u16_t val, sc_core::sc_time &off
     pl.set_command(tlm::TLM_WRITE_COMMAND);
     pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     filter_socket->b_transport(pl, offset);
+}
+
+void BramCtrl:: bram_to_dram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, sc_core::sc_time &offset){
+ 
+  //READ FROM DRAM:
+  pl_t pl_bram_x, pl_bram_y;
+  sc_dt::uint64 dram_addr_x;
+  sc_dt::uint64 dram_addr_y;
+  sc_dt::uint64 bram_addr_x;
+  sc_dt::uint64 bram_addr_y;
+
+  dram_addr_x = (dram_row_ptr_xy)*(this->width-2) + k + width*height;
+  dram_addr_y = (dram_row_ptr_xy + 1)*(this->width-2) + k + width*height;
+  bram_addr_x = i*(this->width-2) + j*BRAM_WIDTH + k;
+  bram_addr_y = i*(this->width-2) + j*BRAM_WIDTH + k;
+      
+  
+  unsigned char buf_bram_x[LEN_IN_BYTES];
+  unsigned char buf_bram_y[LEN_IN_BYTES];
+
+  //READ FROM BRAMX:
+  pl_bram_x.set_address(bram_addr_x);
+  pl_bram_x.set_data_length(LEN_IN_BYTES);
+  pl_bram_x.set_data_ptr(buf_bram_x);
+  pl_bram_x.set_command(tlm::TLM_READ_COMMAND);
+  pl_bram_x.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+ 
+  bramX_socket->b_transport(pl_bram_x, offset);
+ 
+  //WRITE TO DRAM:
+  pl_t pl_dram_xy_ctrl;
+ 
+  pl_dram_xy_ctrl.set_address(dram_addr_x);
+  pl_dram_xy_ctrl.set_data_length(LEN_IN_BYTES);
+  pl_dram_xy_ctrl.set_data_ptr(buf_bram_x);
+  pl_dram_xy_ctrl.set_command(tlm::TLM_WRITE_COMMAND);
+  pl_dram_xy_ctrl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+ 
+  dram_ctrl_socket -> b_transport(pl_dram_xy_ctrl, offset);
+
+  //READ FROM BRAMY:
+  pl_bram_y.set_address(bram_addr_y);
+  pl_bram_y.set_data_length(LEN_IN_BYTES);
+  pl_bram_y.set_data_ptr(buf_bram_y);
+  pl_bram_y.set_command(tlm::TLM_READ_COMMAND);
+  pl_bram_y.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+ 
+  bramY_socket->b_transport(pl_bram_y, offset);
+ 
+  //WRITE TO DRAM:
+  pl_dram_xy_ctrl.set_address(dram_addr_y);
+  pl_dram_xy_ctrl.set_data_length(LEN_IN_BYTES);
+  pl_dram_xy_ctrl.set_data_ptr(buf_bram_y);
+  pl_dram_xy_ctrl.set_command(tlm::TLM_WRITE_COMMAND);
+  pl_dram_xy_ctrl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+ 
+  dram_ctrl_socket -> b_transport(pl_dram_xy_ctrl, offset);
 }
 

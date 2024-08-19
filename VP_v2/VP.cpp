@@ -7,8 +7,8 @@ Vp::Vp(sc_core::sc_module_name name)
 	dram_ctrl("Dram_Ctrl"),
 	dram("Dram"),
     bram("Bram"),
-	//bramX("BramX"),
-    //bramY("BramY"),
+	bramX("BramX"),
+    bramY("BramY"),
     bram_ctrl("Bram_Ctrl"),
 	hard("Hard")
 {
@@ -21,15 +21,21 @@ Vp::Vp(sc_core::sc_module_name name)
     dram_ctrl.dram_socket.bind(dram.dram_ctrl_socket);
 
     // Connecting BRAM_CTRL with DRAM_CTRL
-    bram_ctrl.dram_ctrl_socket(dram_ctrl.bram_ctrl_socket);   
+    bram_ctrl.dram_ctrl_socket.bind(dram_ctrl.bram_ctrl_socket);   
     // Connecting BRAM_CTRL with BRAM
-    bram_ctrl.bram_socket(bram.bram_ctrl_socket); 
+    bram_ctrl.bram_socket.bind(bram.bram_ctrl_socket); 
+	// Connecting BRAM_CTRL with BRAMX
+    bram_ctrl.bramX_socket.bind(bramX.bram_ctrl_socket); 
+	// Connecting BRAM_CTRL with BRAMY
+    bram_ctrl.bramY_socket.bind(bramY.bram_ctrl_socket); 
     
     // Connecting HW with BRAM_CTRL
 	hard.bram_ctrl_socket.bind(bram_ctrl.filter_socket);
-	// Connecting HW with DRAM_CTRL
-	dram_ctrl.hw_socket.bind(hard.dram_ctrl_socket);
-    
+	// Connecting HW with BRAMX
+	hard.bramX_socket.bind(bramX.bram_ctrl_socket);
+	// Connecting HW with BRAMY
+	hard.bramY_socket.bind(bramY.bram_ctrl_socket);
+
 	soft.interconnect_socket.bind(interconnect.soft_socket);
 	SC_REPORT_INFO("Virtual Platform", "Constructed.");
 }

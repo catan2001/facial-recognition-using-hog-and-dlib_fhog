@@ -29,10 +29,10 @@ void SW::process_img(void){
     }
     fclose(gray_f);
     //debug
-    double *img_HOG = new double[((int)(ROWS/8) - 1)*((int)(COLS/8) - 1)*24];
-    extract_hog(ROWS, COLS, gray, img_HOG);
+    //double *img_HOG = new double[((int)(ROWS/8) - 1)*((int)(COLS/8) - 1)*24];
+    //extract_hog(ROWS, COLS, gray, img_HOG);
     
-    //face_recognition_range(&gray[0], steps);
+    face_recognition_range(&gray[0], steps);
 }
 
 void SW::get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad_mag, double *grad_angle){
@@ -221,14 +221,13 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
     temp =  offset;
     //read filtered images from DRAM:
     for(int i = 0; i<rows; ++i){
-    cout << i+1 << ":" << endl; 
+   // cout << i+1 << ":" << endl; 
       for(int j = 0; j<cols; ++j){
         read_dram((rows+2)*(cols+2) + 2*cols*i +j, matrix_im_filtered_x[i][j], offset);
-        cout << matrix_im_filtered_x[i][j] << " ";
         read_dram((rows+2)*(cols+2) + (2*i+1)*cols +j, matrix_im_filtered_y[i][j], offset);
+        //cout << matrix_im_filtered_y[i][j] << " ";
       }
-
-      cout << endl;
+      //cout << endl;
     }
     offset = temp;
     //END OF HARDWARE PART OF CODE
