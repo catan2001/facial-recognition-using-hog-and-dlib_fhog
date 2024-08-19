@@ -7,14 +7,10 @@ entity data_path is
           ADDR_WIDTH:natural:=10;
           PIX_WIDTH:natural:=16);
   Port ( --data signals 
-        data_in1: in std_logic_vector(WIDTH-1 downto 0);
-        data_in2: in std_logic_vector(WIDTH-1 downto 0);
-        data_in3: in std_logic_vector(WIDTH-1 downto 0);
-        data_in4: in std_logic_vector(WIDTH-1 downto 0);
-        data_out1: out std_logic_vector(WIDTH-1 downto 0);
-        data_out2: out std_logic_vector(WIDTH-1 downto 0);
-        data_out3: out std_logic_vector(WIDTH-1 downto 0);
-        data_out4: out std_logic_vector(WIDTH-1 downto 0);
+        data_in1: in std_logic_vector(2*WIDTH-1 downto 0);
+        data_in2: in std_logic_vector(2*WIDTH-1 downto 0);
+        data_out1: out std_logic_vector(2*WIDTH-1 downto 0);
+        data_out2: out std_logic_vector(2*WIDTH-1 downto 0);
         --control signals
         clk: in std_logic;
         we_in: in std_logic_vector(31 downto 0); 
@@ -81,7 +77,7 @@ architecture Behavioral of data_path is
     signal bram_block0B_y, bram_block1B_y, bram_block2B_y, bram_block3B_y, bram_block4B_y, bram_block5B_y, bram_block6B_y, bram_block7B_y:std_logic_vector(WIDTH-1 downto 0);
     signal bram_block8B_y, bram_block9B_y, bram_block10B_y, bram_block11B_y, bram_block12B_y, bram_block13B_y, bram_block14B_y, bram_block15B_y:std_logic_vector(WIDTH-1 downto 0);
     
-    signal data_out1_s, data_out2_s, data_out3_s, data_out4_s: std_logic_vector(WIDTH-1 downto 0);
+    signal data_out1_s, data_out2_s: std_logic_vector(2*WIDTH-1 downto 0);
     
     component demux1_8 is
         generic (
@@ -231,7 +227,7 @@ begin
 demux_in_1: demux1_8
     generic map(WIDTH => WIDTH)
     port map(sel => sel_bram_in,
-             x => data_in1,
+             x => data_in1(63 downto 32),
              y0 => demux1_out_bram_in0,
              y1 => demux1_out_bram_in1,
              y2 => demux1_out_bram_in2,
@@ -244,7 +240,7 @@ demux_in_1: demux1_8
 demux_in_2: demux1_8
     generic map(WIDTH => WIDTH)
     port map(sel => sel_bram_in,
-             x => data_in2,
+             x => data_in1(31 downto 0),
              y0 => demux2_out_bram_in0,
              y1 => demux2_out_bram_in1,
              y2 => demux2_out_bram_in2,
@@ -257,7 +253,7 @@ demux_in_2: demux1_8
 demux_in_3: demux1_8
     generic map(WIDTH => WIDTH)
     port map(sel => sel_bram_in,
-             x => data_in3,
+             x => data_in2(63 downto 32),
              y0 => demux3_out_bram_in0,
              y1 => demux3_out_bram_in1,
              y2 => demux3_out_bram_in2,
@@ -270,7 +266,7 @@ demux_in_3: demux1_8
 demux_in_4: demux1_8
     generic map(WIDTH => WIDTH)
     port map(sel => sel_bram_in,
-             x => data_in4,
+             x => data_in2(31 downto 0),
              y0 => demux4_out_bram_in0,
              y1 => demux4_out_bram_in1,
              y2 => demux4_out_bram_in2,
@@ -1519,9 +1515,7 @@ bram_block1_in: Dual_Port_BRAM
           x14 => bram_block14A_x,
           x15 => bram_block15A_x,
           sel => sel_dram,
-          y => data_out1_s);
-          
-   data_out1 <= data_out1_s; 
+          y => data_out1_s(63 downto 32));
           
           
     mux_xB: mux16_1
@@ -1544,9 +1538,9 @@ bram_block1_in: Dual_Port_BRAM
           x14 => bram_block14B_x,
           x15 => bram_block15B_x,
           sel => sel_dram,
-          y => data_out2_s);
+          y => data_out1_s(31 downto 0));
           
-     data_out2 <= data_out2_s; 
+     data_out1 <= data_out1_s; 
           
      mux_yA: mux16_1
         generic map(WIDTH => WIDTH)
@@ -1568,9 +1562,8 @@ bram_block1_in: Dual_Port_BRAM
           x14 => bram_block14A_y,
           x15 => bram_block15A_y,
           sel => sel_dram,
-          y => data_out3_s); 
-    
-    data_out3 <= data_out3_s;      
+          y => data_out2_s(63 downto 32)); 
+         
           
     mux_yB: mux16_1
         generic map(WIDTH => WIDTH)
@@ -1592,9 +1585,9 @@ bram_block1_in: Dual_Port_BRAM
           x14 => bram_block14B_y,
           x15 => bram_block15B_y,
           sel => sel_dram,
-          y => data_out4_s);
+          y => data_out2_s(31 downto 0));
           
-     data_out4 <= data_out4_s;
+     data_out2 <= data_out2_s;
           
 
 end Behavioral;

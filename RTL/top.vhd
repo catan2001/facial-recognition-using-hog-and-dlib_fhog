@@ -38,14 +38,10 @@ entity top is
     ready: out std_logic; 
     
     --data signals
-    data_in1: in std_logic_vector(31 downto 0);
-    data_in2: in std_logic_vector(31 downto 0);
-    data_in3: in std_logic_vector(31 downto 0);
-    data_in4: in std_logic_vector(31 downto 0);
-    data_out1: out std_logic_vector(31 downto 0);
-    data_out2: out std_logic_vector(31 downto 0);
-    data_out3: out std_logic_vector(31 downto 0);
-    data_out4: out std_logic_vector(31 downto 0));
+    data_in1: in std_logic_vector(63 downto 0);
+    data_in2: in std_logic_vector(63 downto 0);
+    data_out1: out std_logic_vector(63 downto 0);
+    data_out2: out std_logic_vector(63 downto 0));
 end top;
 
 architecture Behavioral of top is
@@ -72,7 +68,7 @@ signal bram_addr_B_out_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 signal burst_len_read_s: std_logic_vector(7 downto 0);
 signal burst_len_write_s: std_logic_vector(7 downto 0);
 
-signal data_out1_s, data_out2_s, data_out3_s, data_out4_s: std_logic_vector(31 downto 0);
+signal data_out1_s, data_out2_s: std_logic_vector(63 downto 0);
 
 signal dram_addr0_s: std_logic_vector(31 downto 0);
 signal dram_addr1_s: std_logic_vector(31 downto 0);
@@ -85,14 +81,10 @@ component data_path is
           ADDR_WIDTH:natural:=10;
           PIX_WIDTH:natural:=16);
   Port ( --data signals 
-        data_in1: in std_logic_vector(WIDTH-1 downto 0);
-        data_in2: in std_logic_vector(WIDTH-1 downto 0);
-        data_in3: in std_logic_vector(WIDTH-1 downto 0);
-        data_in4: in std_logic_vector(WIDTH-1 downto 0);
-        data_out1: out std_logic_vector(WIDTH-1 downto 0);
-        data_out2: out std_logic_vector(WIDTH-1 downto 0);
-        data_out3: out std_logic_vector(WIDTH-1 downto 0);
-        data_out4: out std_logic_vector(WIDTH-1 downto 0);
+        data_in1: in std_logic_vector(2*WIDTH-1 downto 0);
+        data_in2: in std_logic_vector(2*WIDTH-1 downto 0);
+        data_out1: out std_logic_vector(2*WIDTH-1 downto 0);
+        data_out2: out std_logic_vector(2*WIDTH-1 downto 0);
         --control signals
         clk: in std_logic;
         we_in: in std_logic_vector(31 downto 0); 
@@ -170,12 +162,8 @@ data_path_l: data_path
     port map(
       data_in1 => data_in1,
       data_in2 => data_in2,
-      data_in3 => data_in3,
-      data_in4 => data_in4,
       data_out1 => data_out1_s,
       data_out2 => data_out2_s,
-      data_out3 => data_out3_s,
-      data_out4 => data_out4_s,
     
       clk => clk,
       we_in => we_in_s,
@@ -246,8 +234,6 @@ burst_len_write <= burst_len_write_s;
 
 data_out1 <= data_out1_s;
 data_out2 <= data_out2_s;
-data_out3 <= data_out3_s;
-data_out4 <= data_out4_s;
 
 dram_addr0 <= dram_addr0_s;
 dram_addr1 <= dram_addr1_s;
