@@ -149,18 +149,18 @@ data_path_l1: data_path
     begin
         data_in_s(0) <= dram(0)(0)&dram(0)(1)&dram(0)(2)&dram(0)(3), dram(2)(0)&dram(2)(1)&dram(2)(2)&dram(2)(3) after 15ns, dram(4)(0)&dram(4)(1)&dram(4)(2)&dram(4)(3) after 30ns; 
         data_in_s(1) <= dram(1)(0)&dram(1)(1)&dram(1)(2)&dram(1)(3), dram(3)(0)&dram(3)(1)&dram(3)(2)&dram(3)(3) after 15ns, dram(5)(0)&dram(5)(1)&dram(5)(2)&dram(5)(3) after 30ns; 
-        we_in_s <= x"00000000",x"0000000F" after 40ns, x"000000F0" after 90ns, x"00000F00" after 140ns, x"00000000" after 190ns;
-        we_out_s <= x"0000", x"00FF" after 300ns, x"0000" after 450ns;
+        we_in_s <= x"00000FFF", x"00000000" after 100ns;
+        we_out_s <= x"0000", x"00FF" after 700ns, x"0000" after 800ns;
         sel_bram_in_s <= "0000", "0001" after 15ns, "0010" after 30ns;
         sel_filter_s <= "000";
         sel_bram_out_s <= "000";
-        sel_dram_s <= "00000";
+        sel_dram_s <= "00000", "00001" after 860ns, "00010" after 870ns, "00011" after 880ns;
         bram_addrA_l_in_s <= "0000000000";
         bram_addrB_l_in_s <= "0000000001";
         bram_addrA_h_in_s <= "0000000000";
         bram_addrB_h_in_s <= "0000000001";
-        bram_addr_A_out_s <= "0000000000", "0000000001" after 350ns, "0000000010" after 400ns;
-        bram_addr_B_out_s <= "0000000001", "00000000010" after 350ns, "0000000011" after 400ns;
+        bram_addr_A_out_s <= "0000000000";
+        bram_addr_B_out_s <= "0000000001";
     wait;
     end process;
 
