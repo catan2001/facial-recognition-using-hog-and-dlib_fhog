@@ -1,22 +1,23 @@
-#include "bram.hpp"
+#include "bram_out.hpp"
 
-Bram::Bram(sc_core::sc_module_name name) : 
+BramOut::BramOut(sc_core::sc_module_name name) : 
     sc_module(name),
     write_transaction_cnt(0)
 {
-    bram_ctrl_socket.register_b_transport(this, &Bram::b_transport);
-    
+    bram_ctrl_socket.register_b_transport(this, &BramOut::b_transport);
+    hard_socket.register_b_transport(this, &BramOut::b_transport);
+
     mem.reserve(RESERVED_MEM);
 
-    SC_REPORT_INFO("BRAM", "Constructed.");
+    SC_REPORT_INFO("BRAM OUTPUT", "Constructed.");
 }
 
-Bram::~Bram()
+BramOut::~BramOut()
 {
-    SC_REPORT_INFO("BRAM", "Destroyed.");
+    SC_REPORT_INFO("BRAM OUTPUT", "Destroyed.");
 }
 
-void Bram::b_transport(pl_t& pl, sc_core::sc_time& offset)
+void BramOut::b_transport(pl_t& pl, sc_core::sc_time& offset)
 {
     sc_dt::uint64 addr = pl.get_address(); 
     tlm::tlm_command cmd = pl.get_command(); 
@@ -30,7 +31,7 @@ void Bram::b_transport(pl_t& pl, sc_core::sc_time& offset)
 
         write_transaction_cnt++;
         //dual time delay to DRAM read
-        if(write_transaction_cnt==8){
+        if(write_transaction_cnt==16){
             offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
             write_transaction_cnt = 0;
         }

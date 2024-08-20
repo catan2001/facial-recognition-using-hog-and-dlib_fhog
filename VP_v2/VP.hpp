@@ -7,6 +7,7 @@
 #include "def.hpp"
 #include "interconnect.hpp"
 #include "bram.hpp"
+#include "bram_out.hpp"
 #include "bram_ctrl.hpp"
 #include "sw.hpp"
 #include "hw.hpp"
@@ -24,7 +25,8 @@ protected:
 	SW soft;
 	Interconnect interconnect;
 	HW hard;
-    Bram bram, bramX, bramY;
+    Bram bram;
+	BramOut bramX, bramY;
     BramCtrl bram_ctrl;
 	DramCtrl dram_ctrl;
 	DRAM dram;

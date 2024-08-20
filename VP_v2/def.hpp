@@ -25,10 +25,11 @@
 #define ADDR_INPUT_REG 0x10
 #define ADDR_ACC_LOSS 0x14
 #define ADDR_RESET 0x18
+#define ADDR_CONFIG 0x1c
 
 //#define MAX_SIZE 200
-#define ROWS 150
-#define COLS 150
+#define ROWS 365
+#define COLS 300
 #define nBINS 6
 #define CELL_SIZE 8
 #define CELL_POW (CELL_SIZE*CELL_SIZE)
@@ -56,7 +57,7 @@
 #define RESERVED_MEM BRAM_WIDTH*BRAM_HEIGHT
 
 #define DELAY_IC 2
-#define DELAY 10
+#define DELAY 7.5
 #define LEN_IN_BYTES 2
 #define W 16 // DATA_WIDTH
 #define I 4 // FIXED_POINT_WIDTH
@@ -71,6 +72,7 @@ typedef std::deque<out_array_t> out_matrix_t;       // matrix of 16,4
 typedef sc_dt::sc_int  <32> s32_t;  // bit_width 32
 typedef sc_dt::sc_uint <32> u32_t;  // bit_width 32
 typedef sc_dt::sc_uint <W>  u16_t;  // bit-width 16
+typedef sc_dt::sc_uint <11>  u11_t;  // bit-width 11
 typedef sc_dt::sc_uint <6>  u6_t;   // bit-width 6
 typedef sc_dt::sc_uint <1>  u1_t;   // bit-width 1
 typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;

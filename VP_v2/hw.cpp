@@ -15,6 +15,7 @@ HW::HW(sc_core::sc_module_name name)
 
     pixel_batch_cnt=0;
     row_batch_cnt=0;
+    cycle_num = 0;
     
     width = 0;
     height = 0;
@@ -73,6 +74,7 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
             height = to_int(buf);
             pixel_batch_cnt = 0;
             row_batch_cnt = 0;
+            cycle_num = 0;
             pl.set_response_status(tlm::TLM_OK_RESPONSE);
             break;
 
@@ -80,6 +82,10 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
             width = to_int(buf);
             pl.set_response_status(tlm::TLM_OK_RESPONSE);
             break;
+
+        case ADDR_CONFIG:
+          cycle_num = 0;
+          break;
 
         case ADDR_INPUT_REG: //write pixels into the registers
 
@@ -96,18 +102,29 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
         //write REG16 pixels to DRAM:
           for(int i=0; i<PTS_PER_COL*PTS_PER_ROW; ++i){
             if(i<4){
-              reg_to_dram(2*i, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + i*2*(width-2) + pixel_batch_cnt, offset);
-              reg_to_dram(2*i+1, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + i*2*(width-2) + pixel_batch_cnt+1, offset);
+              //reg_to_dram(2*i, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + i*2*(width-2) + pixel_batch_cnt, offset);
+              //reg_to_dram(2*i+1, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + i*2*(width-2) + pixel_batch_cnt+1, offset);
+              reg_to_bramX(2*i, row_batch_cnt*PTS_PER_COL*BRAM_WIDTH + cycle_num*(width-2) + i*BRAM_WIDTH + pixel_batch_cnt, offset);
+              reg_to_bramX(2*i+1, row_batch_cnt*PTS_PER_COL*BRAM_WIDTH + cycle_num*(width-2) + i*BRAM_WIDTH + pixel_batch_cnt+1, offset);
+
             }else{
-              reg_to_dram(2*i, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + (2*(i-PTS_PER_COL)+1)*(width-2)  + pixel_batch_cnt, offset);
-              reg_to_dram(2*i+1, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + (2*(i-PTS_PER_COL)+1)*(width-2)  + pixel_batch_cnt+1, offset);
+              //reg_to_dram(2*i, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + (2*(i-PTS_PER_COL)+1)*(width-2)  + pixel_batch_cnt, offset);
+              //reg_to_dram(2*i+1, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + (2*(i-PTS_PER_COL)+1)*(width-2)  + pixel_batch_cnt+1, offset);
+              reg_to_bramY(2*i, row_batch_cnt*PTS_PER_COL*BRAM_WIDTH+ cycle_num*(width-2) + (i-PTS_PER_COL)*BRAM_WIDTH + pixel_batch_cnt, offset);
+              reg_to_bramY(2*i+1, row_batch_cnt*PTS_PER_COL*BRAM_WIDTH + cycle_num*(width-2) + (i-PTS_PER_COL)*BRAM_WIDTH + pixel_batch_cnt+1, offset);
 
             }
           }
           //cout << endl;
 
           pixel_batch_cnt+=2;
-          if(pixel_batch_cnt>=(width-2)) {pixel_batch_cnt=0; row_batch_cnt++;}
+          if(pixel_batch_cnt>=(width-2)) {pixel_batch_cnt = 0; row_batch_cnt++;}
+
+          if(row_batch_cnt >= BRAM_HEIGHT/PTS_PER_COL) {
+            cycle_num++;
+            row_batch_cnt = 0;
+          }
+
 
           //offset += sc_core::sc_time(3*DELAY, sc_core::SC_NS);
 

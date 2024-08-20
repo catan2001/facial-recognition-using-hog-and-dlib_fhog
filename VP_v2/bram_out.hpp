@@ -1,5 +1,5 @@
-#ifndef BRAM_HPP
-#define BRAM_HPP
+#ifndef BRAM_OUT_HPP
+#define BRAM_OUT_HPP
 
 #include <systemc>
 #include <tlm>
@@ -11,16 +11,17 @@
 
 using namespace std;
 
-class Bram : public sc_core::sc_module
+class BramOut : public sc_core::sc_module
 { 
 public:
-	Bram(sc_core::sc_module_name name);
-	~Bram();
-	tlm_utils::simple_target_socket<Bram> bram_ctrl_socket;
+	BramOut(sc_core::sc_module_name name);
+	~BramOut();
+	tlm_utils::simple_target_socket<BramOut> bram_ctrl_socket;
+	tlm_utils::simple_target_socket<BramOut> hard_socket;
 protected:
 	void b_transport(pl_t&, sc_core::sc_time&);
 	std::vector<output_t> mem; //num_t
 	u6_t write_transaction_cnt;
 };
 
-#endif // BRAM_HPP
+#endif // BRAM_OUT_HPP

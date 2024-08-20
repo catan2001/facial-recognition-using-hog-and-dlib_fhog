@@ -7,6 +7,7 @@ BramCtrl::BramCtrl(sc_core::sc_module_name name) :
     bram_block_ptr(0),
     counter_init(0),
     accumulated_loss(0),
+    dram_row_ptr_xy(0),
     width(0),
     height(0),
     start(0),
@@ -38,6 +39,7 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
         case ADDR_WIDTH:
           width = to_int(buf);  
           dram_row_ptr = 0;
+          dram_row_ptr_xy = 0;
           write_filter(ADDR_WIDTH, width, offset);
           //cout << "Time ADDR_WIDTH: " << offset << endl;
           break;
@@ -105,10 +107,8 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 void BramCtrl::Dram2BramBridge(sc_core::sc_time &offset){
 
     //initial time lag for 
-    //DRAM to BRAM 11 (100-110ns)
     //FILTER_BLOCKS 4 clk
-    //REG to DRAM 11 (100-110ns)
-    offset += sc_core::sc_time(26*DELAY, sc_core::SC_NS);
+    offset += sc_core::sc_time(4*DELAY, sc_core::SC_NS);
 
     for(int i = 0; i < floor(BRAM_WIDTH/width); ++i) { 
         for(int j = 0; j < BRAM_HEIGHT; ++j) {         
@@ -124,14 +124,21 @@ void BramCtrl::Dram2BramBridge(sc_core::sc_time &offset){
 void BramCtrl::Bram2DramBridge(sc_core::sc_time &offset){
 
     for(int i = 0; i < floor(BRAM_WIDTH/(width-2)); ++i) { 
-        for(int j = 0; j < BRAM_HEIGHT; ++j) {         
+        for(int j = 0; j < BRAM_HEIGHT; ++j) {    
+            //exists only for delay:
+            if(finished){
+              offset += sc_core::sc_time(11*DELAY, sc_core::SC_NS);
+            }
+            
             for(int k = 0; k < width-2; ++k) {
                 bram_to_dram(i, j, k, offset);
             }
+            //cout << dram_row_ptr_xy << " ";
             dram_row_ptr_xy+=2;
-            if(dram_row_ptr_xy==(height-2)) return;
+            if(dram_row_ptr_xy==(height-2)*2) return;
         }
     }
+    //cout << endl;
 }
 
 void BramCtrl::control_logic(sc_core::sc_time &offset){
@@ -159,8 +166,16 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
           i+=(BRAM_HEIGHT-bram_block_ptr);
           cycle_number = 0;
           bram_block_ptr = 0;
-          // call output bram_ctrl
 
+          // RESETS cycle_num inside HW
+          pl_t pl_filter_config;
+          pl_filter_config.set_address(ADDR_CONFIG);
+          pl_filter_config.set_command(tlm::TLM_WRITE_COMMAND);
+          pl_filter_config.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+
+          filter_socket -> b_transport(pl_filter_config, offset);
+
+          Bram2DramBridge(offset);
           Dram2BramBridge(offset);
         }
       }
@@ -179,6 +194,8 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
         filter_socket -> b_transport(pl_filter, offset);
       }
     }
+    finished = 1;
+    Bram2DramBridge(offset);
     ready = 1;
   }
 }
@@ -335,7 +352,7 @@ void BramCtrl:: bram_to_dram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, 
   pl_dram_xy_ctrl.set_command(tlm::TLM_WRITE_COMMAND);
   pl_dram_xy_ctrl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
  
-  dram_ctrl_socket -> b_transport(pl_dram_xy_ctrl, offset);
+  dram_ctrlX_socket -> b_transport(pl_dram_xy_ctrl, offset);
 
   //READ FROM BRAMY:
   pl_bram_y.set_address(bram_addr_y);
@@ -353,6 +370,6 @@ void BramCtrl:: bram_to_dram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, 
   pl_dram_xy_ctrl.set_command(tlm::TLM_WRITE_COMMAND);
   pl_dram_xy_ctrl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
  
-  dram_ctrl_socket -> b_transport(pl_dram_xy_ctrl, offset);
+  dram_ctrlY_socket -> b_transport(pl_dram_xy_ctrl, offset);
 }
 

@@ -16,6 +16,7 @@ class DRAM : public sc_core::sc_module {
     protected:
         void b_transport(pl_t &, sc_core::sc_time &);
         u6_t read_transaction_cnt;
+        u11_t read_row_cnt;
         std::vector<output_t> dmem;
 };
 

@@ -19,6 +19,9 @@ public:
 
     // DRAM SOCKETS:
     tlm_utils::simple_initiator_socket<BramCtrl> dram_ctrl_socket;
+    tlm_utils::simple_initiator_socket<BramCtrl> dram_ctrlX_socket;
+    tlm_utils::simple_initiator_socket<BramCtrl> dram_ctrlY_socket;
+
 
     // BRAM SOCKETS:
     tlm_utils::simple_initiator_socket<BramCtrl> bram_socket;
@@ -50,6 +53,8 @@ public:
     u16_t dram_row_ptr_xy;
 
     u1_t start, ready, reset;
+    //variable used only for delay, to model the final init delay for axi BRAM->DRAM 
+    u1_t finished = 0;
 
     pl_t pl_bram;
 };

@@ -14,6 +14,7 @@ public:
     HW(sc_core::sc_module_name name);
 	~HW();
 	tlm_utils::simple_target_socket<HW> bram_ctrl_socket;
+	tlm_utils::simple_initiator_socket<HW> dram_ctrl_socket;
 	tlm_utils::simple_initiator_socket<HW> bramX_socket;
  	tlm_utils::simple_initiator_socket<HW> bramY_socket;
 
@@ -29,6 +30,7 @@ protected:
 	std::vector<output_t> temp;
     std::vector<output_t> mem24, mem16;
 	u6_t mem24_ptr;
+	u16_t cycle_num = 0;
 	u16_t pixel_batch_cnt = 0;
     u16_t row_batch_cnt = 0; // TODO: bugs for some reason
     u16_t width, height;  
