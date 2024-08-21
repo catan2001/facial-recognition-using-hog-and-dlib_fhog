@@ -132,7 +132,7 @@ signal x_reg, x_next: std_logic_vector(9 downto 0);
 signal row_position_reg, row_position_next: std_logic_vector(8 downto 0);
 
 signal cycle_num_reg, cycle_num_next: std_logic_vector(5 downto 0); 
-signal counter_init_reg, counter_init_next: std_logic_vector(5 downto 0);
+signal cnt_init_reg, cnt_init_next: std_logic_vector(5 downto 0);
 
 --signals bram_to_dram
 signal y_reg, y_next: std_logic_vector(5 downto 0);
@@ -190,7 +190,7 @@ if(rising_edge(clk)) then
 
         cycle_num_reg <= (others => '0');
         sel_bram_addr_reg <= '0';
-        counter_init_reg <= (others => '0');
+        cnt_init_reg <= "000001";
 
         dram_row_ptr0_reg <= (others => '0');
         dram_row_ptr1_reg <= "00000000001"; 
@@ -268,7 +268,7 @@ if(rising_edge(clk)) then
 
         cycle_num_reg <= cycle_num_next;
         sel_bram_addr_reg <= sel_bram_addr_next;
-        counter_init_reg <= counter_init_next;
+        cnt_init_reg <= cnt_init_next;
 
         dram_row_ptr0_reg <= dram_row_ptr0_next; 
         dram_row_ptr1_reg <= dram_row_ptr1_next; 
@@ -417,7 +417,7 @@ end case;
 end process;
 
 process(state_control_logic_r, x_reg, row_position_reg, cycle_num_reg, sel_bram_addr_reg,
-    sel_filter_reg, sel_bram_out_reg1, counter_init_reg, dram_row_ptr0_reg, dram_row_ptr1_reg,
+    sel_filter_reg, sel_bram_out_reg1, cnt_init_reg, dram_row_ptr0_reg, dram_row_ptr1_reg,
     we_in_reg, we_out_reg, cycle_num_limit_reg, height_reg, rows_num_reg, width_2_reg, 
     effective_row_limit_reg) 
 begin
@@ -428,7 +428,7 @@ row_position_next <= row_position_reg;
 cycle_num_next <= cycle_num_reg;
 sel_bram_addr_next <= sel_bram_addr_reg;
 sel_filter_next <= sel_filter_reg;
-counter_init_next <= counter_init_reg;
+cnt_init_next <= cnt_init_reg;
 dram_row_ptr0_next <= dram_row_ptr0_reg;
 dram_row_ptr1_next <= dram_row_ptr1_reg;
 we_in_next <= we_in_reg;
@@ -444,9 +444,9 @@ case state_control_logic_r is
         cycle_num_next <= x_reg(9 downto 4);
         if(cycle_num_next = std_logic_vector(unsigned(cycle_num_limit_reg) - 1) and x_reg = std_logic_vector(12*unsigned(cycle_num_next))) then
             if(dram_row_ptr1_reg < height_reg) then 
-                counter_init_next <= std_logic_vector(unsigned(counter_init_reg) + 1); 
-                dram_row_ptr0_next <= std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(counter_init_next));
-                dram_row_ptr1_next <= std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(counter_init_next) + 1);
+                dram_row_ptr0_next <= std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_next));
+                dram_row_ptr1_next <= std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_next) + 1);
+                cnt_init_next <= std_logic_vector(unsigned(cnt_init_reg) + 1); 
                 x_next <= std_logic_vector(unsigned(x_reg) + 4);
                 cycle_num_next <= (others => '0');
                 sel_filter_next <= (others => '0');
