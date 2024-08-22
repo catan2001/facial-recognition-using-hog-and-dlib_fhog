@@ -181,32 +181,34 @@ case state_dram_to_bram_r is
         --bram_addr_B1_write_s <= std_logic_vector(resize(unsigned(i_reg)*unsigned(width_2_reg) + unsigned(k_reg) + 1,10));
         --bram_addr_B2_write_s <= std_logic_vector(resize(unsigned(i_reg)*unsigned(width_2_reg) + unsigned(k_reg) + 1,10));  
         k_next <= std_logic_vector(unsigned(k_reg) + 2);
-            
+        
         if(k_next = std_logic_vector(resize(unsigned(width_2_reg),10))) then 
             state_dram_to_bram_n <= end_dram_to_bram3;
         end if;
+
 
     when end_dram_to_bram3 =>
         dram_row_ptr0_next <= std_logic_vector(unsigned(dram_row_ptr0_reg) + 2);
         dram_row_ptr1_next <= std_logic_vector(unsigned(dram_row_ptr1_reg) + 2);
         sel_bram_in_next <= std_logic_vector(unsigned(sel_bram_in_reg) + 1);
         we_in_next <= std_logic_vector(shift_left(unsigned(we_in_reg),4));
-            
+        
         if(dram_row_ptr1_next = height_reg) then 
             state_dram_to_bram_n <= end_dram_to_bram1;
-        end if;
-
-        if(sel_bram_in_next = "1000") then
-            sel_bram_in_next <= (others => '0');
-            we_in_next <= X"0000000F";
-        end if;
-            
-        j_next <= std_logic_vector(unsigned(j_reg) + 2);
-            
-        if(j_next = bram_height_reg) then
-            state_dram_to_bram_n <= end_dram_to_bram2;
         else
-            state_dram_to_bram_n <= loop_dram_to_bram2;
+
+            if(sel_bram_in_next = "1000") then
+                sel_bram_in_next <= (others => '0');
+                we_in_next <= X"0000000F";
+            end if;
+            
+            j_next <= std_logic_vector(unsigned(j_reg) + 2);
+  
+            if(j_next = bram_height_reg) then
+                state_dram_to_bram_n <= end_dram_to_bram2;
+            else
+                state_dram_to_bram_n <= loop_dram_to_bram2;
+            end if;
         end if;
 
     when end_dram_to_bram2 =>
