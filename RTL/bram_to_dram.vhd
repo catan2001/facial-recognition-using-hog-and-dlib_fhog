@@ -68,14 +68,9 @@ if(rising_edge(clk)) then
         
         sel_dram_reg <= (others => '0');
 
-
-
-
         y_reg <= (others => '0');
         row_cnt_reg <= (others => '0');
         z_reg <= (others => '0');
-
-
 
     else
         state_bram_to_dram_r <= state_bram_to_dram_n;
@@ -89,8 +84,6 @@ if(rising_edge(clk)) then
         dram_x_addr_reg <= dram_x_addr_next;
         dram_y_addr_reg <= dram_y_addr_next;
 
-
-
         sel_dram_reg <= sel_dram_next;
         
         y_reg <= y_next;
@@ -103,7 +96,7 @@ end process;
 
 process(state_bram_to_dram_r, sel_dram_reg, y_reg, row_cnt_reg, z_reg, width, width_2, width_4, height, bram_height, cycle_num_out,
         dram_x_addr, dram_y_addr, en_bram_to_dram, width_reg, width_2_reg, width_4_reg, height_reg, bram_height_reg,
-        cycle_num_out_reg, dram_x_addr_reg, dram_y_addr_reg, y_next) 
+        cycle_num_out_reg, dram_x_addr_reg, dram_y_addr_reg, y_next, z_next, sel_dram_next) 
 begin
 
 state_bram_to_dram_n <= state_bram_to_dram_r;
@@ -148,8 +141,8 @@ case state_bram_to_dram_r is
         state_bram_to_dram_n <= loop_bram_to_dram3;
 
     when loop_bram_to_dram3 =>
-        bram_addr_bram_to_dram_A <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+unsigned(z_reg),10));
-        bram_addr_bram_to_dram_B <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+unsigned(z_reg)+1,10));
+        bram_addr_bram_to_dram_A_s <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+unsigned(z_reg),10));
+        bram_addr_bram_to_dram_B_s <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+unsigned(z_reg)+1,10));
         z_next <= std_logic_vector(unsigned(z_reg)+1);
         if(z_next = std_logic_vector(unsigned(width_2_reg) - 1)) then
             state_bram_to_dram_n <= end_bram_to_dram3;
@@ -158,7 +151,7 @@ case state_bram_to_dram_r is
     when end_bram_to_dram3 =>
         row_cnt_next <= std_logic_vector(unsigned(row_cnt_reg)+1);
         sel_dram_next <= std_logic_vector(unsigned(sel_dram_reg)+1);
-        if(sel_dram_next = bram_height_reg) then
+        if(sel_dram_next = std_logic_vector(resize(unsigned(bram_height_reg),5))) then
             state_bram_to_dram_n <= end_bram_to_dram2;
         else
             state_bram_to_dram_n <= loop_bram_to_dram2;
