@@ -29,27 +29,29 @@ signal b : signed(WIDTH-1 downto 0);
 signal d1: signed(WIDTH-1 downto 0);
 
 signal add : signed(WIDTH_INTERIM-1 downto 0);
-signal mult, p, d2 : signed(WIDTH_INTERIM+1 downto 0);
+signal mult, mult_reg, p, d2 : signed(WIDTH_INTERIM+1 downto 0);
 
 signal const : signed(WIDTH_CONST-1 downto 0);
 begin
 
     process(clk)
     begin
-        if rising_edge(clk) then
+        if falling_edge(clk) then
             d1 <= signed(din);
             d2 <= resize(d1, WIDTH_INTERIM+2);
             const <= signed(cin);
             
             add <= resize(signed(ain), WIDTH_INTERIM) + resize(signed(bin), WIDTH_INTERIM);
             
-            mult <= add * const;
-            
-            p <= mult + d2;
+            --mult <= add * const;
+            mult_reg <= mult;
+            --p <= mult + d2;
             
         end if; 
     end process;
-
+     mult <= add * const;
+    --pout <= std_logic_vector(p(18 downto 3));
+    p <= mult_reg + d2;
     pout <= std_logic_vector(p(18 downto 3));
 
 end Behavioral;

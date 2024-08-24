@@ -17,10 +17,6 @@ entity control_logic is
     --out sig
     bram_output_xy_addr:out std_logic_vector(9 downto 0);
     row_position: out std_logic_vector(8 downto 0);
-    --bram_addr_A1_read: out std_logic_vector(9 downto 0);
-    --bram_addr_B1_read: out std_logic_vector(9 downto 0);
-    --bram_addr_A2_read: out std_logic_vector(9 downto 0); 
-    --bram_addr_B2_read: out std_logic_vector(9 downto 0);
     sel_bram_out: out std_logic_vector(2 downto 0);
     sel_filter: out std_logic_vector(2 downto 0));
     
@@ -36,7 +32,6 @@ signal state_control_logic_r, state_control_logic_n: state_control_logic_t;
 --reg bank
 signal width_2_reg, width_2_next: std_logic_vector(8 downto 0);
 
---signal bram_addr_A1_read_s, bram_addr_B1_read_s, bram_addr_A2_read_s, bram_addr_B2_read_s: std_logic_vector(9 downto 0);
 signal bram_output_xy_addr_s: std_logic_vector(9 downto 0);
 
 signal sel_filter_reg, sel_filter_next: std_logic_vector(2 downto 0);
@@ -83,8 +78,9 @@ end process;
 
 
 process(state_control_logic_r, width_2, sel_filter_reg, sel_bram_out_reg,
-        row_position_reg, cycle_num_reg, cnt_init_reg, width_2_reg, 
-        row_position_next, sel_filter_next, sel_bram_out_next, cycle_num)
+        row_position_reg, cycle_num_reg, cnt_init_reg, width_2_reg, sel_filter_fsm, 
+        row_position_next, sel_filter_next, sel_bram_out_next, cycle_num, sel_bram_out_fsm, 
+        en_pipe)
 begin
 
 state_control_logic_n <= state_control_logic_r;
@@ -100,7 +96,6 @@ cnt_init_next <= cnt_init_reg;
 
 case state_control_logic_r is
 
-
     when init_loop_row =>
     width_2_next <= width_2;
     
@@ -114,18 +109,6 @@ case state_control_logic_r is
     end if;
 
     when loop_row =>
---        if (sel_filter_reg = "100") then
---            bram_addr_A1_read_s <= std_logic_vector(resize((unsigned(cycle_num_reg)+1)*unsigned(width_2_reg)+unsigned(row_position_reg),10));
---            bram_addr_B1_read_s <= std_logic_vector(resize((unsigned(cycle_num_reg)+1)*unsigned(width_2_reg)+unsigned(row_position_reg)+1,10));
---            bram_addr_A2_read_s <= std_logic_vector(resize(unsigned(cycle_num_reg)*unsigned(width_2_reg)+unsigned(row_position_reg),10));
---            bram_addr_B2_read_s <= std_logic_vector(resize(unsigned(cycle_num_reg)*unsigned(width_2_reg)+unsigned(row_position_reg)+1,10));
---        else
---            bram_addr_A1_read_s <= std_logic_vector(resize(unsigned(cycle_num_reg)*unsigned(width_2)+unsigned(row_position_reg),10));
---            bram_addr_A2_read_s <= std_logic_vector(resize(unsigned(cycle_num_reg)*unsigned(width_2)+unsigned(row_position_reg),10));
---            bram_addr_B2_read_s <= std_logic_vector(resize(unsigned(cycle_num_reg)*unsigned(width_2)+unsigned(row_position_reg)+1,10));
---            bram_addr_B2_read_s <= std_logic_vector(resize(unsigned(cycle_num_reg)*unsigned(width_2)+unsigned(row_position_reg)+1,10));
---        end if;
-
         bram_output_xy_addr_s <= std_logic_vector(resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg)-1)+shift_right(unsigned(row_position_reg),1),10));
         row_position_next <= std_logic_vector(unsigned(row_position_reg)+2);
         

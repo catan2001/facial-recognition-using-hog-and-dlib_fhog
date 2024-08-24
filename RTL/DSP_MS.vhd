@@ -36,29 +36,29 @@ architecture Behavioral of DSP_MS is
 
 begin
     
-    process(a, b) is
-    begin
+    --process(a, b) is
+    --begin
         mult_out <= std_logic_vector(signed(a) * signed(b));
-    end process;
+    --end process;
 
     reg_middle: process(clk) is
     begin
-        if(rising_edge(clk)) then
+        if(falling_edge(clk)) then
             reg_mult <= mult_out;
             reg_c <= c;
         end if;
     end process;
 
-    process(reg_mult, reg_c) is
-    begin
+    --process(reg_mult, reg_c) is
+    --begin
         adder_out <= std_logic_vector(resize(signed(reg_mult) - resize(signed(reg_c), (WIDTH_INTERIM+1)), WIDTH_INTERIM));
-    end process;
+    --end process;
     
-    reg_out: process(clk) is
-    begin
-        if(rising_edge(clk)) then
+    --reg_out: process(clk) is
+    --begin
+        --if(rising_edge(clk)) then
             res <= adder_out;
-        end if;
-    end process;
+        --end if;
+    --end process;
 
 end Behavioral;

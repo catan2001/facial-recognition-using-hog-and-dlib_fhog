@@ -16,6 +16,7 @@ entity bram_to_dram is
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
     dram_x_addr: in std_logic_vector(31 downto 0);
     dram_y_addr: in std_logic_vector(31 downto 0);
+    burst_len_write: out std_logic_vector(7 downto 0);
     --sig for FSM
     en_bram_to_dram: in std_logic;
     bram_to_dram_finished: out std_logic;
@@ -53,6 +54,7 @@ signal sel_dram_reg, sel_dram_next: std_logic_vector(4 downto 0);
 signal dram_out_addr_x_s, dram_out_addr_y_s: std_logic_vector(31 downto 0);
 signal bram_addr_bram_to_dram_A_s: std_logic_vector(9 downto 0);
 signal bram_addr_bram_to_dram_B_s: std_logic_vector(9 downto 0);
+signal burst_len_write_s: std_logic_vector(7 downto 0);
 
 signal bram_to_dram_finished_s: std_logic;
 
@@ -71,7 +73,8 @@ if(rising_edge(clk)) then
         y_reg <= (others => '0');
         row_cnt_reg <= (others => '0');
         z_reg <= (others => '0');
-
+        
+        burst_len_write_s <= "11111111";
     else
         state_bram_to_dram_r <= state_bram_to_dram_n;
 
@@ -89,6 +92,8 @@ if(rising_edge(clk)) then
         y_reg <= y_next;
         row_cnt_reg <= row_cnt_next;
         z_reg <= z_next;
+        
+        burst_len_write_s <= std_logic_vector(unsigned(width_4_reg) - 2);
     end if;
 end if;
 end process;
@@ -174,5 +179,6 @@ bram_addr_bram_to_dram_B <= bram_addr_bram_to_dram_B_s;
 sel_dram <= sel_dram_reg;
 dram_out_addr_x <= dram_out_addr_x_s;
 dram_out_addr_y <= dram_out_addr_y_s;
+burst_len_write <= burst_len_write_s;
 
 end Behavioral;
