@@ -150,7 +150,7 @@ data_path_l1: data_path
         data_in_s(0) <= dram(0)(0)&dram(0)(1)&dram(0)(2)&dram(0)(3), dram(2)(0)&dram(2)(1)&dram(2)(2)&dram(2)(3) after 15ns, dram(4)(0)&dram(4)(1)&dram(4)(2)&dram(4)(3) after 30ns; 
         data_in_s(1) <= dram(1)(0)&dram(1)(1)&dram(1)(2)&dram(1)(3), dram(3)(0)&dram(3)(1)&dram(3)(2)&dram(3)(3) after 15ns, dram(5)(0)&dram(5)(1)&dram(5)(2)&dram(5)(3) after 30ns; 
         we_in_s <= x"00000FFF", x"00000000" after 100ns;
-        we_out_s <= x"0000", x"00FF" after 700ns, x"0000" after 800ns;
+        we_out_s <= x"0000", x"00FF" after 400ns, x"0000" after 500ns;
         sel_bram_in_s <= "0000", "0001" after 15ns, "0010" after 30ns;
         sel_filter_s <= "000";
         sel_bram_out_s <= "000";
