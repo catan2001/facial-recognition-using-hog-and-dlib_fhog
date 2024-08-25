@@ -30,11 +30,19 @@ void DRAM::b_transport(pl_t &pl, sc_core::sc_time &offset) {
             to_uchar(buf, dmem[addr]);
 
             read_transaction_cnt++;
-            //during one clk we will transfer 4*(4 pixels 16 bits) = 4 lines by 64 bits
-            if(read_transaction_cnt==16){
+            read_row_cnt++;
+            //during one clk we will transfer 2*(4 pixels 16 bits) = 2 lines by 64 bits
+            if(read_transaction_cnt==8){
                 offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
                 read_transaction_cnt = 0;
             }
+
+            if(read_row_cnt==COLS+2){
+            //every time we call a new burst transaction there will be an init lag 100-110ns
+                offset += sc_core::sc_time(11*DELAY, sc_core::SC_NS);
+                read_row_cnt = 0;
+            }
+
             pl.set_response_status(tlm::TLM_OK_RESPONSE);
             break;
         default: 

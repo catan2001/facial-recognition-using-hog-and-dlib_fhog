@@ -19,21 +19,28 @@ public:
 
     // DRAM SOCKETS:
     tlm_utils::simple_initiator_socket<BramCtrl> dram_ctrl_socket;
+    tlm_utils::simple_initiator_socket<BramCtrl> dram_ctrlX_socket;
+    tlm_utils::simple_initiator_socket<BramCtrl> dram_ctrlY_socket;
+
 
     // BRAM SOCKETS:
     tlm_utils::simple_initiator_socket<BramCtrl> bram_socket;
+    tlm_utils::simple_initiator_socket<BramCtrl> bramX_socket;
+    tlm_utils::simple_initiator_socket<BramCtrl> bramY_socket;
 
     //SW SOCKETS:
     tlm_utils::simple_target_socket<BramCtrl> interconnect_socket;
 
     protected:
     void b_transport (pl_t &, sc_core::sc_time &);
-    void dram_to_bram(u1_t, sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &);
+    void dram_to_bram(sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &);
+    void bram_to_dram(sc_dt::uint64, sc_dt::uint64, sc_dt::uint64, sc_core::sc_time &);
     void bram_to_reg(u16_t, u16_t, u16_t, sc_dt::uint64, sc_core::sc_time &);
     void write_filter(sc_dt::uint64, u16_t, sc_core::sc_time &);
     void control_logic(sc_core::sc_time &);
 
-    void initialisation(u1_t, sc_core::sc_time &);
+    void Dram2BramBridge(sc_core::sc_time &);
+    void Bram2DramBridge(sc_core::sc_time &);
 
     sc_core::sc_time offset;
     u16_t width, height;
@@ -43,7 +50,11 @@ public:
     u16_t counter_init;
     u16_t accumulated_loss;
 
+    u16_t dram_row_ptr_xy;
+
     u1_t start, ready, reset;
+    //variable used only for delay, to model the final init delay for axi BRAM->DRAM 
+    u1_t finished = 0;
 
     pl_t pl_bram;
 };

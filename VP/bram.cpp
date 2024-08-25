@@ -5,7 +5,7 @@ Bram::Bram(sc_core::sc_module_name name) :
     write_transaction_cnt(0)
 {
     bram_ctrl_socket.register_b_transport(this, &Bram::b_transport);
-
+    
     mem.reserve(RESERVED_MEM);
 
     SC_REPORT_INFO("BRAM", "Constructed.");
@@ -30,7 +30,7 @@ void Bram::b_transport(pl_t& pl, sc_core::sc_time& offset)
 
         write_transaction_cnt++;
         //dual time delay to DRAM read
-        if(write_transaction_cnt==16){
+        if(write_transaction_cnt==8){
             offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
             write_transaction_cnt = 0;
         }

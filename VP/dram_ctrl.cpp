@@ -3,6 +3,8 @@
 DramCtrl::DramCtrl(sc_core::sc_module_name name) : sc_module(name) {
     interconnect_socket.register_b_transport(this, &DramCtrl::b_transport);  
     bram_ctrl_socket.register_b_transport(this, &DramCtrl::b_transport); 
+    bram_ctrlX_socket.register_b_transport(this, &DramCtrl::b_transport); 
+    bram_ctrlY_socket.register_b_transport(this, &DramCtrl::b_transport); 
     hw_socket.register_b_transport(this, &DramCtrl::b_transport); 
     SC_REPORT_INFO("DRAM Controller", "Constructed.");
 }
