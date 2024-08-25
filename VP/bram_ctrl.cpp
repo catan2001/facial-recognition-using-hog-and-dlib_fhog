@@ -4,9 +4,11 @@ BramCtrl::BramCtrl(sc_core::sc_module_name name) :
     sc_module(name), 
     dram_row_ptr(0),
     cycle_number(0),
+    cycle_num_in(0),
+    cycle_num_out(0),
     bram_block_ptr(0),
     counter_init(0),
-    accumulated_loss(0),
+    effective_row_limit(0),
     dram_row_ptr_xy(0),
     width(0),
     height(0),
@@ -41,22 +43,50 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           dram_row_ptr = 0;
           dram_row_ptr_xy = 0;
           write_filter(ADDR_WIDTH, width, offset);
-          //cout << "Time ADDR_WIDTH: " << offset << endl;
+          break;
+
+        case ADDR_WIDTH_2:
+          width_2 = to_int(buf);
+          break;
+
+        case ADDR_WIDTH_4:
+          width_4 = to_int(buf);
           break;
 
         case ADDR_HEIGHT:
           height = to_int(buf);
           write_filter(ADDR_HEIGHT, height, offset);
-          //cout << "Time ADDR_HEIGHT: " << offset << endl;
           break;
 
-        case ADDR_ACC_LOSS:
-          accumulated_loss = to_int(buf);
-          //cout << "Time ADDR_ACC_LOSS: " << offset << endl;
+        case ADDR_EFFECTIVE_ROW_LIMIT:
+          effective_row_limit = to_int(buf);
+          break;
+
+        case ADDR_ROWS_IN_BRAM:
+          row_capacity_bram = to_int(buf);
+          break;
+
+        case ADDR_CYCLE_NUM_IN:
+          cycle_num_in = to_int(buf);
+          break;
+
+        case ADDR_CYCLE_NUM_OUT:
+          cycle_num_out = to_int(buf);
+          break;
+
+        case ADDR_DRAM_IN:
+          base_addr_input = to_int(buf);
+          break;
+
+        case ADDR_DRAM_X:
+          base_addr_dx = to_int(buf);
+          break;
+
+        case ADDR_DRAM_Y:
+          base_addr_dy = to_int(buf);
           break;
 
         case ADDR_RESET:
-          //cout << "Time ADDR_RESET: " << offset << endl;
           reset = to_int(buf);
 
           if(reset) ready = 1;
@@ -110,8 +140,10 @@ void BramCtrl::Dram2BramBridge(sc_core::sc_time &offset){
     //FILTER_BLOCKS 4 clk
     offset += sc_core::sc_time(4*DELAY, sc_core::SC_NS);
 
-    for(int i = 0; i < floor(BRAM_WIDTH/width); ++i) { 
-        for(int j = 0; j < BRAM_HEIGHT; ++j) {         
+    for(int i = 0; i < cycle_num_in; ++i) { 
+        for(int j = 0; j < BRAM_HEIGHT; ++j) {
+            //cout << dram_row_ptr << endl;
+
             dram_row_ptr++;
             for(int k = 0; k < width; ++k) {
                 dram_to_bram(i, j, k, offset);
@@ -119,11 +151,12 @@ void BramCtrl::Dram2BramBridge(sc_core::sc_time &offset){
             if(dram_row_ptr==height) return;
         }
     }
+        //cout << endl;
 }
 
 void BramCtrl::Bram2DramBridge(sc_core::sc_time &offset){
 
-    for(int i = 0; i < floor(BRAM_WIDTH/(width-2)); ++i) { 
+    for(int i = 0; i < cycle_num_out; ++i) { 
         for(int j = 0; j < BRAM_HEIGHT; ++j) {    
             //exists only for delay:
             if(finished){
@@ -133,12 +166,11 @@ void BramCtrl::Bram2DramBridge(sc_core::sc_time &offset){
             for(int k = 0; k < width-2; ++k) {
                 bram_to_dram(i, j, k, offset);
             }
-            //cout << dram_row_ptr_xy << " ";
+        
             dram_row_ptr_xy+=2;
             if(dram_row_ptr_xy==(height-2)*2) return;
         }
     }
-    //cout << endl;
 }
 
 void BramCtrl::control_logic(sc_core::sc_time &offset){
@@ -152,18 +184,24 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
    
     Dram2BramBridge(offset);
 
-    for(int i = 0; i <= floor(height/PTS_PER_COL)*PTS_PER_COL + accumulated_loss; i+=PTS_PER_COL){ //the number of times we will repeat a single cycle
+    for(int i = 0; i <= effective_row_limit; i+=PTS_PER_COL){ //the number of times we will repeat a single cycle
         
-      cycle_number = ((int)i/BRAM_HEIGHT); 
+      cycle_number = ((int)i/BRAM_HEIGHT)%((int)(BRAM_WIDTH/width)); 
       bram_block_ptr = i%BRAM_HEIGHT;
 
-      if(cycle_number == (floor(BRAM_WIDTH/width)-1) && (bram_block_ptr == 12)){
+      if(cycle_number == (cycle_num_in-1) && (bram_block_ptr == 12)){
         if(dram_row_ptr<height){ 
           
           counter_init++; 
-          dram_row_ptr = (floor(BRAM_WIDTH/width)*BRAM_HEIGHT - (BRAM_HEIGHT-bram_block_ptr)) * counter_init;
+          dram_row_ptr = (row_capacity_bram - (BRAM_HEIGHT-bram_block_ptr)) * counter_init;
+          
+          //row_capacity_bram - 1 -> the number of rows that will fit into BRAM
+          // divide by four and floor before multiplying by four to get the last divisible int number by 4 until 127
+          //multiply by two because of x and y
+          dram_row_ptr_xy = (floor((row_capacity_bram - 1)/4))*4*2*(counter_init-1);
 
           i+=(BRAM_HEIGHT-bram_block_ptr);
+         
           cycle_number = 0;
           bram_block_ptr = 0;
 
@@ -182,10 +220,10 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
         
       for(int j=0; j < width - 2; j+=2){ 
       
-      //PHASE I -> WRITE TO REG33:
+      //PHASE I -> WRITE TO REG24:
         bram_to_reg(bram_block_ptr, cycle_number, j, ADDR_INPUT_REG, offset);
 
-      //PHASE II -> FILTER REG33 INTO REG18:
+      //PHASE II -> FILTER REG24 INTO REG16:
         pl_t pl_filter;
         pl_filter.set_address(ADDR_START);
         pl_filter.set_command(tlm::TLM_WRITE_COMMAND);
@@ -195,6 +233,7 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
       }
     }
     finished = 1;
+    dram_row_ptr_xy = (floor((row_capacity_bram - 1)/4))*4*2*(counter_init);
     Bram2DramBridge(offset);
     ready = 1;
   }
@@ -207,7 +246,7 @@ void BramCtrl:: dram_to_bram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, 
   sc_dt::uint64 dram_addr;
   sc_dt::uint64 bram_addr;
 
-  dram_addr = (dram_row_ptr-1)*(this->width) + k;
+  dram_addr = base_addr_input + (dram_row_ptr-1)*(this->width) + k;
   bram_addr = i*(this->width) + j*BRAM_WIDTH + k;
       
   
@@ -241,7 +280,7 @@ void BramCtrl:: bram_to_reg(u16_t bram_block_ptr, u16_t cycle_num, u16_t row_pos
   unsigned char buf_bram[LEN_IN_BYTES*(PTS_PER_COL+2)*4];
   unsigned char buf_bram0[LEN_IN_BYTES];
  
- //PROMIJENI 10
+ 
   if(bram_block_ptr == 12){
  
     for(int i = 0; i < (BRAM_HEIGHT-bram_block_ptr); ++i){
@@ -325,8 +364,8 @@ void BramCtrl:: bram_to_dram(sc_dt::uint64 i, sc_dt::uint64 j, sc_dt::uint64 k, 
   sc_dt::uint64 bram_addr_x;
   sc_dt::uint64 bram_addr_y;
 
-  dram_addr_x = (dram_row_ptr_xy)*(this->width-2) + k + width*height;
-  dram_addr_y = (dram_row_ptr_xy + 1)*(this->width-2) + k + width*height;
+  dram_addr_x = (dram_row_ptr_xy)*(this->width-2) + k + base_addr_dx;
+  dram_addr_y = (dram_row_ptr_xy + 1)*(this->width-2) + k + base_addr_dy;
   bram_addr_x = i*(this->width-2) + j*BRAM_WIDTH + k;
   bram_addr_y = i*(this->width-2) + j*BRAM_WIDTH + k;
       

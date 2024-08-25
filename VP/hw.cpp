@@ -28,6 +28,30 @@ HW::~HW()
  
 void HW::filter_image_t(sc_core::sc_time& offset){
 
+  /*cout << "0: " << mem24[0] << endl;
+  cout << "1: " << mem24[1] << endl;
+  cout << "2: " << mem24[2] << endl;
+  cout << "3: " << mem24[3] << endl;
+  cout << "4: " << mem24[4] << endl;
+  cout << "5: " << mem24[5] << endl;
+  cout << "6: " << mem24[6] << endl;
+  cout << "7: " << mem24[7] << endl;
+  cout << "8: " << mem24[8] << endl;
+  cout << "9: " << mem24[9] << endl;
+  cout << "10: " << mem24[10] << endl;
+  cout << "11: " << mem24[11] << endl;
+  cout << "12 " << mem24[12] << endl;
+  cout << "13: " << mem24[13] << endl;
+  cout << "14: " << mem24[14] << endl;
+  cout << "15: " << mem24[15] << endl;
+  cout << "16: " << mem24[16] << endl;
+  cout << "17: " << mem24[17] << endl;
+  cout << "18: " << mem24[18] << endl;
+  cout << "19 " << mem24[19] << endl;
+  cout << "20: " << mem24[20] << endl;
+  cout << "21: " << mem24[21] << endl;
+  cout << "22: " << mem24[22] << endl;
+  cout << "23: " << mem24[23] << endl;*/
 
   for (int i=0; i<PTS_PER_COL; ++i){ 
     for(int j=0; j<PTS_PER_ROW; ++j){
@@ -85,6 +109,8 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
 
         case ADDR_CONFIG:
           cycle_num = 0;
+          pixel_batch_cnt = 0;
+          row_batch_cnt = 0;
           break;
 
         case ADDR_INPUT_REG: //write pixels into the registers
@@ -102,15 +128,11 @@ void HW::b_transport(pl_t& pl, sc_core::sc_time& offset)
         //write REG16 pixels to DRAM:
           for(int i=0; i<PTS_PER_COL*PTS_PER_ROW; ++i){
             if(i<4){
-              //reg_to_dram(2*i, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + i*2*(width-2) + pixel_batch_cnt, offset);
-              //reg_to_dram(2*i+1, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + i*2*(width-2) + pixel_batch_cnt+1, offset);
               reg_to_bramX(2*i, row_batch_cnt*PTS_PER_COL*BRAM_WIDTH + cycle_num*(width-2) + i*BRAM_WIDTH + pixel_batch_cnt, offset);
               reg_to_bramX(2*i+1, row_batch_cnt*PTS_PER_COL*BRAM_WIDTH + cycle_num*(width-2) + i*BRAM_WIDTH + pixel_batch_cnt+1, offset);
 
             }else{
-              //reg_to_dram(2*i, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + (2*(i-PTS_PER_COL)+1)*(width-2)  + pixel_batch_cnt, offset);
-              //reg_to_dram(2*i+1, (height)*(width) + row_batch_cnt*PTS_PER_COL*2*(width-2) + (2*(i-PTS_PER_COL)+1)*(width-2)  + pixel_batch_cnt+1, offset);
-              reg_to_bramY(2*i, row_batch_cnt*PTS_PER_COL*BRAM_WIDTH+ cycle_num*(width-2) + (i-PTS_PER_COL)*BRAM_WIDTH + pixel_batch_cnt, offset);
+              reg_to_bramY(2*i, row_batch_cnt*PTS_PER_COL*BRAM_WIDTH + cycle_num*(width-2) + (i-PTS_PER_COL)*BRAM_WIDTH + pixel_batch_cnt, offset);
               reg_to_bramY(2*i+1, row_batch_cnt*PTS_PER_COL*BRAM_WIDTH + cycle_num*(width-2) + (i-PTS_PER_COL)*BRAM_WIDTH + pixel_batch_cnt+1, offset);
 
             }

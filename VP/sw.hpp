@@ -32,7 +32,7 @@ protected:
 	void get_block_descriptor(int rows, int cols, double *ori_histo, double *ori_histo_normalized);
 	void extract_hog(int rows, int cols, double *im, double *hog);
 	double *face_recognition(int img_h, int img_w, int box_h, int box_w, double *I_target, double *I_template, int *num_thresholded);
-	void face_recognition_range(double *I_target, int step); 
+	void face_recognition_range(double *I_target, int step, int lower_boundary); 
 };
 
 #endif // SOFT_HPP_

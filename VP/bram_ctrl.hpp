@@ -48,7 +48,17 @@ public:
     u16_t cycle_number;
     u16_t bram_block_ptr;
     u16_t counter_init;
-    u16_t accumulated_loss;
+    u16_t effective_row_limit;
+    u16_t row_capacity_bram;
+
+    u16_t width_2;
+    u16_t width_4;
+    u16_t cycle_num_in;
+    u16_t cycle_num_out;
+
+    u16_t base_addr_input;
+    u16_t base_addr_dx;
+    u16_t base_addr_dy;
 
     u16_t dram_row_ptr_xy;
 

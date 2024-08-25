@@ -16,9 +16,11 @@ SW::~SW()
 }
 
 void SW::process_img(void){
-    int steps = floor((UPPER_BOUNDARY-LOWER_BOUNDARY)/10); // parameter for face_recognition_range
+    //int step = ceil(floor((UPPER_BOUNDARY-floor(UPPER_BOUNDARY/3))/10)/4)*4;; // parameter for face_recognition_range
+    int step = floor((UPPER_BOUNDARY-floor(UPPER_BOUNDARY/3))/10);
+    int lower_boundary = UPPER_BOUNDARY-10*step;
     double *gray = new double[ROWS*COLS];
-    FILE * gray_f = fopen("monica246_300.txt", "rb");
+    FILE * gray_f = fopen("template/gray.txt", "rb");
     double tmp_gray;
 
     for (int i = 0; i < ROWS; ++i){
@@ -28,11 +30,14 @@ void SW::process_img(void){
           }
     }
     fclose(gray_f);
+    
     //debug
     //double *img_HOG = new double[((int)(ROWS/8) - 1)*((int)(COLS/8) - 1)*24];
     //extract_hog(ROWS, COLS, gray, img_HOG);
     
-    face_recognition_range(&gray[0], steps);
+    face_recognition_range(&gray[0], step, lower_boundary);
+
+    //cout << "picture dim[" << ROWS << "x" << COLS << "] took: " << offset << endl;
 }
 
 void SW::get_gradient(int rows, int cols, double *im_dx, double *im_dy, double *grad_mag, double *grad_angle){
@@ -131,7 +136,7 @@ void SW::get_block_descriptor(int rows, int cols, double *ori_histo, double *ori
 }
 
 void SW::extract_hog(int rows, int cols, double *im, double *hog) { 
-    
+   
     double im_min = *(im + 0)/255.00000000;
     double im_max = *(im + 0)/255.00000000;
     
@@ -152,7 +157,7 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
         }
     }
 
-    cout << "START OF HW: " << offset << endl;
+    //cout << "START OF HW: " << offset << endl;
     //HARDWARE PART OF CODE:
     orig_array_t orig_gray(rows, vector<double>(cols));
     
@@ -189,6 +194,7 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
         }
     }
     sc_core::sc_time temp = offset;
+
     //write image to DRAM:
     for(int i=0; i<rows+2; ++i){
       for(int j=0; j<cols+2; ++j){
@@ -197,15 +203,26 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
       }
     }
     offset = temp;
+
     //cout << "Time after writing in image" << offset << endl;
     write_hard(ADDR_RESET, 1, offset);
 
-//accumulated_loss = (ceel((rows+2)/(BRAM_HEIGHT*floor(BRAM_WIDTH/(cols+2))))-1)*(BRAM_HEIGHT-bram_block_ptr);
-    int accumulated_loss = floor((rows+2)/(BRAM_HEIGHT*floor(BRAM_WIDTH/(cols+2))))*(BRAM_HEIGHT - ((int)((floor(BRAM_WIDTH/(cols+2))*BRAM_HEIGHT/PTS_PER_COL)*PTS_PER_COL)%BRAM_HEIGHT));
+    int accumulated_loss = (ceil((rows+2)/(BRAM_HEIGHT*floor(BRAM_WIDTH/(cols+2))))-1)*4;
     //configure hardware registers and send start command:
     write_hard(ADDR_WIDTH, cols+2, offset);
+    write_hard(ADDR_WIDTH_2, floor(cols/2)+1, offset);
+    write_hard(ADDR_WIDTH_4, floor((cols+2)/4), offset);
     write_hard(ADDR_HEIGHT, rows+2, offset);
-    write_hard(ADDR_ACC_LOSS, accumulated_loss, offset);
+
+    write_hard(ADDR_CYCLE_NUM_IN, floor(BRAM_WIDTH/(cols+2)), offset);
+    write_hard(ADDR_ROWS_IN_BRAM, floor(BRAM_WIDTH/(cols+2))*BRAM_HEIGHT, offset);
+    write_hard(ADDR_CYCLE_NUM_OUT, floor(BRAM_WIDTH/cols), offset);
+    write_hard(ADDR_EFFECTIVE_ROW_LIMIT, floor((rows+2)/PTS_PER_COL)*PTS_PER_COL + accumulated_loss, offset);
+
+    write_hard(ADDR_DRAM_IN, 0, offset);
+    write_hard(ADDR_DRAM_X, (cols+2)*(rows+2), offset);
+    write_hard(ADDR_DRAM_Y, (cols+2)*(rows+2), offset);
+
     write_hard(ADDR_START, 1, offset);
 
     int ready = 1;
@@ -225,13 +242,13 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
       for(int j = 0; j<cols; ++j){
         read_dram((rows+2)*(cols+2) + 2*cols*i +j, matrix_im_filtered_x[i][j], offset);
         read_dram((rows+2)*(cols+2) + (2*i+1)*cols +j, matrix_im_filtered_y[i][j], offset);
-        //cout << matrix_im_filtered_x[i][j] << " ";
+        //cout << matrix_im_filtered_y[i][j] << " ";
       }
       //cout << endl;
     }
     offset = temp;
     //END OF HARDWARE PART OF CODE
-    cout << "END OF HW: " << offset << endl;
+    //cout << "END OF HW: " << offset << endl;
     
     //GET_GRADIENT:
     //define variables and containers
@@ -443,20 +460,20 @@ double *SW::face_recognition(int img_h, int img_w, int box_h, int box_w, double 
 }
 
 
-void SW::face_recognition_range(double *I_target, int step) {
+void SW::face_recognition_range(double *I_target, int step, int lower_boundary) {
     
     cout << "Upper Boundary: " << UPPER_BOUNDARY << endl;
-    cout << "Lower Boundary: " << LOWER_BOUNDARY << endl;
+    cout << "Lower Boundary: " << lower_boundary << endl;
     cout << "Step: " << step << endl;
 
     double *found_faces = (double *) malloc(sizeof(double)*3);
     int num_faces = 0;
     int num_thresholded = 0;
 
-    for(int width = UPPER_BOUNDARY; width >= LOWER_BOUNDARY; width -= step) { //TODO: change back to UPPER_BOUNDARY
+    for(int width = UPPER_BOUNDARY; width >= lower_boundary; width -= step) { //TODO: change back to UPPER_BOUNDARY
      	cout << "current template: " << width << endl;
         
-        char gray_template[50] = "template300_100/template_";
+        char gray_template[50] = "template/template_";
         char size_gray[4];
         snprintf(size_gray, sizeof(size_gray), "%d", width);
         strcat(gray_template, size_gray);
