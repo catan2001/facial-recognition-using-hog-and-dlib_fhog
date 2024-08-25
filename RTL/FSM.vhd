@@ -13,7 +13,7 @@ entity FSM is
   
   cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
   rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
-  effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_ROW)/accumulated_loss
+  effective_row_limit: in std_logic_vector(11 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
   
   start: in std_logic;
   
@@ -48,7 +48,7 @@ signal sel_filter_fsm_reg, sel_filter_fsm_next: std_logic_vector(2 downto 0);
 
 signal cycle_num_limit_reg, cycle_num_limit_next: std_logic_vector(5 downto 0);
 signal rows_num_reg, rows_num_next: std_logic_vector(9 downto 0); 
-signal effective_row_limit_reg, effective_row_limit_next: std_logic_vector(9 downto 0);
+signal effective_row_limit_reg, effective_row_limit_next: std_logic_vector(11 downto 0);
 
 signal x_reg, x_next: std_logic_vector(9 downto 0);
 signal cycle_num_reg, cycle_num_next: std_logic_vector(5 downto 0); 
@@ -82,9 +82,9 @@ if(rising_edge(clk)) then
         
         ready_reg <= '0';
         start_reg <= '0';
+
         x_reg <= (others => '0');
         cycle_num_reg <= (others => '0');
-        sel_bram_addr_reg <= '0';
         cnt_init_reg <= "000001";
 
     else
@@ -100,10 +100,11 @@ if(rising_edge(clk)) then
         sel_bram_out_fsm_reg <= sel_bram_out_fsm_next;
         sel_bram_addr_reg <= sel_bram_addr_next;
 
+        we_out_reg <= we_out_next;
+
         x_reg <= x_next;
         cycle_num_reg <= cycle_num_next;
         cnt_init_reg <= cnt_init_next; 
-        we_out_reg <= we_out_next;
 
     end if;
 end if;
@@ -111,8 +112,8 @@ end process;
 
 process(state_r, rows_num_reg, cycle_num_limit_reg, effective_row_limit_reg, sel_filter_fsm_reg, sel_bram_out_fsm_reg,
         sel_bram_addr_reg, x_reg, cycle_num_reg, cnt_init_reg, we_out_reg, rows_num, cycle_num_limit, effective_row_limit,
-        start, dram_to_bram_finished, cycle_num_next, bram_to_dram_finished, pipe_finished, effective_row_limit_reg, x_next,
-        ready_reg, start_reg, start, start_next) 
+        start, dram_to_bram_finished, cycle_num_next, bram_to_dram_finished, pipe_finished, x_next,
+        ready_reg, start_reg, start_next) 
 begin
 
 state_n  <= state_r;    
@@ -185,10 +186,10 @@ case state_r is
         we_out_next <= X"000F";
         x_next <= std_logic_vector(unsigned(x_reg)+4);
         en_pipe_s <= '1';
-        if(pipe_finished = '1' and x_next = effective_row_limit_reg) then
+        if(pipe_finished = '1' and std_logic_vector(resize(unsigned(x_next),12)) = effective_row_limit_reg) then
             en_pipe_s <= '1';
             state_n <= br2dr;
-        else
+        elsif(pipe_finished = '1') then
             en_pipe_s <= '0';
             state_n <= ctrl_loop;
         end if;
@@ -203,7 +204,6 @@ case state_r is
 end case;
 end process;
 
---dodaj izlaze
 ready <= ready_reg;
 sel_bram_addr <= sel_bram_addr_reg;
 sel_bram_out_fsm <= sel_bram_out_fsm_reg;

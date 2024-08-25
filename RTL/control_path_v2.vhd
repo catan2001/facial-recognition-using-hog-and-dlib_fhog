@@ -14,14 +14,14 @@ entity control_path_v2 is
     width_4: in std_logic_vector(7 downto 0);
     width_2: in std_logic_vector(8 downto 0);
     height: in std_logic_vector(10 downto 0);
-    bram_height: in std_logic_vector(3 downto 0);
+    bram_height: in std_logic_vector(4 downto 0);
     dram_in_addr: in std_logic_vector(31 downto 0);
     dram_x_addr: in std_logic_vector(31 downto 0);
     dram_y_addr: in std_logic_vector(31 downto 0);
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
     rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
-    effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_ROW)/accumulated_loss
+    effective_row_limit: in std_logic_vector(11 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
 
     ready: out std_logic; 
     
@@ -61,7 +61,7 @@ component bram_to_dram is
     width_4: in std_logic_vector(7 downto 0);
     width_2: in std_logic_vector(8 downto 0);
     height: in std_logic_vector(10 downto 0);
-    bram_height: in std_logic_vector(3 downto 0);
+    bram_height: in std_logic_vector(4 downto 0);
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
     dram_x_addr: in std_logic_vector(31 downto 0);
     dram_y_addr: in std_logic_vector(31 downto 0);
@@ -108,7 +108,7 @@ component dram_to_bram is
     height: in std_logic_vector(10 downto 0);
     dram_in_addr: in std_logic_vector(31 downto 0);
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
-    bram_height: in std_logic_vector(3 downto 0);
+    bram_height: in std_logic_vector(4 downto 0);
     
     --sig for FSM
     en_dram_to_bram: in std_logic;
@@ -137,7 +137,7 @@ component FSM is
   
   cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
   rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
-  effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_ROW)/accumulated_loss
+  effective_row_limit: in std_logic_vector(11 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
   
   start: in std_logic;
   

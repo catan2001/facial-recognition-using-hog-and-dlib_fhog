@@ -14,7 +14,7 @@ entity dram_to_bram is
     height: in std_logic_vector(10 downto 0);
     dram_in_addr: in std_logic_vector(31 downto 0);
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
-    bram_height: in std_logic_vector(3 downto 0);
+    bram_height: in std_logic_vector(4 downto 0);
     
     --sig for FSM
     en_dram_to_bram: in std_logic;
@@ -25,10 +25,6 @@ entity dram_to_bram is
     --out signals
     we_in: out std_logic_vector(31 downto 0);
     sel_bram_in: out std_logic_vector(3 downto 0);
-    --bram_addr_A1_write: out std_logic_vector(9 downto 0); --bram block 0-1
-    --bram_addr_B1_write: out std_logic_vector(9 downto 0); --bram block 0-1
-    --bram_addr_A2_write: out std_logic_vector(9 downto 0); --bram block 2-15
-    --bram_addr_B2_write: out std_logic_vector(9 downto 0); --bram block 2-15
     i: out std_logic_vector(4 downto 0);
     k: out std_logic_vector(9 downto 0);
     dram_addr0: out std_logic_vector(31 downto 0);
@@ -47,7 +43,7 @@ signal state_dram_to_bram_r, state_dram_to_bram_n : state_dram_to_bram_t;
 signal width_2_reg, width_2_next: std_logic_vector(8 downto 0);
 signal width_4_reg, width_4_next: std_logic_vector(7 downto 0);
 signal height_reg, height_next: std_logic_vector(10 downto 0);
-signal bram_height_reg, bram_height_next: std_logic_vector(3 downto 0);
+signal bram_height_reg, bram_height_next: std_logic_vector(4 downto 0);
 signal dram_in_addr_reg, dram_in_addr_next: std_logic_vector(31 downto 0);
 signal cycle_num_limit_reg, cycle_num_limit_next: std_logic_vector(5 downto 0);
 
@@ -57,8 +53,6 @@ signal k_reg, k_next: std_logic_vector(9 downto 0);
 
 signal we_in_reg, we_in_next: std_logic_vector(31 downto 0);
 signal sel_bram_in_reg, sel_bram_in_next: std_logic_vector(3 downto 0); 
-
---signal bram_addr_A1_write_s, bram_addr_B1_write_s, bram_addr_A2_write_s, bram_addr_B2_write_s: std_logic_vector(9 downto 0);
 
 signal dram_addr0_s, dram_addr1_s: std_logic_vector(31 downto 0);
 signal dram_row_ptr0_reg, dram_row_ptr0_next: std_logic_vector(10 downto 0);
@@ -121,6 +115,8 @@ process(state_dram_to_bram_r,  width_2_reg, width_4_reg, height_reg, bram_height
     en_dram_to_bram, en_axi, i_next, j_next, k_next, dram_row_ptr1_next, sel_bram_in_next) 
 begin
 
+state_dram_to_bram_n <= state_dram_to_bram_r;
+
 --reg bank
 width_2_next <= width_2_reg;
 width_4_next <= width_4_reg;
@@ -129,7 +125,6 @@ bram_height_next <= bram_height_reg;
 cycle_num_limit_next <= cycle_num_limit_reg;
 dram_in_addr_next <= dram_in_addr_reg;
 
-state_dram_to_bram_n <= state_dram_to_bram_r;
 sel_bram_in_next <= sel_bram_in_reg;
 we_in_next <= we_in_reg;
 i_next <= i_reg;
@@ -176,13 +171,9 @@ case state_dram_to_bram_r is
         state_dram_to_bram_n <= loop_dram_to_bram3;
 
     when loop_dram_to_bram3 =>
-        --bram_addr_A1_write_s <= std_logic_vector(resize(unsigned(i_reg)*unsigned(width_2_reg) + unsigned(k_reg),10));
-        --bram_addr_A2_write_s <= std_logic_vector(resize(unsigned(i_reg)*unsigned(width_2_reg) + unsigned(k_reg),10));  
-        --bram_addr_B1_write_s <= std_logic_vector(resize(unsigned(i_reg)*unsigned(width_2_reg) + unsigned(k_reg) + 1,10));
-        --bram_addr_B2_write_s <= std_logic_vector(resize(unsigned(i_reg)*unsigned(width_2_reg) + unsigned(k_reg) + 1,10));  
         k_next <= std_logic_vector(unsigned(k_reg) + 2);
         
-        if(k_next = std_logic_vector(resize(unsigned(width_2_reg),10))) then 
+        if(k_next = std_logic_vector(resize(unsigned(width_2_reg),10))) then  
             state_dram_to_bram_n <= end_dram_to_bram3;
         end if;
 
@@ -204,7 +195,7 @@ case state_dram_to_bram_r is
             
             j_next <= std_logic_vector(unsigned(j_reg) + 2);
   
-            if(j_next = bram_height_reg) then
+            if(std_logic_vector(resize(unsigned(j_next),5)) = bram_height_reg) then
                 state_dram_to_bram_n <= end_dram_to_bram2;
             else
                 state_dram_to_bram_n <= loop_dram_to_bram2;
@@ -220,7 +211,7 @@ case state_dram_to_bram_r is
         end if;
 
     when end_dram_to_bram1 =>
-        we_in <= (others => '0');
+        we_in_next <= (others => '0');
         dram_to_bram_finished_s <= '1';
 end case;
 end process;
@@ -228,10 +219,6 @@ end process;
 --dodaj signale
 we_in <= we_in_reg;
 sel_bram_in <= sel_bram_in_reg;
---bram_addr_A1_write_s <= bram_addr_A1_write_s;
---bram_addr_B1_write <= bram_addr_B1_write_s;
---bram_addr_A2_write <= bram_addr_A2_write_s;
---bram_addr_B2_write <= bram_addr_B2_write_s;
 i <= i_reg;
 k <= k_reg;
 dram_addr0 <= dram_addr0_s;

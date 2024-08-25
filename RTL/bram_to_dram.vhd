@@ -12,7 +12,7 @@ entity bram_to_dram is
     width_4: in std_logic_vector(7 downto 0);
     width_2: in std_logic_vector(8 downto 0);
     height: in std_logic_vector(10 downto 0);
-    bram_height: in std_logic_vector(3 downto 0);
+    bram_height: in std_logic_vector(4 downto 0);
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
     dram_x_addr: in std_logic_vector(31 downto 0);
     dram_y_addr: in std_logic_vector(31 downto 0);
@@ -41,7 +41,7 @@ signal width_reg, width_next: std_logic_vector(9 downto 0);
 signal width_2_reg, width_2_next: std_logic_vector(8 downto 0);
 signal width_4_reg, width_4_next: std_logic_vector(7 downto 0);
 signal height_reg, height_next: std_logic_vector(10 downto 0);
-signal bram_height_reg, bram_height_next: std_logic_vector(3 downto 0);
+signal bram_height_reg, bram_height_next: std_logic_vector(4 downto 0);
 signal cycle_num_out_reg, cycle_num_out_next: std_logic_vector(5 downto 0);
 signal dram_x_addr_reg, dram_x_addr_next: std_logic_vector(31 downto 0); 
 signal dram_y_addr_reg, dram_y_addr_next: std_logic_vector(31 downto 0);
@@ -105,6 +105,7 @@ process(state_bram_to_dram_r, sel_dram_reg, y_reg, row_cnt_reg, z_reg, width, wi
 begin
 
 state_bram_to_dram_n <= state_bram_to_dram_r;
+
 sel_dram_next <= sel_dram_reg;
 y_next <= y_reg;
 row_cnt_next <= row_cnt_reg;
@@ -140,8 +141,8 @@ case state_bram_to_dram_r is
         state_bram_to_dram_n <= loop_bram_to_dram2;
 
     when loop_bram_to_dram2 =>
-        dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(width_reg)*unsigned(height_reg) + unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
-        dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(width_reg)*unsigned(height_reg) + (unsigned(width_reg)-2)*(unsigned(height_reg)-2) + unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
+        dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
+        dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
         z_next <= (others => '0');
         state_bram_to_dram_n <= loop_bram_to_dram3;
 
@@ -156,7 +157,7 @@ case state_bram_to_dram_r is
     when end_bram_to_dram3 =>
         row_cnt_next <= std_logic_vector(unsigned(row_cnt_reg)+1);
         sel_dram_next <= std_logic_vector(unsigned(sel_dram_reg)+1);
-        if(sel_dram_next = std_logic_vector(resize(unsigned(bram_height_reg),5))) then
+        if(sel_dram_next = bram_height_reg) then
             state_bram_to_dram_n <= end_bram_to_dram2;
         else
             state_bram_to_dram_n <= loop_bram_to_dram2;
@@ -174,9 +175,9 @@ end case;
 end process;
 
 bram_to_dram_finished <= bram_to_dram_finished_s;
+sel_dram <= sel_dram_reg;
 bram_addr_bram_to_dram_A <= bram_addr_bram_to_dram_A_s;
 bram_addr_bram_to_dram_B <= bram_addr_bram_to_dram_B_s;
-sel_dram <= sel_dram_reg;
 dram_out_addr_x <= dram_out_addr_x_s;
 dram_out_addr_y <= dram_out_addr_y_s;
 burst_len_write <= burst_len_write_s;

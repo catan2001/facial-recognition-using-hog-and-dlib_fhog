@@ -17,14 +17,14 @@ entity top is
     width_4: in std_logic_vector(7 downto 0);
     width_2: in std_logic_vector(8 downto 0);
     height: in std_logic_vector(10 downto 0);
-    bram_height: in std_logic_vector(3 downto 0);
+    bram_height: in std_logic_vector(4 downto 0);
     dram_in_addr: in std_logic_vector(31 downto 0);
-    dram_x_addr: in std_logic_vector(31 downto 0);
-    dram_y_addr: in std_logic_vector(31 downto 0);
+    dram_x_addr: in std_logic_vector(31 downto 0); --width*height
+    dram_y_addr: in std_logic_vector(31 downto 0); --width*height+(width-2)*(height-2)
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
     rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
-    effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_ROW)/accumulated_loss
+    effective_row_limit: in std_logic_vector(11 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
     
     burst_len_read: out std_logic_vector(7 downto 0);
     burst_len_write: out std_logic_vector(7 downto 0);
@@ -102,7 +102,7 @@ component data_path is
         );
 end component;
 
-component control_path is
+component control_path_v2 is
   Port ( 
     clk: in std_logic;
     reset: in std_logic;
@@ -114,14 +114,14 @@ component control_path is
     width_4: in std_logic_vector(7 downto 0);
     width_2: in std_logic_vector(8 downto 0);
     height: in std_logic_vector(10 downto 0);
-    bram_height: in std_logic_vector(3 downto 0);
+    bram_height: in std_logic_vector(4 downto 0);
     dram_in_addr: in std_logic_vector(31 downto 0);
     dram_x_addr: in std_logic_vector(31 downto 0);
     dram_y_addr: in std_logic_vector(31 downto 0);
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
     rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
-    effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_ROW)/accumulated_loss
+    effective_row_limit: in std_logic_vector(11 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
 
     ready: out std_logic; 
     
@@ -179,7 +179,7 @@ data_path_l: data_path
       bram_addr_A_out => bram_addr_A_out_s,
       bram_addr_B_out => bram_addr_B_out_s);
 
-control_path_l: control_path
+control_path_l: control_path_v2
 Port map( 
   clk => clk,
   reset => reset,
