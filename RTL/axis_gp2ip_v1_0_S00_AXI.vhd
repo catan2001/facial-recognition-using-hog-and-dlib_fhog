@@ -28,7 +28,7 @@ entity axis_gp2ip_v1_0_S00_AXI is
 		cycle_num_limit_reg: out std_logic_vector(5 downto 0); --2*bram_width/width
 		cycle_num_out_reg: out std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
 		rows_num_reg: out std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
-		effective_row_limit_reg: out std_logic_vector(9 downto 0); --(height/PTS_PER_ROW)/accumulated_loss
+		effective_row_limit_reg: out std_logic_vector(11 downto 0); --(height/PTS_PER_ROW)/accumulated_loss
 		dram_in_addr_reg : out std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 		dram_x_addr_reg : out std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 		dram_y_addr_reg : out std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
@@ -436,9 +436,9 @@ begin
 
 	-- SAHE 2
 	width_4_reg <= slv_reg1(7 downto 0);
-	effective_row_limit_reg <= slv_reg1(17 downto 8);
-	cycle_num_limit_reg <= slv_reg1(23 downto 18);
-	cycle_num_out_reg <= slv_reg1(29 downto 24);
+	effective_row_limit_reg <= slv_reg1(19 downto 8);
+	cycle_num_limit_reg <= slv_reg1(25 downto 20);
+	cycle_num_out_reg <= slv_reg1(31 downto 26);
 
 	-- SAHE 3
 	rows_num_reg <= slv_reg2(9 downto 0);
