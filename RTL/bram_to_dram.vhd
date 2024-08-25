@@ -32,8 +32,7 @@ architecture Behavioral of bram_to_dram is
 
 --states bram_to_dram
 type state_bram_to_dram_t is
-    (init_loop_bram_to_dram1, loop_bram_to_dram1, loop_bram_to_dram2, 
-    loop_bram_to_dram3, end_bram_to_dram2, end_bram_to_dram3);
+    (init_loop_bram_to_dram, loop_bram_to_dram1, loop_bram_to_dram2);
 signal state_bram_to_dram_r, state_bram_to_dram_n: state_bram_to_dram_t;
 
 --reg bank
@@ -66,7 +65,7 @@ begin
 
 if(rising_edge(clk)) then
     if reset = '1' then
-        state_bram_to_dram_r <= init_loop_bram_to_dram1;
+        state_bram_to_dram_r <= init_loop_bram_to_dram;
         
         sel_dram_reg <= (others => '0');
 
@@ -121,7 +120,7 @@ dram_x_addr_next <= dram_x_addr_reg;
 dram_y_addr_next <= dram_y_addr_reg;
 
 case state_bram_to_dram_r is
-    when init_loop_bram_to_dram1 =>
+    when init_loop_bram_to_dram =>
         width_next <= width;
         width_2_next <= width_2;
         width_4_next <= width_4;
@@ -133,44 +132,35 @@ case state_bram_to_dram_r is
         
         if(en_bram_to_dram = '1') then
             y_next <= (others => '0');
+            sel_dram_next <= (others => '0');
             state_bram_to_dram_n <= loop_bram_to_dram1;
         end if;
 
     when loop_bram_to_dram1 =>
-        sel_dram_next <= (others => '0');
-        state_bram_to_dram_n <= loop_bram_to_dram2;
-
-    when loop_bram_to_dram2 =>
         dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
         dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
         z_next <= (others => '0');
-        state_bram_to_dram_n <= loop_bram_to_dram3;
+        state_bram_to_dram_n <= loop_bram_to_dram2;
 
-    when loop_bram_to_dram3 =>
+    when loop_bram_to_dram2 =>
         bram_addr_bram_to_dram_A_s <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+unsigned(z_reg),10));
         bram_addr_bram_to_dram_B_s <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+unsigned(z_reg)+1,10));
         z_next <= std_logic_vector(unsigned(z_reg)+1);
         if(z_next = std_logic_vector(unsigned(width_2_reg) - 1)) then
-            state_bram_to_dram_n <= end_bram_to_dram3;
+            row_cnt_next <= std_logic_vector(unsigned(row_cnt_reg)+1);
+            sel_dram_next <= std_logic_vector(unsigned(sel_dram_reg)+1);
+            if(sel_dram_next = bram_height_reg) then
+                y_next <= std_logic_vector(unsigned(y_reg)+1);
+                if(y_next = cycle_num_out_reg) then
+                    bram_to_dram_finished_s <= '1';
+                else
+                    sel_dram_next <= (others => '0');
+                    state_bram_to_dram_n <= loop_bram_to_dram1;
+                end if;
+            else
+                state_bram_to_dram_n <= loop_bram_to_dram1;
+            end if;
         end if;
-
-    when end_bram_to_dram3 =>
-        row_cnt_next <= std_logic_vector(unsigned(row_cnt_reg)+1);
-        sel_dram_next <= std_logic_vector(unsigned(sel_dram_reg)+1);
-        if(sel_dram_next = bram_height_reg) then
-            state_bram_to_dram_n <= end_bram_to_dram2;
-        else
-            state_bram_to_dram_n <= loop_bram_to_dram2;
-        end if;
-
-    when end_bram_to_dram2 =>
-        y_next <= std_logic_vector(unsigned(y_reg)+1);
-        if(y_next = cycle_num_out_reg) then
-            bram_to_dram_finished_s <= '1';
-        else
-            state_bram_to_dram_n <= loop_bram_to_dram1;
-        end if;
-
 end case;
 end process;
 

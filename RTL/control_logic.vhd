@@ -26,7 +26,7 @@ architecture Behavioral of control_logic is
 
 --states control_logic
 type state_control_logic_t is
-    (init_loop_row, loop_row, end_row);
+    (init_loop_row, loop_row);
 signal state_control_logic_r, state_control_logic_n: state_control_logic_t;
 
 --reg bank
@@ -113,19 +113,20 @@ case state_control_logic_r is
         row_position_next <= std_logic_vector(unsigned(row_position_reg)+2);
         
         if(row_position_next = std_logic_vector(unsigned(width_2_reg)-1)) then 
-            state_control_logic_n <= end_row;
+            sel_filter_next <= std_logic_vector(unsigned(sel_filter_reg) + 1);
+            
+            if(sel_filter_next = "100") then
+                sel_filter_next <= (others => '0');
+            end if;    
+            
+            sel_bram_out_next <= std_logic_vector(unsigned(sel_bram_out_reg) + 1);
+            
+            if(sel_bram_out_next = "100") then
+                sel_bram_out_next <= (others => '0');
+            end if;
+            
+            pipe_finished_s <= '1';
         end if;
-
-    when end_row =>
-        sel_filter_next <= std_logic_vector(unsigned(sel_filter_reg) + 1);
-        if(sel_filter_next = "100") then
-            sel_filter_next <= (others => '0');
-        end if;    
-        sel_bram_out_next <= std_logic_vector(unsigned(sel_bram_out_reg) + 1);
-        if(sel_bram_out_next = "100") then
-            sel_bram_out_next <= (others => '0');
-        end if;
-        pipe_finished_s <= '1';
 
 end case;
 end process;
