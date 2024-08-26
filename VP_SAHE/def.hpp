@@ -84,6 +84,7 @@ typedef sc_dt::sc_uint <10> u10_t;  // bit_width 10
 typedef sc_dt::sc_uint <9> u9_t;  // bit_width 9
 typedef sc_dt::sc_uint <8> u8_t;  // bit_width 8
 typedef sc_dt::sc_uint <6>  u6_t;   // bit-width 6
+typedef sc_dt::sc_uint <5>  u5_t;   // bit-width 6
 typedef sc_dt::sc_uint <1>  u1_t;   // bit-width 1
 typedef tlm::tlm_base_protocol_types::tlm_payload_type pl_t;
 #endif

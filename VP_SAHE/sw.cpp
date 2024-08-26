@@ -224,7 +224,9 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
     write_hard(ADDR_SAHE4, sahe4, offset);
 
     //SAHE3:
-    u32_t sahe3 = floor(BRAM_WIDTH/(cols+2))*BRAM_HEIGHT;
+    u5_t bram_height = BRAM_HEIGHT;
+    u10_t row_capacity_bram = floor(BRAM_WIDTH/(cols+2))*BRAM_HEIGHT;
+    u32_t sahe3 = (bram_height << 10) | row_capacity_bram;
     
     write_hard(ADDR_SAHE3, sahe3, offset);
 

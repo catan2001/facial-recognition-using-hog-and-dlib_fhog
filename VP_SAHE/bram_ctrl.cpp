@@ -61,7 +61,9 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           break;
 
         case ADDR_SAHE3:
-          row_capacity_bram = to_int32(buf);
+          sahe3 = to_int32(buf);
+          row_capacity_bram = (sahe3 & 0x3FF);
+          bram_height = (sahe3 & 0x7C00); 
 
           break;
 

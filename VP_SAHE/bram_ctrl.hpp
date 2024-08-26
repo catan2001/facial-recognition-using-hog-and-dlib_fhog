@@ -61,7 +61,7 @@ public:
     u16_t base_addr_dx;
     u16_t base_addr_dy;
 
-    u32_t sahe1, sahe2;
+    u32_t sahe1, sahe2, sahe3;
 
     u16_t dram_row_ptr_xy;
 
