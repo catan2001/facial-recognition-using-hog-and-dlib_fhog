@@ -38,58 +38,6 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
  
       switch(addr)
         {
-        /*case ADDR_WIDTH:
-          width = to_int(buf);  
-          dram_row_ptr = 0;
-          dram_row_ptr_xy = 0;
-          write_filter(ADDR_WIDTH, width, offset);
-          break;
-
-        case ADDR_WIDTH_2:
-          width_2 = to_int(buf);
-          break;
-
-        case ADDR_WIDTH_4:
-          width_4 = to_int(buf);
-          break;
-
-        case ADDR_HEIGHT:
-          height = to_int(buf);
-          write_filter(ADDR_HEIGHT, height, offset);
-          break;
-
-        case ADDR_BRAM_HEIGHT:
-          bram_height = to_int(buf);
-          break;
-
-        case ADDR_EFFECTIVE_ROW_LIMIT:
-          effective_row_limit = to_int(buf);
-          break;
-
-        case ADDR_ROWS_IN_BRAM:
-          row_capacity_bram = to_int(buf);
-          break;
-
-        case ADDR_CYCLE_NUM_IN:
-          cycle_num_in = to_int(buf);
-          break;
-
-        case ADDR_CYCLE_NUM_OUT:
-          cycle_num_out = to_int(buf);
-          break;
-
-        case ADDR_DRAM_IN:
-          base_addr_input = to_int(buf);
-          break;
-
-        case ADDR_DRAM_X:
-          base_addr_dx = to_int(buf);
-          break;
-
-        case ADDR_DRAM_Y:
-          base_addr_dy = to_int(buf);
-          break;
-          */
 
         case ADDR_RESET:
           reset = to_int(buf);
@@ -99,29 +47,21 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 
         case ADDR_SAHE6:
           base_addr_dy = to_int32(buf);
-
-          //cout << "base addres dy: " << base_addr_dy << endl;
           
           break;
 
         case ADDR_SAHE5:
           base_addr_dx = to_int32(buf);
 
-          //cout << "base addres dx: " << base_addr_dx << endl;
-
           break;
 
         case ADDR_SAHE4:
           base_addr_input = to_int32(buf);
 
-          //cout << "base addres dram: " << base_addr_input << endl;
-
           break;
 
         case ADDR_SAHE3:
           row_capacity_bram = to_int32(buf);
-
-          //cout << "row_capacity: " << row_capacity_bram << endl;
 
           break;
 
@@ -134,16 +74,8 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           cycle_num_in = (sahe2 & 0xFC0000) >> 18;
           cycle_num_out = (sahe2 & 0x3F000000) >> 24;
 
-            /*cout << "effective row limit: " << effective_row_limit << endl;
-            cout << "cycle_num_in: " << cycle_num_in << endl;
-            cout << "cycle_num_out: " << cycle_num_out << endl;
-            cout << "width4: " << width_4 << endl;*/
-
-
           break;
 
-        //case ADDR_START:
-        //  start = to_int(buf);
         case ADDR_SAHE1:
             dram_row_ptr = 0;
             dram_row_ptr_xy = 0;
@@ -157,10 +89,6 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
 
             write_filter(ADDR_WIDTH, width, offset);
             write_filter(ADDR_HEIGHT, height, offset);
-
-            /*cout << "width: " << width << endl;
-            cout << "height: " << height << endl;
-            cout << "width_2: " << width_2 << endl;*/
   
           if(width > BRAM_WIDTH) {
               pl.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);

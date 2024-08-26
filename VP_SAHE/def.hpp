@@ -27,16 +27,6 @@
 #define ADDR_RESET 0x18
 #define ADDR_CONFIG 0x1c
 
-/*#define ADDR_WIDTH_2 0x20
-#define ADDR_WIDTH_4 0x24
-#define ADDR_CYCLE_NUM_IN 0x28
-#define ADDR_CYCLE_NUM_OUT 0x2c
-#define ADDR_DRAM_IN 0x30
-#define ADDR_DRAM_X 0x34
-#define ADDR_DRAM_Y 0x38
-#define ADDR_ROWS_IN_BRAM 0x3c
-#define ADDR_BRAM_HEIGHT 0x40*/
-
 #define ADDR_SAHE1 0x20
 #define ADDR_SAHE2 0x24
 #define ADDR_SAHE3 0x28

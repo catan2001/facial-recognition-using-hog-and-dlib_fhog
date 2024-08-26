@@ -208,21 +208,6 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
     write_hard(ADDR_RESET, 1, offset);
 
     int accumulated_loss = (ceil((rows+2)/(BRAM_HEIGHT*floor(BRAM_WIDTH/(cols+2))))-1)*4;
-    //configure hardware registers and send start command:
-    /*write_hard(ADDR_WIDTH, cols+2, offset);
-    write_hard(ADDR_WIDTH_2, floor(cols/2)+1, offset);
-    write_hard(ADDR_WIDTH_4, floor((cols+2)/4), offset);
-    write_hard(ADDR_HEIGHT, rows+2, offset);
-    write_hard(ADDR_BRAM_HEIGHT, BRAM_HEIGHT, offset);
-
-    write_hard(ADDR_CYCLE_NUM_IN, floor(BRAM_WIDTH/(cols+2)), offset);
-    write_hard(ADDR_ROWS_IN_BRAM, floor(BRAM_WIDTH/(cols+2))*BRAM_HEIGHT, offset);
-    write_hard(ADDR_CYCLE_NUM_OUT, floor(BRAM_WIDTH/cols), offset);
-    write_hard(ADDR_EFFECTIVE_ROW_LIMIT, floor((rows+2)/PTS_PER_COL)*PTS_PER_COL + accumulated_loss, offset);
-
-    write_hard(ADDR_DRAM_IN, 0, offset);
-    write_hard(ADDR_DRAM_X, (cols+2)*(rows+2), offset);
-    write_hard(ADDR_DRAM_Y, (cols+2)*(rows+2), offset);*/
 
     //SAHE6:
     u32_t sahe6 = (cols+2)*(rows+2);
@@ -262,13 +247,15 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
     u32_t sahe1 =  (width_2 << 22) | (picture_height << 11) | (picture_width << 1) | start;
 
     write_hard(ADDR_SAHE1, sahe1, offset);
-    //write_hard(ADDR_START, 1, offset);
 
     int ready = 1;
     while(ready){
         ready = read_hard(ADDR_STATUS, offset);
     }
-    write_hard(ADDR_START, 0, offset);
+    
+    start = 0;
+    sahe1 =  (width_2 << 22) | (picture_height << 11) | (picture_width << 1) | start;
+    write_hard(ADDR_SAHE1, sahe1, offset);
 
     while(!ready){
         ready = read_hard(ADDR_STATUS, offset);
