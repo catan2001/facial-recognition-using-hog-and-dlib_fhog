@@ -1,11 +1,27 @@
-all: main
+#	Usage:
+#	make - compiles all binary
+#	make run - runs the program
+#	make clean - remove all binaries and objects
 
-# main: main.cpp generator.cpp generator.hpp memory.cpp memory.hpp top.cpp top.hpp utils.cpp utils.hpp conv.cpp conv.hpp
-# 	g++ -I/opt/systemc/include -L/opt/systemc/lib-linux64 -lsystemc -o main main.cpp generator.cpp memory.cpp top.cpp utils.cpp conv.cpp
+CC = "g++"
 
-main: main.cpp bram.cpp hw.cpp interconnect.cpp sw.cpp utils.cpp VP.cpp bram_ctrl.cpp dram.cpp bram_out.cpp dram_ctrl.cpp
-	g++ -std=c++11 -DSC_INCLUDE_FX -I/opt/systemc/include -L/opt/systemc/lib-linux64 -lsystemc -o main main.cpp bram.cpp hw.cpp interconnect.cpp sw.cpp utils.cpp VP.cpp bram_ctrl.cpp dram.cpp bram_out.cpp dram_ctrl.cpp
+SOURCE_CPP=$(wildcard *.cpp)
+SOURCE_HPP=$(wildcard *.hpp)
 
-.PHONY: clean
-clean:
-	rm main
+MAIN_TARGET=main*.cpp
+TARGET=$(patsubst %.cpp,%,$(wildcard main*.cpp))
+
+.PHONY: all clean
+
+all: $(TARGET)
+$(TARGET): $(SOURCE_CPP) $(SOURCE_HPP)
+	@echo "compiling..."
+	$(CC) -std=c++17 -I ${SYSTEMC}/include -L${SYSTEMC}/lib-linux64 -lsystemc -lm -DSC_INCLUDE_FX -o $@ *.cpp
+	
+run: $(TARGET)
+	@echo "running VP..."
+	./$(TARGET)
+
+clean: $(TARGET)
+	@echo "cleaning up..."
+	rm $(TARGET)
