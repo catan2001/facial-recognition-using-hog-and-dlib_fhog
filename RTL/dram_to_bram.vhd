@@ -112,7 +112,7 @@ process(state_dram_to_bram_r,  width_2_reg, width_4_reg, height_reg, bram_height
     cycle_num_limit_reg, dram_in_addr_reg, sel_bram_in_reg,
     we_in_reg, i_reg, j_reg, k_reg, dram_row_ptr0_reg, dram_row_ptr1_reg, width_2,
     width_4, height, bram_height, cycle_num_limit, dram_in_addr, dram_row_ptr0, dram_row_ptr1,
-    en_dram_to_bram, en_axi, i_next, j_next, k_next, dram_row_ptr1_next, sel_bram_in_next) 
+    en_dram_to_bram, en_axi, i_next, j_next, dram_row_ptr1_next, sel_bram_in_next) 
 begin
 
 state_dram_to_bram_n <= state_dram_to_bram_r;
@@ -165,9 +165,9 @@ case state_dram_to_bram_r is
         end if;
 
     when loop_dram_to_bram2 =>
-        k_next <= std_logic_vector(unsigned(k_reg) + 2);
         
-        if(k_next = std_logic_vector(resize(unsigned(unsigned(width_2_reg)-4),10))) then  
+        if(k_reg = std_logic_vector(resize(unsigned(unsigned(width_2_reg)-2),10))) then 
+            k_next <= (others => '0'); 
             dram_row_ptr0_next <= std_logic_vector(unsigned(dram_row_ptr0_reg) + 2);
             dram_row_ptr1_next <= std_logic_vector(unsigned(dram_row_ptr1_reg) + 2);
             sel_bram_in_next <= std_logic_vector(unsigned(sel_bram_in_reg) + 1);
@@ -186,16 +186,21 @@ case state_dram_to_bram_r is
       
                 if(std_logic_vector(resize(unsigned(j_next),5)) = bram_height_reg) then
                     i_next <= std_logic_vector(unsigned(i_reg) + 1);
+                    we_in_next <= X"0000000F";
                     if(std_logic_vector(resize(unsigned(i_next),6)) = cycle_num_limit_reg) then 
                         state_dram_to_bram_n <= end_dram_to_bram;
                     else
                         j_next <= (others => '0');
-                        state_dram_to_bram_n <= loop_dram_to_bram1;
+                        dram_addr0_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr0_reg)*unsigned(width_4_reg),32));
+                        dram_addr1_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr1_reg)*unsigned(width_4_reg),32));
                     end if;
                 else
-                    state_dram_to_bram_n <= loop_dram_to_bram1;
+                    dram_addr0_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr0_reg)*unsigned(width_4_reg),32));
+                    dram_addr1_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr1_reg)*unsigned(width_4_reg),32));
                 end if;
-            end if;      
+            end if;    
+        else
+            k_next <= std_logic_vector(unsigned(k_reg) + 2);  
         end if;
 
     when end_dram_to_bram =>
@@ -206,7 +211,7 @@ end process;
 
 --dodaj signale
 we_in <= we_in_reg;
-sel_bram_in <= sel_bram_in_next;
+sel_bram_in <= sel_bram_in_reg;
 i <= i_reg;
 k <= k_reg;
 dram_addr0 <= dram_addr0_s;

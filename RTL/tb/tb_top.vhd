@@ -57,7 +57,7 @@ component top is
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
     rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
-    effective_row_limit: in std_logic_vector(11 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
+    effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
     
     burst_len_read: out std_logic_vector(7 downto 0);
     burst_len_write: out std_logic_vector(7 downto 0);
@@ -94,7 +94,7 @@ signal dram_y_addr_s: std_logic_vector(31 downto 0); --height*width+(height-2)*(
 signal cycle_num_limit_s: std_logic_vector(5 downto 0); --2*bram_width/width
 signal cycle_num_out_s: std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
 signal rows_num_s: std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
-signal effective_row_limit_s: std_logic_vector(11 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
+signal effective_row_limit_s: std_logic_vector(9 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
 
 signal burst_len_read_s: std_logic_vector(7 downto 0);
 signal burst_len_write_s: std_logic_vector(7 downto 0);
@@ -194,13 +194,14 @@ port map(
         variable c: integer := 0;
     begin
         reset_s <= '1', '0' after 55ns;
-        start_s <= '1', '0' after 175ns;
+        start_s <= '0', '1' after 125ns, '0' after 165ns;
+        en_axi_s <= '1';
         --data_in_s(0) <= dram(0)(0)&dram(0)(1)&dram(0)(2)&dram(0)(3), dram(2)(0)&dram(2)(1)&dram(2)(2)&dram(2)(3) after 15ns, dram(4)(0)&dram(4)(1)&dram(4)(2)&dram(4)(3) after 30ns; 
         --data_in_s(1) <= dram(1)(0)&dram(1)(1)&dram(1)(2)&dram(1)(3), dram(3)(0)&dram(3)(1)&dram(3)(2)&dram(3)(3) after 15ns, dram(5)(0)&dram(5)(1)&dram(5)(2)&dram(5)(3) after 30ns; 
-        for c in 0 to 2 loop
+        for c in 0 to 4 loop
             data_in_s(0) <= x"0000000000000000"; 
             data_in_s(1) <= x"0000000000000000";
-                                en_axi_s <= '1';
+                               
                     width_s <= "0010011000";
                     width_4_s <= "00100110";
                     width_2_s <= "001001100";
@@ -212,7 +213,7 @@ port map(
                     cycle_num_limit_s <= "001101";
                     cycle_num_out_s <= "001101";
                     rows_num_s <= "0011010111";
-                    effective_row_limit_s <= "000010011000";
+                    effective_row_limit_s <= "0010011000";
             --en_axi_s <= '1';
             wait until rising_edge(clk_s);
         end loop;
@@ -221,7 +222,7 @@ port map(
                 for b in 0 to 37 loop
                     data_in_s(0) <= dram(2*a)(4*b)&dram(2*a)(4*b+1)&dram(2*a)(4*b+2)&dram(2*a)(4*b+3); 
                     data_in_s(1) <= dram(2*a+1)(4*b)&dram(2*a+1)(4*b+1)&dram(2*a+1)(4*b+2)&dram(2*a+1)(4*b+3);
-                    en_axi_s <= '1';
+                    --en_axi_s <= '1';
                     width_s <= "0010011000";
                     width_4_s <= "00100110";
                     width_2_s <= "001001100";
@@ -233,7 +234,7 @@ port map(
                     cycle_num_limit_s <= "001101";
                     cycle_num_out_s <= "001101";
                     rows_num_s <= "0011010111";
-                    effective_row_limit_s <= "000010011000";
+                    effective_row_limit_s <= "0010011000";
                 wait until rising_edge(clk_s);
                 end loop;
             end loop;  

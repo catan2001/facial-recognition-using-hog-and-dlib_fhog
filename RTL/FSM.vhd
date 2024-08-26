@@ -13,7 +13,7 @@ entity FSM is
   
   cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
   rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
-  effective_row_limit: in std_logic_vector(11 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
+  effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
   
   start: in std_logic;
   
@@ -48,7 +48,7 @@ signal sel_filter_fsm_reg, sel_filter_fsm_next: std_logic_vector(2 downto 0);
 
 signal cycle_num_limit_reg, cycle_num_limit_next: std_logic_vector(5 downto 0);
 signal rows_num_reg, rows_num_next: std_logic_vector(9 downto 0); 
-signal effective_row_limit_reg, effective_row_limit_next: std_logic_vector(11 downto 0);
+signal effective_row_limit_reg, effective_row_limit_next: std_logic_vector(9 downto 0);
 
 signal x_reg, x_next: std_logic_vector(9 downto 0);
 signal cycle_num_reg, cycle_num_next: std_logic_vector(5 downto 0); 
