@@ -58,6 +58,10 @@ void BramCtrl::b_transport(pl_t &pl, sc_core::sc_time &offset)
           write_filter(ADDR_HEIGHT, height, offset);
           break;
 
+        case ADDR_BRAM_HEIGHT:
+          bram_height = to_int(buf);
+          break;
+
         case ADDR_EFFECTIVE_ROW_LIMIT:
           effective_row_limit = to_int(buf);
           break;
@@ -186,7 +190,7 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
 
     for(int i = 0; i <= effective_row_limit; i+=PTS_PER_COL){ //the number of times we will repeat a single cycle
         
-      cycle_number = ((int)i/BRAM_HEIGHT)%((int)(BRAM_WIDTH/width)); 
+      cycle_number = ((int)i/BRAM_HEIGHT)%cycle_num_in; 
       bram_block_ptr = i%BRAM_HEIGHT;
 
       if(cycle_number == (cycle_num_in-1) && (bram_block_ptr == 12)){
@@ -198,7 +202,7 @@ void BramCtrl::control_logic(sc_core::sc_time &offset){
           //row_capacity_bram - 1 -> the number of rows that will fit into BRAM
           // divide by four and floor before multiplying by four to get the last divisible int number by 4 until 127
           //multiply by two because of x and y
-          dram_row_ptr_xy = (floor((row_capacity_bram - 1)/4))*4*2*(counter_init-1);
+          dram_row_ptr_xy = (floor((row_capacity_bram - 1)/4))*8*(counter_init-1);
 
           i+=(BRAM_HEIGHT-bram_block_ptr);
          

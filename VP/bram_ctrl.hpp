@@ -53,6 +53,7 @@ public:
 
     u16_t width_2;
     u16_t width_4;
+    u16_t bram_height;
     u16_t cycle_num_in;
     u16_t cycle_num_out;
 

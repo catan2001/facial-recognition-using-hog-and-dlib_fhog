@@ -213,6 +213,7 @@ void SW::extract_hog(int rows, int cols, double *im, double *hog) {
     write_hard(ADDR_WIDTH_2, floor(cols/2)+1, offset);
     write_hard(ADDR_WIDTH_4, floor((cols+2)/4), offset);
     write_hard(ADDR_HEIGHT, rows+2, offset);
+    write_hard(ADDR_BRAM_HEIGHT, BRAM_HEIGHT, offset);
 
     write_hard(ADDR_CYCLE_NUM_IN, floor(BRAM_WIDTH/(cols+2)), offset);
     write_hard(ADDR_ROWS_IN_BRAM, floor(BRAM_WIDTH/(cols+2))*BRAM_HEIGHT, offset);
