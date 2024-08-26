@@ -33,7 +33,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity demux1_4 is
     generic(WIDTH:natural:=32);
-    Port (sel: in std_logic_vector(1 downto 0);
+    Port (sel: in std_logic_vector(2 downto 0);
           x: in std_logic_vector(WIDTH-1 downto 0);
           y0: out std_logic_vector(WIDTH-1 downto 0);
           y1: out std_logic_vector(WIDTH-1 downto 0);
@@ -48,11 +48,11 @@ begin
 demux:process(sel, x)
 begin
     case sel is 
-    when "00" =>
+    when "000" =>
         y0 <= x;
-    when "01" =>
+    when "001" =>
         y1 <= x;
-    when "10" =>
+    when "010" =>
         y2 <= x;
     when others =>
         y3 <= x;

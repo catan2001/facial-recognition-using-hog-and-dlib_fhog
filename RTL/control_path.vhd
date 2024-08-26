@@ -36,7 +36,7 @@ entity control_path is
     we_in: out std_logic_vector(31 downto 0);
     we_out: out std_logic_vector(15 downto 0); 
     burst_len_read: out std_logic_vector(7 downto 0);
-    burst_len_write: out std_logic_vector(7 downto 0);
+    burst_len_write: out std_logic_vector(7 downto 0); --bram to dram
     
     --control logic
     sel_filter: out std_logic_vector(2 downto 0);
@@ -113,9 +113,9 @@ signal width_reg, width_next: std_logic_vector(9 downto 0);
 signal width_2_reg, width_2_next: std_logic_vector(8 downto 0);
 signal width_4_reg, width_4_next: std_logic_vector(7 downto 0);
 signal height_reg, height_next: std_logic_vector(10 downto 0);
+signal bram_height_reg, bram_height_next: std_logic_vector(3 downto 0);
 signal rows_num_reg, rows_num_next: std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
 signal effective_row_limit_reg, effective_row_limit_next: std_logic_vector(9 downto 0); --(height/PTS_PER_ROW)/accumulated_loss
-signal bram_height_reg, bram_height_next: std_logic_vector(3 downto 0);
 signal cycle_num_limit_reg, cycle_num_limit_next: std_logic_vector(5 downto 0);
 signal cycle_num_out_reg, cycle_num_out_next: std_logic_vector(5 downto 0);
 signal dram_in_addr_reg, dram_in_addr_next: std_logic_vector(31 downto 0);

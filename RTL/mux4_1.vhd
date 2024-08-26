@@ -37,7 +37,7 @@ entity mux4_1 is
           x1: in std_logic_vector(WIDTH-1 downto 0);
           x2: in std_logic_vector(WIDTH-1 downto 0);
           x3: in std_logic_vector(WIDTH-1 downto 0);
-          sel: in std_logic_vector(1 downto 0);
+          sel: in std_logic_vector(2 downto 0);
           y: out std_logic_vector(WIDTH-1 downto 0));
 end mux4_1;
 
@@ -48,11 +48,11 @@ begin
 mux: process(sel, x0, x1, x2, x3)
 begin
     case sel is
-    when "00" =>
+    when "000" =>
         y <= x0;
-    when "01" =>
+    when "001" =>
         y <= x1;
-    when "10" =>
+    when "010" =>
         y <= x2;
     when others =>
         y <= x3;
