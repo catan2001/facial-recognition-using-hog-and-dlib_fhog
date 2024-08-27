@@ -198,7 +198,7 @@ port map(
         en_axi_s <= '1';
         --data_in_s(0) <= dram(0)(0)&dram(0)(1)&dram(0)(2)&dram(0)(3), dram(2)(0)&dram(2)(1)&dram(2)(2)&dram(2)(3) after 15ns, dram(4)(0)&dram(4)(1)&dram(4)(2)&dram(4)(3) after 30ns; 
         --data_in_s(1) <= dram(1)(0)&dram(1)(1)&dram(1)(2)&dram(1)(3), dram(3)(0)&dram(3)(1)&dram(3)(2)&dram(3)(3) after 15ns, dram(5)(0)&dram(5)(1)&dram(5)(2)&dram(5)(3) after 30ns; 
-        for c in 0 to 4 loop
+        for c in 0 to 3 loop
             data_in_s(0) <= x"0000000000000000"; 
             data_in_s(1) <= x"0000000000000000";
                                

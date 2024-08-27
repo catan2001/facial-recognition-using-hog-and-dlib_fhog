@@ -36,8 +36,7 @@ architecture Behavioral of dram_to_bram is
 
 --states dram to bram
 type state_dram_to_bram_t is 
-    (loop_dram_to_bram0, loop_dram_to_bram1, loop_dram_to_bram2, 
-     end_dram_to_bram, loop_dram_to_bram_axi);
+    (loop_dram_to_bram0, loop_dram_to_bram1, end_dram_to_bram, loop_dram_to_bram_axi);
 signal state_dram_to_bram_r, state_dram_to_bram_n : state_dram_to_bram_t;
 
 signal width_2_reg, width_2_next: std_logic_vector(8 downto 0);
@@ -149,22 +148,19 @@ case state_dram_to_bram_r is
             i_next <= (others => '0');
             sel_bram_in_next <= (others => '0');
             j_next <= (others => '0');
+            dram_addr0_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr0_reg)*unsigned(width_4_reg),32));
+            dram_addr1_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr1_reg)*unsigned(width_4_reg),32));
             state_dram_to_bram_n <= loop_dram_to_bram1;
         end if;
-
-    when loop_dram_to_bram1 =>
-        dram_addr0_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr0_reg)*unsigned(width_4_reg),32));
-        dram_addr1_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr1_reg)*unsigned(width_4_reg),32));
-        state_dram_to_bram_n <= loop_dram_to_bram_axi;
-
+ 
     when loop_dram_to_bram_axi=>
         if(en_axi = '1') then
             k_next <= (others => '0');
             we_in_next <= X"0000000F"; 
-            state_dram_to_bram_n <= loop_dram_to_bram2;
+            state_dram_to_bram_n <= loop_dram_to_bram1;
         end if;
 
-    when loop_dram_to_bram2 =>
+    when loop_dram_to_bram1 =>
         
         if(k_reg = std_logic_vector(resize(unsigned(unsigned(width_2_reg)-2),10))) then 
             k_next <= (others => '0'); 
