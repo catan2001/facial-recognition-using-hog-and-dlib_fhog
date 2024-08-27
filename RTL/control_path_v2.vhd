@@ -119,7 +119,7 @@ component dram_to_bram is
     --out signals
     we_in: out std_logic_vector(31 downto 0);
     sel_bram_in: out std_logic_vector(3 downto 0);
-    i: out std_logic_vector(4 downto 0);
+    i: out std_logic_vector(5 downto 0);
     k: out std_logic_vector(9 downto 0);
     dram_addr0: out std_logic_vector(31 downto 0);
     dram_addr1: out std_logic_vector(31 downto 0);
@@ -163,7 +163,7 @@ component DSP_addr_A0
   Port ( 
     clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
-    a: in std_logic_vector(4 downto 0); --i
+    a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
     c: in std_logic_vector(9 downto 0); --k
     d: in std_logic_vector(8 downto 0); --row_position
@@ -179,7 +179,7 @@ component DSP_addr_B0
   Port ( 
     clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
-    a: in std_logic_vector(4 downto 0); --i
+    a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
     c: in std_logic_vector(9 downto 0); --k
     d: in std_logic_vector(8 downto 0); --row_position
@@ -195,7 +195,7 @@ component DSP_addr_AX
   Port ( 
     clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
-    a: in std_logic_vector(4 downto 0); --i
+    a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
     c: in std_logic_vector(9 downto 0); --k
     d: in std_logic_vector(8 downto 0); --row_position
@@ -209,7 +209,7 @@ component DSP_addr_BX
   Port (     
     clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
-    a: in std_logic_vector(4 downto 0); --i
+    a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
     c: in std_logic_vector(9 downto 0); --k
     d: in std_logic_vector(8 downto 0); --row_position
@@ -225,7 +225,7 @@ signal en_dram_to_bram_s: std_logic;
 signal dram_row_ptr0_s: std_logic_vector(10 downto 0);
 signal dram_row_ptr1_s: std_logic_vector(10 downto 0); 
 signal dram_to_bram_finished_s: std_logic; 
-signal i_s: std_logic_vector(4 downto 0);
+signal i_s: std_logic_vector(5 downto 0);
 signal k_s: std_logic_vector(9 downto 0);
 
 --control logic

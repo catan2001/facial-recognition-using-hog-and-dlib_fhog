@@ -81,7 +81,7 @@ if(rising_edge(clk)) then
         we_out_reg <= (others => '0');
         
         ready_reg <= '0';
-        start_reg <= '0';
+        --start_reg <= '0';
 
         x_reg <= (others => '0');
         cycle_num_reg <= (others => '0');
@@ -94,7 +94,7 @@ if(rising_edge(clk)) then
         cycle_num_limit_reg <= cycle_num_limit_next;
         effective_row_limit_reg <= effective_row_limit_next;
         ready_reg <= ready_next;
-        start_reg <= start_next;
+        --start_reg <= start_next;
 
         sel_filter_fsm_reg <= sel_filter_fsm_next;
         sel_bram_out_fsm_reg <= sel_bram_out_fsm_next;
@@ -113,7 +113,8 @@ end process;
 process(state_r, rows_num_reg, cycle_num_limit_reg, effective_row_limit_reg, sel_filter_fsm_reg, sel_bram_out_fsm_reg,
         sel_bram_addr_reg, x_reg, cycle_num_reg, cnt_init_reg, we_out_reg, rows_num, cycle_num_limit, effective_row_limit,
         start, dram_to_bram_finished, cycle_num_next, bram_to_dram_finished, pipe_finished, x_next,
-        ready_reg, start_reg, start_next) 
+        ready_reg)
+        --start_reg, start_next 
 begin
 
 state_n  <= state_r;    
@@ -122,7 +123,7 @@ rows_num_next <= rows_num_reg;
 cycle_num_limit_next <= cycle_num_limit_reg;
 effective_row_limit_next <= effective_row_limit_reg;
 ready_next <= ready_reg;
-start_next <= start_reg;
+--start_next <= start_reg;
 
 sel_filter_fsm_next <= sel_filter_fsm_reg;
 sel_bram_out_fsm_next <= sel_bram_out_fsm_reg;
@@ -138,17 +139,19 @@ case state_r is
         rows_num_next <= rows_num;
         cycle_num_limit_next <= cycle_num_limit;
         effective_row_limit_next <= effective_row_limit;
-        start_next <= start;
+        --start_next <= start;
         
         ready_next <= '1';
         x_next <= (others => '0');
-        if(start_next = '1') then
+        if(start = '1') then
             state_n <= dr2br;
         end if;
         
     when dr2br =>
         sel_bram_addr_next <= '0';
         en_dram_to_bram_s <= '1';
+        dram_row_ptr0_s <= (others => '0');
+        dram_row_ptr1_s <= "00000000001";
         
         if(dram_to_bram_finished = '1') then
             x_next <= (others => '0');
@@ -187,7 +190,7 @@ case state_r is
         x_next <= std_logic_vector(unsigned(x_reg)+4);
         en_pipe_s <= '1';
         if(pipe_finished = '1' and std_logic_vector(resize(unsigned(x_next),12)) = effective_row_limit_reg) then
-            en_pipe_s <= '1';
+            en_pipe_s <= '0';
             state_n <= br2dr;
         elsif(pipe_finished = '1') then
             en_pipe_s <= '0';
