@@ -160,8 +160,6 @@ case state_r is
         end if;
       
     when ctrl_loop =>
-        sel_bram_addr_next <= '1'; 
-        cycle_num_next <= x_reg(9 downto 4);
         if(cycle_num_next = std_logic_vector(unsigned(cycle_num_limit_reg)-1) and x_reg = std_logic_vector(resize(unsigned(std_logic_vector(12*unsigned(cycle_num_next))),10))) then  
             dram_row_ptr0_s <= std_logic_vector(resize(unsigned(std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_reg))),11));
             dram_row_ptr1_s <= std_logic_vector(resize(unsigned(std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_reg) + 1)),11));
@@ -172,6 +170,8 @@ case state_r is
             sel_bram_out_fsm_next <= (others => '0');
             state_n <= reint;
         else
+            sel_bram_addr_next <= '1'; 
+            cycle_num_next <= x_reg(9 downto 4);
             state_n <= pipe;
         end if;
         
@@ -189,10 +189,10 @@ case state_r is
         we_out_next <= X"000F";
         x_next <= std_logic_vector(unsigned(x_reg)+4);
         en_pipe_s <= '1';
-        if(pipe_finished = '1' and std_logic_vector(resize(unsigned(x_next),12)) = effective_row_limit_reg) then
+        if(pipe_finished = '1' and x_reg = effective_row_limit_reg) then
             en_pipe_s <= '0';
             state_n <= br2dr;
-        elsif(pipe_finished = '1') then
+        elsif(pipe_finished = '1' and x_reg /= effective_row_limit_reg) then
             en_pipe_s <= '0';
             state_n <= ctrl_loop;
         end if;

@@ -80,8 +80,6 @@ if(rising_edge(clk)) then
         dram_row_ptr0_reg <= (others => '0');
         dram_row_ptr1_reg <= "00000000001"; 
         
-        --dram_to_bram_finished_s <= '0';
- 
     else
         state_dram_to_bram_r <= state_dram_to_bram_n;
 
@@ -163,13 +161,13 @@ case state_dram_to_bram_r is
         
         if(k_reg = std_logic_vector(resize((unsigned(width_2_reg)-2),10))) then 
             k_next <= (others => '0'); 
-            dram_row_ptr0_next <= std_logic_vector(unsigned(dram_row_ptr0_reg) + 2);
-            dram_row_ptr1_next <= std_logic_vector(unsigned(dram_row_ptr1_reg) + 2);
            
-            if(dram_row_ptr1_next = height_reg) then 
+            if(dram_row_ptr1_reg = std_logic_vector(unsigned(height_reg)-1)) then 
+                we_in_next <= (others => '0');
                 state_dram_to_bram_n <= end_dram_to_bram;
             else
-    
+                dram_row_ptr0_next <= std_logic_vector(unsigned(dram_row_ptr0_reg) + 2);
+                dram_row_ptr1_next <= std_logic_vector(unsigned(dram_row_ptr1_reg) + 2);
                 if(sel_bram_in_reg = "0111") then
                     sel_bram_in_next <= (others => '0');
                     we_in_next <= X"0000000F";
@@ -182,6 +180,7 @@ case state_dram_to_bram_r is
                     i_next <= std_logic_vector(unsigned(i_reg) + 1);
                     --we_in_next <= X"0000000F";
                     if(i_next = cycle_num_limit_reg) then 
+                        we_in_next <= (others => '0');
                         state_dram_to_bram_n <= end_dram_to_bram;
                     else
                         j_next <= (others => '0');
@@ -199,7 +198,6 @@ case state_dram_to_bram_r is
         end if;
 
     when end_dram_to_bram =>
-        we_in_next <= (others => '0');
         dram_to_bram_finished_s <= '1';
 end case;
 end process;

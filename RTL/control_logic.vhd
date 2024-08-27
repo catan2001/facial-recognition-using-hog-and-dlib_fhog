@@ -79,8 +79,7 @@ end process;
 
 process(state_control_logic_r, width_2, sel_filter_reg, sel_bram_out_reg,
         row_position_reg, cycle_num_reg, cnt_init_reg, width_2_reg, sel_filter_fsm, 
-        row_position_next, sel_filter_next, sel_bram_out_next, cycle_num, sel_bram_out_fsm, 
-        en_pipe)
+        cycle_num, sel_bram_out_fsm, en_pipe)
 begin
 
 state_control_logic_n <= state_control_logic_r;
@@ -109,23 +108,25 @@ case state_control_logic_r is
     end if;
 
     when loop_row =>
-        bram_output_xy_addr_s <= std_logic_vector(resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg)-1)+shift_right(unsigned(row_position_reg),1),10));
-        row_position_next <= std_logic_vector(unsigned(row_position_reg)+2);
         
-        if(row_position_next = std_logic_vector(unsigned(width_2_reg)-1)) then 
-            sel_filter_next <= std_logic_vector(unsigned(sel_filter_reg) + 1);
+        if(row_position_reg = std_logic_vector(unsigned(width_2_reg)-2)) then 
             
-            if(sel_filter_next = "100") then
+            if(sel_filter_reg = "011") then
                 sel_filter_next <= (others => '0');
+            else
+                sel_filter_next <= std_logic_vector(unsigned(sel_filter_reg) + 1);
             end if;    
             
-            sel_bram_out_next <= std_logic_vector(unsigned(sel_bram_out_reg) + 1);
-            
-            if(sel_bram_out_next = "100") then
+            if(sel_bram_out_reg = "011") then
                 sel_bram_out_next <= (others => '0');
+            else
+                sel_bram_out_next <= std_logic_vector(unsigned(sel_bram_out_reg) + 1);
             end if;
             
             pipe_finished_s <= '1';
+        else
+            row_position_next <= std_logic_vector(unsigned(row_position_reg)+2);
+            bram_output_xy_addr_s <= std_logic_vector(resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg)-1)+shift_right(unsigned(row_position_reg),1),10));
         end if;
 
 end case;
