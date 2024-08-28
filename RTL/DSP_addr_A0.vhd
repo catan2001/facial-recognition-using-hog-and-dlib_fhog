@@ -23,10 +23,12 @@ attribute use_dsp : string;
 attribute use_dsp of Behavioral : architecture is "yes";
 
 signal mux_out1: std_logic_vector(5 downto 0);
-signal mux_out2, reg_mux_out2: std_logic_vector(9 downto 0);
+signal mux_out2: std_logic_vector(9 downto 0);
+--signal reg_mux_out2: std_logic_vector(9 downto 0):=(others => '0');
 signal mux_const: std_logic_vector(1 downto 0);
 
-signal mult_out, reg_mult: std_logic_vector(14 downto 0);
+signal mult_out: std_logic_vector(14 downto 0);
+--signal reg_mult: std_logic_vector(14 downto 0):=(others => '0');
 signal adder_out: std_logic_vector(14 downto 0);
 signal increment: std_logic_vector(5 downto 0);
 
@@ -43,7 +45,7 @@ end process;
 
 process(sel_filter, const1, const2)
 begin
-    if(sel_filter = "0011") then
+    if(sel_filter = "011") then
         mux_const <= const1;
     else
         mux_const <= const2; 
@@ -62,21 +64,21 @@ end process;
 increment <= std_logic_vector(unsigned(mux_out1)+resize(unsigned(mux_const),6));
 mult_out <= std_logic_vector(unsigned(width_2) * unsigned(increment));
 
-process(clk)
-begin
-    if rising_edge(clk) then
-        reg_mult <= mult_out;
-        reg_mux_out2 <= mux_out2;
-    end if; 
-end process;
+--process(clk)
+--begin
+--    if rising_edge(clk) then
+--        reg_mult <= mult_out;
+--        reg_mux_out2 <= mux_out2;
+--    end if; 
+--end process;
 
-adder_out <= std_logic_vector(unsigned(reg_mult) + resize(unsigned(reg_mux_out2),15));
+adder_out <= std_logic_vector(unsigned(mult_out) + resize(unsigned(mux_out2),15));
 
-reg_out: process(clk) is
-begin
-if(rising_edge(clk)) then
+--reg_out: process(clk) is
+--begin
+--if(rising_edge(clk)) then
     res <= std_logic_vector(resize(unsigned(adder_out),10));
-end if;
-end process;
+--end if;
+--end process;
 
 end Behavioral;

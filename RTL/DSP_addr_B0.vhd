@@ -43,7 +43,7 @@ end process;
 
 process(sel_filter, const1, const2)
 begin
-    if(sel_filter = "0011") then
+    if(sel_filter = "011") then
         mux_const <= const1;
     else
         mux_const <= const2; 
@@ -63,22 +63,22 @@ increment1 <= std_logic_vector(unsigned(mux_out1)+resize(unsigned(mux_const),6))
 increment2 <= std_logic_vector(unsigned(mux_out2) + resize(unsigned(const1),10));
 mult_out <= std_logic_vector(unsigned(width_2) * unsigned(increment1));
 
-process(clk)
-begin
-    if rising_edge(clk) then
-        reg_mult <= mult_out;
-        reg_increment2 <= increment2;
-    end if; 
-end process;
+--process(clk)
+--begin
+--    if rising_edge(clk) then
+--        reg_mult <= mult_out;
+--        reg_increment2 <= increment2;
+--    end if; 
+--end process;
 
-adder_out <= std_logic_vector(unsigned(reg_mult) + resize(unsigned(reg_increment2),15));
+adder_out <= std_logic_vector(unsigned(mult_out) + resize(unsigned(increment2),15));
 
-reg_out: process(clk) is
-begin
-if(rising_edge(clk)) then
+--reg_out: process(clk) is
+--begin
+--if(rising_edge(clk)) then
     res <= std_logic_vector(resize(unsigned(adder_out),10));
-end if;
-end process;
+--end if;
+--end process;
 
 
 end Behavioral;
