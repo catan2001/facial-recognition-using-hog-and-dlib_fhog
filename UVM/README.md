@@ -125,6 +125,97 @@ In summary:
 
 Together, these components create a flexible and powerful UVM testbench capable of verifying complex DUTs.
 
+## Call Hierarchy
+
+In the UVM testbench for the AXI Lite protocol, understanding the sequence of calls between components is essential to grasp how the testbench drives, observes, and verifies the Design Under Test (DUT). Here's a detailed explanation of the flow, outlining who calls who and when, step by step:
+
+### 1. **Top-Level Module**
+
+- **Who and When**: The top-level module starts the simulation by invoking the UVM test environment.
+- **What Happens**: 
+  - The DUT is instantiated and connected to the UVM testbench via the virtual interface.
+  - The UVM test is started using the `run_test()` call, which kicks off the UVM run-time phases.
+
+### 2. **UVM Test**
+
+- **Who and When**: The test is started by the UVM run-time environment as soon as `run_test()` is called in the top-level module.
+- **What Happens**:
+  - **Build Phase**: The test creates and configures the UVM environment. It instantiates the environment, which in turn builds all its sub-components (sequencer, driver, monitor, etc.).
+  - **Run Phase**: The test triggers the execution of sequences by starting the sequence on the sequencer. It calls `seq.start(env.sequencer)` to initiate the sequence.
+
+### 3. **UVM Environment**
+
+- **Who and When**: The environment is instantiated and configured during the build phase of the test.
+- **What Happens**:
+  - **Build Phase**: It instantiates all the required components (driver, monitor, sequencer).
+  - **Connect Phase**: It connects the ports of the sequencer, driver, and monitor to ensure proper communication between them.
+  
+### 4. **UVM Sequence**
+
+- **Who and When**: The sequence is started by the test during the run phase.
+- **What Happens**:
+  - **Execution**: The sequence generates transactions (sequence items) and sends them to the sequencer.
+  - **Interaction with Sequencer**: It calls methods like `start_item(trans)` and `finish_item(trans)` to send each transaction to the sequencer.
+
+### 5. **UVM Sequencer**
+
+- **Who and When**: The sequencer is part of the environment, connected to the sequence and the driver.
+- **What Happens**:
+  - **Transaction Flow**: It receives transactions from the sequence and queues them for the driver.
+  - **Interaction with Driver**: The sequencer uses the `seq_item_export` to send transactions to the driver, allowing the driver to fetch transactions as needed.
+
+### 6. **UVM Driver**
+
+- **Who and When**: The driver is called by the sequencer when transactions are available.
+- **What Happens**:
+  - **Execution**: The driver fetches transactions from the sequencer’s `seq_item_export` using methods like `get_next_item()`.
+  - **Signal Driving**: It converts the transactions into the appropriate signal-level operations on the DUT’s interface using the virtual interface.
+  - **Completion Notification**: Once a transaction is driven, the driver notifies the sequencer using `item_done()`.
+
+### 7. **UVM Monitor**
+
+- **Who and When**: The monitor operates continuously and passively; it observes the DUT’s signal activity throughout the run phase.
+- **What Happens**:
+  - **Observation**: The monitor captures signal changes on the DUT’s interface.
+  - **Transaction Conversion**: It converts the observed signals back into high-level transactions (similar to sequence items).
+  - **Reporting**: The monitor sends these transactions to other components like the scoreboard via analysis ports.
+
+### 8. **UVM Scoreboard**
+
+- **Who and When**: The scoreboard receives transactions from the monitor as they occur.
+- **What Happens**:
+  - **Comparison**: It compares the observed transactions against expected results, which might come from a reference model or predetermined expected values.
+  - **Error Reporting**: If discrepancies are found, the scoreboard logs errors, helping to identify failures in the DUT’s behavior.
+
+### 9. **UVM Checker (If Used)**
+
+- **Who and When**: Checkers can be called by the monitor, driver, or scoreboard depending on where specific protocol checks are needed.
+- **What Happens**:
+  - **Verification**: Checkers verify specific properties or conditions on the transactions, ensuring protocol compliance or data integrity.
+  - **Error Detection**: They flag errors if any properties or conditions are violated.
+
+### 10. **UVM Coverage (If Used)**
+
+- **Who and When**: Coverage collectors are typically called by the monitor or within the sequence to collect coverage data throughout the simulation.
+- **What Happens**:
+  - **Coverage Collection**: They gather data on which scenarios were exercised, ensuring that the testbench is thorough.
+  - **Analysis**: This data is used to assess the effectiveness of the test and guide additional testing efforts.
+
+### Summary of Flow
+
+1. **Top-Level Module** starts the UVM test.
+2. **UVM Test** creates the environment and starts the sequence.
+3. **UVM Environment** builds and connects components (driver, monitor, sequencer).
+4. **UVM Sequence** generates transactions and interacts with the sequencer.
+5. **UVM Sequencer** passes transactions from the sequence to the driver.
+6. **UVM Driver** drives the transactions as signals on the DUT interface.
+7. **UVM Monitor** observes DUT behavior, converting signals back to transactions.
+8. **UVM Scoreboard** checks the observed transactions against expected outcomes.
+9. **UVM Checker** verifies specific conditions or properties (if used).
+10. **UVM Coverage** collects data on scenario coverage (if used).
+
+This flow ensures a structured approach to verification, allowing systematic generation, driving, observation, and checking of the DUT’s behavior in a controlled and reusable manner.
+
 
 ## Example AXI Lite (short version)
 
