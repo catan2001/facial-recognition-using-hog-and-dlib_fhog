@@ -9,6 +9,7 @@ entity control_logic is
     --reg bank
     width_2: in std_logic_vector(8 downto 0);
     --sig for FSM
+    reinit: in std_logic;
     en_pipe: in std_logic;
     cycle_num: in std_logic_vector(5 downto 0); 
     sel_bram_out_fsm: in std_logic_vector(2 downto 0); 
@@ -41,7 +42,7 @@ signal cycle_num_reg, cycle_num_next: std_logic_vector(5 downto 0);
 signal row_position_reg, row_position_next: std_logic_vector(8 downto 0);
 signal cnt_init_reg, cnt_init_next: std_logic_vector(5 downto 0);
 
-signal pipe_finished_s: std_logic;
+signal pipe_finished_s: std_logic := '0';
 
 begin
 
@@ -79,37 +80,41 @@ end process;
 
 process(state_control_logic_r, width_2, sel_filter_reg, sel_bram_out_reg,
         row_position_reg, cycle_num_reg, cnt_init_reg, width_2_reg, sel_filter_fsm, 
-        cycle_num, sel_bram_out_fsm, en_pipe)
+        cycle_num, sel_bram_out_fsm, en_pipe, reinit)
 begin
 
 state_control_logic_n <= state_control_logic_r;
 
 width_2_next <= width_2_reg;
 
-sel_filter_next <= sel_filter_reg;
-sel_bram_out_next <= sel_bram_out_reg;
+if(reinit = '1') then
+    sel_filter_next <= sel_filter_fsm;
+    sel_bram_out_next <= sel_bram_out_fsm;
+    cycle_num_next <= cycle_num;
+else
+    sel_filter_next <= sel_filter_reg;
+    sel_bram_out_next <= sel_bram_out_reg;
+    cycle_num_next <= cycle_num_reg;
+end if;
 
 row_position_next <= row_position_reg;
-cycle_num_next <= cycle_num_reg;
 cnt_init_next <= cnt_init_reg;
 
 case state_control_logic_r is
 
     when init_loop_row =>
-    width_2_next <= width_2;
     
-    cycle_num_next <= cycle_num;
-    sel_filter_next <= sel_filter_fsm;
-    sel_bram_out_next <= sel_bram_out_fsm;
-        
-    if(en_pipe = '1') then
-        row_position_next <= (others => '0');
-        state_control_logic_n <= loop_row;
-    end if;
-
+        width_2_next <= width_2;
+        pipe_finished_s <= '0';
+            
+        if(en_pipe = '1') then
+            row_position_next <= (others => '0');
+            state_control_logic_n <= loop_row;
+        end if;
+    
     when loop_row =>
         
-        if(row_position_reg = std_logic_vector(unsigned(width_2_reg)-2)) then 
+        if(row_position_reg = std_logic_vector(unsigned(width_2_reg))) then 
             
             if(sel_filter_reg = "011") then
                 sel_filter_next <= (others => '0');
@@ -124,6 +129,7 @@ case state_control_logic_r is
             end if;
             
             pipe_finished_s <= '1';
+            state_control_logic_n <= init_loop_row;
         else
             row_position_next <= std_logic_vector(unsigned(row_position_reg)+2);
             bram_output_xy_addr_s <= std_logic_vector(resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg)-1)+shift_right(unsigned(row_position_reg),1),10));

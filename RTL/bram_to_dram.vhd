@@ -144,6 +144,7 @@ case state_bram_to_dram_r is
                 y_next <= std_logic_vector(unsigned(y_reg)+1);
                 if(y_reg = std_logic_vector(unsigned(cycle_num_out_reg)-1)) then
                     bram_to_dram_finished_s <= '1';
+                    state_bram_to_dram_n <= init_loop_bram_to_dram;
                 else
                     z_next <= (others => '0');
                     sel_dram_next <= (others => '0');

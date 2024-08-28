@@ -84,6 +84,7 @@ component control_logic is
     --reg bank
     width_2: in std_logic_vector(8 downto 0);
     --sig for FSM
+    reinit: in std_logic;
     en_pipe: in std_logic;
     cycle_num: in std_logic_vector(5 downto 0); 
     sel_bram_out_fsm: in std_logic_vector(2 downto 0); --pazi
@@ -111,6 +112,7 @@ component dram_to_bram is
     bram_height: in std_logic_vector(4 downto 0);
     
     --sig for FSM
+    reinit: in std_logic;
     en_dram_to_bram: in std_logic;
     dram_row_ptr0: in std_logic_vector(10 downto 0);
     dram_row_ptr1: in std_logic_vector(10 downto 0); 
@@ -154,6 +156,7 @@ component FSM is
   sel_bram_addr: out std_logic;
   we_out: out std_logic_vector(15 downto 0); 
   
+  reinit: out std_logic;
   en_dram_to_bram: out std_logic;
   en_pipe: out std_logic;
   en_bram_to_dram:out std_logic);
@@ -245,6 +248,7 @@ signal bram_to_dram_finished_s: std_logic;
 signal bram_addr_bram_to_dram_A_s: std_logic_vector(9 downto 0);
 
 --FSM
+signal reinit_s: std_logic;
 signal sel_bram_addr_s: std_logic;
 
 signal const1_s: std_logic_vector(1 downto 0):="01";
@@ -280,6 +284,7 @@ port map(
     bram_height => bram_height,
     
     --sig for FSM
+    reinit => reinit_s,
     en_dram_to_bram => en_dram_to_bram_s,
     dram_row_ptr0 => dram_row_ptr0_s,
     dram_row_ptr1 => dram_row_ptr1_s, 
@@ -301,6 +306,7 @@ port map(
     --reg bank
     width_2 => width_2,
     --sig for FSM
+    reinit => reinit_s,
     en_pipe => en_pipe_s,
     cycle_num => cycle_num_s,
     sel_bram_out_fsm => sel_bram_out_fsm_s,
@@ -364,6 +370,7 @@ Port map(
   sel_bram_addr => sel_bram_addr_s,
   we_out => we_out,
   
+  reinit => reinit_s,
   en_dram_to_bram => en_dram_to_bram_s,
   en_pipe => en_pipe_s,
   en_bram_to_dram => en_bram_to_dram_s);

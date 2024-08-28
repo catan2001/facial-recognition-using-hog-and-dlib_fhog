@@ -123,7 +123,7 @@ impure function dram_init return dram_type is
     variable data : std_logic_vector(15 downto 0);
     variable dram_rows : rows_type;
     variable dram : dram_type;
-    file text_file : text open read_mode is "C:\Users\Andjela\Desktop\psds\gray_normalised.txt";
+    file text_file : text open read_mode is "/home/koshek/Desktop/emotion_recognition_git/facial-recognition-using-hog-and-dlib_fhog/input_files/gray_normalised.txt";
 begin
     for row in 0 to IMG_HEIGHT - 1 loop
         readline(text_file, row_text);

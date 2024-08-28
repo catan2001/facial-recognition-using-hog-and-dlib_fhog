@@ -17,6 +17,7 @@ entity dram_to_bram is
     bram_height: in std_logic_vector(4 downto 0);
     
     --sig for FSM
+    reinit: in std_logic;
     en_dram_to_bram: in std_logic;
     dram_row_ptr0: in std_logic_vector(10 downto 0);
     dram_row_ptr1: in std_logic_vector(10 downto 0); 
@@ -108,7 +109,7 @@ process(state_dram_to_bram_r,  width_2_reg, width_4_reg, height_reg, bram_height
     cycle_num_limit_reg, dram_in_addr_reg, sel_bram_in_reg,
     we_in_reg, i_reg, j_reg, k_reg, dram_row_ptr0_reg, dram_row_ptr1_reg, width_2,
     width_4, height, bram_height, cycle_num_limit, dram_in_addr, dram_row_ptr0, dram_row_ptr1,
-    en_dram_to_bram, en_axi, i_next, dram_row_ptr1_next) 
+    en_dram_to_bram, en_axi, i_next, dram_row_ptr1_next, reinit) 
 begin
 
 state_dram_to_bram_n <= state_dram_to_bram_r;
@@ -126,8 +127,15 @@ we_in_next <= we_in_reg;
 i_next <= i_reg;
 j_next <= j_reg;
 k_next <= k_reg;
-dram_row_ptr0_next <= dram_row_ptr0_reg;
-dram_row_ptr1_next <= dram_row_ptr1_reg;
+
+
+if(reinit = '1') then
+    dram_row_ptr0_next <= dram_row_ptr0;
+    dram_row_ptr1_next <= dram_row_ptr1;
+else
+    dram_row_ptr0_next <= dram_row_ptr0_reg;
+    dram_row_ptr1_next <= dram_row_ptr1_reg;
+end if;
 
 case state_dram_to_bram_r is
 
@@ -138,8 +146,6 @@ case state_dram_to_bram_r is
         bram_height_next <= bram_height;
         cycle_num_limit_next <= cycle_num_limit;
         dram_in_addr_next <= dram_in_addr;
-        dram_row_ptr0_next <= dram_row_ptr0;
-        dram_row_ptr1_next <= dram_row_ptr1; 
         
         if(en_dram_to_bram = '1') then 
             i_next <= (others => '0');

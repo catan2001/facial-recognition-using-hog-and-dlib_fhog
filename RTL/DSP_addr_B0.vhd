@@ -43,7 +43,7 @@ end process;
 
 process(sel_filter, const1, const2)
 begin
-    if(sel_filter = "011") then
+    if(sel_filter = "0011") then
         mux_const <= const1;
     else
         mux_const <= const2; 
