@@ -1,3 +1,0 @@
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SYSTEMC_HOME/lib-linux64
-
-g++ -I. -I$SYSTEMC_HOME/include -L. -L$SYSTEMC_HOME/lib-linux64 -lsystemc -lm -DSC_INCLUDE_FX -o main main.cpp bram.cpp hw.cpp interconnect.cpp sw.cpp utils.cpp VP.cpp bram_ctrl.cpp dram.cpp bram_out.cpp dram_ctrl.cpp
