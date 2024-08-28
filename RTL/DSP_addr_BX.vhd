@@ -6,7 +6,7 @@ entity DSP_addr_BX is
   Port (     
     clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
-    a: in std_logic_vector(4 downto 0); --i
+    a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
     c: in std_logic_vector(9 downto 0); --k
     d: in std_logic_vector(8 downto 0); --row_position
@@ -34,7 +34,7 @@ process(sel_addr, a, b, c, d)
 begin
 
 if(sel_addr = '0') then
-    mux_out1 <= std_logic_vector(resize(unsigned(a),6));
+    mux_out1 <= a;
     mux_out2 <= c;
 else
     mux_out1 <= b;

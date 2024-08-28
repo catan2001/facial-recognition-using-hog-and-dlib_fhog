@@ -55,22 +55,23 @@ loop_dram_to_bram3:
         goto loop_dram_to_bram3;
 end_dram_to_bram3: 
 
-    if(dram_row_ptr1=height) then
+    if(dram_row_ptr1=height-1) then
       goto end_dram_to_bram1;
 
     dram_row_ptr0 += 2;
     dram_row_ptr1 += 2;
-    sel_bram_in += 1; // nojs
     we_in = we_in << 4;
 
-    if(sel_bram_in = 8) then
-      sel_bram_in = 0; // nojs
+    if(sel_bram_in = 7) then
+      sel_bram_in = 0; 
       we_in = 0X"0000000F";
+    else
+       sel_bram_in += 1; 
     
-    j = j + 2; 
-    if(j = BRAM_HEIGHT) then
+    if(j = BRAM_HEIGHT-2) then
       goto end_dram_to_bram2;
     else
+      j = j + 2; 
       goto loop_dram_to_bram2;
 
 end_dram_to_bram2:
@@ -133,16 +134,17 @@ loop_row:
 
     END_PIPELINE:
 
-    row_position = row_position + 2; // calculated 2 pixels
-    if(row_position = width/2) then
+    if(row_position = width/2 - 2) then
         goto end_row;
     else
+        row_position = row_position + 2;
         goto loop_row;
 end_row: 
 
-  sel_filter = sel_filter + 1;
   if(sel_filter = 4) then
     sel_filter = 0;
+  else 
+    sel_filter = sel_filter + 1;
 
   sel_bram_out = sel_bram_out + 1;
   we_out = we_out << 4;
