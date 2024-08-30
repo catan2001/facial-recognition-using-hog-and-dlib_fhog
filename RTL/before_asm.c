@@ -137,7 +137,7 @@ loop_row:
     if(row_position = width/2 - 2) then
         goto end_row;
     else
-        row_position = row_position + 2;
+        row_position = row_position + 1;
         goto loop_row;
 end_row: 
 
@@ -154,7 +154,7 @@ end_row:
 
   i = i + 4;
 
-  if(i > floor(height/PTS_PER_ROWS) + accumulated_loss) then
+  if(i > floor(height/PTS_PER_COL)*PTS_PER_COL + accumulated_loss) then
     finished = 1;
     goto BRAM_TO_DRAM;
   else

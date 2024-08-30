@@ -89,12 +89,14 @@ component control_logic is
     cycle_num: in std_logic_vector(5 downto 0); 
     sel_bram_out_fsm: in std_logic_vector(2 downto 0); --pazi
     sel_filter_fsm: in std_logic_vector(2 downto 0);
+    we_out_fsm: in std_logic_vector(15 downto 0);
     pipe_finished: out std_logic;
     --out sig
     bram_output_xy_addr:out std_logic_vector(9 downto 0);
     row_position: out std_logic_vector(8 downto 0);
     sel_bram_out: out std_logic_vector(2 downto 0);
-    sel_filter: out std_logic_vector(2 downto 0));
+    sel_filter: out std_logic_vector(2 downto 0);
+    we_out: out std_logic_vector(15 downto 0));
 end component;
 
 component dram_to_bram is
@@ -241,6 +243,7 @@ signal sel_filter_s: std_logic_vector(2 downto 0);
 signal sel_bram_out_s: std_logic_vector(2 downto 0); 
 signal en_pipe_s: std_logic;
 signal pipe_finished_s: std_logic;
+signal we_out_pipe_s: std_logic_vector(15 downto 0); --we_out that will be led to the data_path
 
 --bram to dram
 signal en_bram_to_dram_s: std_logic;
@@ -248,6 +251,7 @@ signal bram_to_dram_finished_s: std_logic;
 signal bram_addr_bram_to_dram_A_s: std_logic_vector(9 downto 0);
 
 --FSM
+signal we_out_fsm_s: std_logic_vector(15 downto 0); --we_out connecting FSM and control_logic
 signal reinit_s: std_logic;
 signal sel_bram_addr_s: std_logic;
 
@@ -259,13 +263,16 @@ signal bram_output_xy_addr_reg1, bram_output_xy_addr_next1: std_logic_vector(9 d
 signal bram_output_xy_addr_reg2, bram_output_xy_addr_next2: std_logic_vector(9 downto 0);
 signal bram_output_xy_addr_reg3, bram_output_xy_addr_next3: std_logic_vector(9 downto 0);
 signal bram_output_xy_addr_reg4, bram_output_xy_addr_next4: std_logic_vector(9 downto 0);
-signal bram_output_xy_addr_reg5, bram_output_xy_addr_next5: std_logic_vector(9 downto 0);
 
 signal sel_bram_out_reg1, sel_bram_out_next1: std_logic_vector(2 downto 0);
 signal sel_bram_out_reg2, sel_bram_out_next2: std_logic_vector(2 downto 0);
 signal sel_bram_out_reg3, sel_bram_out_next3: std_logic_vector(2 downto 0);
 signal sel_bram_out_reg4, sel_bram_out_next4: std_logic_vector(2 downto 0);
-signal sel_bram_out_reg5, sel_bram_out_next5: std_logic_vector(2 downto 0);
+
+signal we_out_reg1, we_out_next1: std_logic_vector(15 downto 0);
+signal we_out_reg2, we_out_next2: std_logic_vector(15 downto 0);
+signal we_out_reg3, we_out_next3: std_logic_vector(15 downto 0);
+signal we_out_reg4, we_out_next4: std_logic_vector(15 downto 0);
 
 begin
 
@@ -311,12 +318,14 @@ port map(
     cycle_num => cycle_num_s,
     sel_bram_out_fsm => sel_bram_out_fsm_s,
     sel_filter_fsm => sel_filter_fsm_s,
+    we_out_fsm => we_out_fsm_s,
     pipe_finished => pipe_finished_s,
     --out sig
     bram_output_xy_addr => bram_output_xy_addr_s,
     row_position => row_position_s,
     sel_bram_out => sel_bram_out_s,
-    sel_filter => sel_filter_s);
+    sel_filter => sel_filter_s,
+    we_out => we_out_pipe_s);
 
 bram_to_dram_l: bram_to_dram
 port map(
@@ -368,7 +377,7 @@ Port map(
   
   ready => ready,
   sel_bram_addr => sel_bram_addr_s,
-  we_out => we_out,
+  we_out => we_out_fsm_s,
   
   reinit => reinit_s,
   en_dram_to_bram => en_dram_to_bram_s,
@@ -427,43 +436,50 @@ Port map(
     res => bram_addr_B2); 
     
 --mux control_logic and bram_to_dram
-process(sel_bram_addr_s, bram_output_xy_addr_reg5, bram_addr_bram_to_dram_A_s)
+process(sel_bram_addr_s, bram_output_xy_addr_reg4, bram_addr_bram_to_dram_A_s)
 begin
-if(sel_bram_addr_s = '1') then
+if(sel_bram_addr_s = '0') then
     bram_output_addr_A <= bram_addr_bram_to_dram_A_s;
 else
-    bram_output_addr_A <= bram_output_xy_addr_reg5;
+    bram_output_addr_A <= bram_output_xy_addr_reg4;
 end if;
 end process;
 
 process(clk)
 begin
-if(rising_edge(clk)) then
+if(falling_edge(clk)) then
     if(reset = '1') then
         sel_bram_out_reg1 <= (others => '0');
         sel_bram_out_reg2 <= (others => '0');
         sel_bram_out_reg3 <= (others => '0');
         sel_bram_out_reg4 <= (others => '0');
-        sel_bram_out_reg5 <= (others => '0');
 
         bram_output_xy_addr_reg1 <= (others => '0');
         bram_output_xy_addr_reg2 <= (others => '0');
         bram_output_xy_addr_reg3 <= (others => '0');
         bram_output_xy_addr_reg4 <= (others => '0');
-        bram_output_xy_addr_reg5 <= (others => '0');
+        
+        we_out_reg1 <= (others => '0');
+        we_out_reg2 <= (others => '0');
+        we_out_reg3 <= (others => '0');
+        we_out_reg4 <= (others => '0');
+      
     else
         bram_output_xy_addr_reg1 <= bram_output_xy_addr_next1;
         bram_output_xy_addr_reg2 <= bram_output_xy_addr_next2;
         bram_output_xy_addr_reg3 <= bram_output_xy_addr_next3;
         bram_output_xy_addr_reg4 <= bram_output_xy_addr_next4;
-        bram_output_xy_addr_reg5 <= bram_output_xy_addr_next5;
+     
         
         sel_bram_out_reg1 <= sel_bram_out_next1;
         sel_bram_out_reg2 <= sel_bram_out_next2;
         sel_bram_out_reg3 <= sel_bram_out_next3;
         sel_bram_out_reg4 <= sel_bram_out_next4;
-        sel_bram_out_reg5 <= sel_bram_out_next5;
-        sel_bram_out_reg5 <= sel_bram_out_next5;
+        
+        we_out_reg1 <= we_out_next1;
+        we_out_reg2 <= we_out_next2;
+        we_out_reg3 <= we_out_next3;
+        we_out_reg4 <= we_out_next4;
         
     end if;
 end if;
@@ -477,16 +493,22 @@ sel_bram_out_next1 <= sel_bram_out_s;
 sel_bram_out_next2 <= sel_bram_out_reg1;
 sel_bram_out_next3 <= sel_bram_out_reg2;
 sel_bram_out_next4 <= sel_bram_out_reg3;
-sel_bram_out_next5 <= sel_bram_out_reg4;
+
 
 bram_output_xy_addr_next1 <= bram_output_xy_addr_s;
 bram_output_xy_addr_next2 <= bram_output_xy_addr_reg1;
 bram_output_xy_addr_next3 <= bram_output_xy_addr_reg2;
 bram_output_xy_addr_next4 <= bram_output_xy_addr_reg3;
-bram_output_xy_addr_next5 <= bram_output_xy_addr_reg4;
+
+we_out_next1 <= we_out_pipe_s;
+we_out_next2 <= we_out_reg1;
+we_out_next3 <= we_out_reg2;
+we_out_next4 <= we_out_reg3;
+
 end process;
 
-sel_bram_out <= sel_bram_out_reg5;
+sel_bram_out <= sel_bram_out_reg4;
 sel_filter <= sel_filter_s;
+we_out <= we_out_reg4;
 
 end Behavioral;

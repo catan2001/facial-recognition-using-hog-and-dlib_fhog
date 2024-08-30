@@ -79,6 +79,11 @@ architecture Behavioral of data_path is
     
     signal data_out1_s, data_out2_s: std_logic_vector(2*WIDTH-1 downto 0);
     
+--SIGNALS FOR VERIFICATION:------------------------------------------------------------------------
+signal diax00_s, diax01_s, diax10_s, diax11_s, diax20_s, diax21_s, diax30_s, diax31_s: std_logic_vector(15 downto 0);
+signal diay00_s, diay01_s, diay10_s, diay11_s, diay20_s, diay21_s, diay30_s, diay31_s: std_logic_vector(15 downto 0);
+----------------------------------------------------------------------------------------------------
+    
     component demux1_8 is
         generic (
             WIDTH: natural := 32);
@@ -1588,6 +1593,32 @@ bram_block1_in: Dual_Port_BRAM
           y => data_out2_s(31 downto 0));
           
      data_out2 <= data_out2_s;
-          
+     
+--SIGNALS FOR VERIFICATION:----------------------------------------------------------------------
+diax00_s <= demux_x_bram0(31 downto 16);
+diax01_s <= demux_x_bram0(15 downto 0);
+
+diax10_s <= demux_x_bram1(31 downto 16);
+diax11_s <= demux_x_bram1(15 downto 0);
+
+diax20_s <= demux_x_bram2(31 downto 16);
+diax21_s <= demux_x_bram2(15 downto 0);
+
+diax30_s <= demux_x_bram3(31 downto 16);
+diax31_s <= demux_x_bram3(15 downto 0);
+
+diay00_s <= demux_y_bram0(31 downto 16);
+diay01_s <= demux_y_bram0(15 downto 0);
+
+diay10_s <= demux_y_bram1(31 downto 16);
+diay11_s <= demux_y_bram1(15 downto 0);
+
+diay20_s <= demux_y_bram2(31 downto 16);
+diay21_s <= demux_y_bram2(15 downto 0);
+
+diay30_s <= demux_y_bram3(31 downto 16);
+diay31_s <= demux_y_bram3(15 downto 0);
+
+-------------------------------------------------------------------------------------------------
 
 end Behavioral;

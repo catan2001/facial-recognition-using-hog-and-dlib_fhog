@@ -75,6 +75,14 @@ signal dram_addr1_s: std_logic_vector(31 downto 0);
 signal dram_out_addr_x_s: std_logic_vector(31 downto 0);
 signal dram_out_addr_y_s: std_logic_vector(31 downto 0);
 
+--SIGNALS FOR VERIFICATION:----------------------------------------------------------------------------
+signal data_out11_s, data_out12_s, data_out13_s, data_out14_s, data_out21_s, data_out22_s, data_out23_s, data_out24_s: std_logic_vector(15 downto 0); 
+
+
+
+---------------------------------------------------------------------------------------------------------------------
+
+
 component data_path is
   generic(WIDTH:natural:=32;
           BRAM_SIZE:natural:=1024;
@@ -234,6 +242,18 @@ burst_len_write <= burst_len_write_s;
 
 data_out1 <= data_out1_s;
 data_out2 <= data_out2_s;
+
+--SIGNALS FOR VERIFICATION:--------------------------------------------------------------------
+data_out11_s <= data_out1_s(63 downto 48);
+data_out12_s <= data_out1_s(47 downto 32);
+data_out13_s <= data_out1_s(31 downto 16);
+data_out14_s <= data_out1_s(15 downto 0);
+
+data_out21_s <= data_out2_s(63 downto 48);
+data_out22_s <= data_out2_s(47 downto 32);
+data_out23_s <= data_out2_s(31 downto 16);
+data_out24_s <= data_out2_s(15 downto 0);
+-------------------------------------------------------------------------------------------------
 
 dram_addr0 <= dram_addr0_s;
 dram_addr1 <= dram_addr1_s;

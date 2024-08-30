@@ -14,12 +14,14 @@ entity control_logic is
     cycle_num: in std_logic_vector(5 downto 0); 
     sel_bram_out_fsm: in std_logic_vector(2 downto 0); 
     sel_filter_fsm: in std_logic_vector(2 downto 0);
+    we_out_fsm: in std_logic_vector(15 downto 0);
     pipe_finished: out std_logic;
     --out sig
     bram_output_xy_addr:out std_logic_vector(9 downto 0);
     row_position: out std_logic_vector(8 downto 0);
     sel_bram_out: out std_logic_vector(2 downto 0);
-    sel_filter: out std_logic_vector(2 downto 0));
+    sel_filter: out std_logic_vector(2 downto 0);
+    we_out: out std_logic_vector(15 downto 0));
     
 end control_logic;
 
@@ -37,6 +39,7 @@ signal bram_output_xy_addr_s: std_logic_vector(9 downto 0);
 
 signal sel_filter_reg, sel_filter_next: std_logic_vector(2 downto 0);
 signal sel_bram_out_reg, sel_bram_out_next: std_logic_vector(2 downto 0);
+signal we_out_reg, we_out_next: std_logic_vector(15 downto 0);
 
 signal cycle_num_reg, cycle_num_next: std_logic_vector(5 downto 0); 
 signal row_position_reg, row_position_next: std_logic_vector(8 downto 0);
@@ -56,6 +59,7 @@ if(rising_edge(clk)) then
 
         sel_filter_reg <= (others => '0');
         sel_bram_out_reg <= (others => '0');
+        we_out_reg <= X"000F";
         
         row_position_reg <= (others => '0');
         cycle_num_reg <= (others => '0');
@@ -69,6 +73,7 @@ if(rising_edge(clk)) then
 
         sel_filter_reg <= sel_filter_next;
         sel_bram_out_reg <= sel_bram_out_next;
+        we_out_reg <= we_out_next;
         
         row_position_reg <= row_position_next;
         cycle_num_reg <= cycle_num_next;
@@ -90,13 +95,19 @@ width_2_next <= width_2_reg;
 if(reinit = '1') then
     sel_filter_next <= sel_filter_fsm;
     sel_bram_out_next <= sel_bram_out_fsm;
-    cycle_num_next <= cycle_num;
+    --cycle_num_next <= cycle_num;
+    we_out_next <= we_out_fsm;
+    
 else
     sel_filter_next <= sel_filter_reg;
     sel_bram_out_next <= sel_bram_out_reg;
-    cycle_num_next <= cycle_num_reg;
+    --cycle_num_next <= cycle_num_reg;
+    we_out_next <= we_out_reg;
+    
 end if;
 
+
+cycle_num_next <= cycle_num;
 row_position_next <= row_position_reg;
 cnt_init_next <= cnt_init_reg;
 
@@ -124,15 +135,18 @@ case state_control_logic_r is
             
             if(sel_bram_out_reg = "011") then
                 sel_bram_out_next <= (others => '0');
+                we_out_next <= X"000F";
             else
                 sel_bram_out_next <= std_logic_vector(unsigned(sel_bram_out_reg) + 1);
+                we_out_next <= std_logic_vector(shift_left(unsigned(we_out_reg), 4));
+            
             end if;
             
             pipe_finished_s <= '1';
             state_control_logic_n <= init_loop_row;
         else
-            row_position_next <= std_logic_vector(unsigned(row_position_reg)+2);
-            bram_output_xy_addr_s <= std_logic_vector(resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg)-1)+shift_right(unsigned(row_position_reg),1),10));
+            row_position_next <= std_logic_vector(unsigned(row_position_reg) + 1);
+            bram_output_xy_addr_s <= std_logic_vector(resize((resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg) - 1), 9) + unsigned(row_position_reg)), 10));
         end if;
 
 end case;
@@ -143,4 +157,7 @@ bram_output_xy_addr <= bram_output_xy_addr_s;
 row_position <= row_position_reg;
 sel_bram_out <= sel_bram_out_reg;
 sel_filter <= sel_filter_reg;
+we_out <= we_out_reg;
+
+
 end Behavioral;

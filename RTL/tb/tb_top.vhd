@@ -123,7 +123,7 @@ impure function dram_init return dram_type is
     variable data : std_logic_vector(15 downto 0);
     variable dram_rows : rows_type;
     variable dram : dram_type;
-    file text_file : text open read_mode is "C:\Users\Andjela\Desktop\psds\gray_normalised.txt";
+    file text_file : text open read_mode is "/home/koshek/Desktop/emotion_recognition_git/facial-recognition-using-hog-and-dlib_fhog/input_files/gray_normalised.txt";
 begin
     for row in 0 to IMG_HEIGHT - 1 loop
         readline(text_file, row_text);
@@ -214,13 +214,13 @@ port map(
                     cycle_num_out_s <= "001101";
                     rows_num_s <= "0011010111";
                     effective_row_limit_s <= "0010011000";
-            wait until rising_edge(clk_s);
+            wait until falling_edge(clk_s);
         end loop;
         
             for a in 0 to 75 loop
                 for b in 0 to 37 loop
-                    data_in_s(0) <= dram(2*a)(2*b)&dram(2*a)(2*b+1)&dram(2*a)(2*b+2)&dram(2*a)(2*b+3); 
-                    data_in_s(1) <= dram(2*a+1)(2*b)&dram(2*a+1)(2*b+1)&dram(2*a+1)(2*b+2)&dram(2*a+1)(2*b+3);
+                    data_in_s(0) <= dram(2*a)(4*b)&dram(2*a)(4*b+1)&dram(2*a)(4*b+2)&dram(2*a)(4*b+3); 
+                    data_in_s(1) <= dram(2*a+1)(4*b)&dram(2*a+1)(4*b+1)&dram(2*a+1)(4*b+2)&dram(2*a+1)(4*b+3);
                     --en_axi_s <= '1';
                     width_s <= "0010011000";
                     width_4_s <= "00100110";
@@ -234,7 +234,7 @@ port map(
                     cycle_num_out_s <= "001101";
                     rows_num_s <= "0011010111";
                     effective_row_limit_s <= "0010011000";
-                wait until rising_edge(clk_s);
+                wait until falling_edge(clk_s);
                 end loop;
             end loop;  
  

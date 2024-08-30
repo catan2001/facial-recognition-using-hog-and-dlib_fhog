@@ -170,6 +170,7 @@ case state_r is
             sel_filter_fsm_next <= (others => '0');
             sel_bram_out_fsm_next <= (others => '0');
             reinit_s <= '1';
+            we_out_next <= (others => '0');
             state_n <= reint;
         else
             sel_bram_addr_next <= '1'; 
@@ -178,7 +179,6 @@ case state_r is
         end if;
         
      when reint =>
-        we_out_next <= (others => '0');
         en_dram_to_bram_s <= '1';
         en_bram_to_dram_s <= '1';
         reinit_s <= '0';
@@ -186,6 +186,7 @@ case state_r is
         if(dram_to_bram_finished = '1' and bram_to_dram_finished = '1') then
             en_dram_to_bram_s <= '0';
             en_bram_to_dram_s <= '0';
+            we_out_next <= X"000F";
             state_n <= pipe;
         end if;       
         
@@ -193,10 +194,10 @@ case state_r is
      
         if(pipe_finished = '1') then
             en_pipe_s <= '0';
-            we_out_next <= X"000F";
             x_next <= std_logic_vector(unsigned(x_reg)+4);
             
-            if(x_reg = effective_row_limit_reg) then
+            if(x_reg = std_logic_vector(unsigned(effective_row_limit_reg) - 4)) then
+                we_out_next <= X"0000";
                 state_n <= br2dr;
             else
                 state_n <= ctrl_loop;
@@ -204,20 +205,6 @@ case state_r is
         else
             en_pipe_s <= '1';
         end if;
-     
---        if(en_pipe_s = '0') then
---            we_out_next <= X"000F";
---            x_next <= std_logic_vector(unsigned(x_reg)+4);
---            en_pipe_s <= '1';
---        end if;
-            
---        if(pipe_finished = '1' and x_reg = effective_row_limit_reg) then
---            en_pipe_s <= '0';
---            state_n <= br2dr;
---        elsif(pipe_finished = '1' and x_reg /= effective_row_limit_reg) then
---            en_pipe_s <= '0';
---            state_n <= ctrl_loop;
---        end if;
         
      when br2dr =>
         sel_bram_addr_next <= '0';
