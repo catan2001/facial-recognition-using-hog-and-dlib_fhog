@@ -82,6 +82,7 @@ architecture Behavioral of data_path is
 --SIGNALS FOR VERIFICATION:------------------------------------------------------------------------
 signal diax00_s, diax01_s, diax10_s, diax11_s, diax20_s, diax21_s, diax30_s, diax31_s: std_logic_vector(15 downto 0);
 signal diay00_s, diay01_s, diay10_s, diay11_s, diay20_s, diay21_s, diay30_s, diay31_s: std_logic_vector(15 downto 0);
+signal doax00_s, dobx00_s, doax01_s, dobx01_s: std_logic_vector(15 downto 0);
 signal data_out1_s0, data_out1_s1, data_out1_s2, data_out1_s3: std_logic_vector(15 downto 0);
 signal data_out2_s0, data_out2_s1, data_out2_s2, data_out2_s3: std_logic_vector(15 downto 0);
 ----------------------------------------------------------------------------------------------------
@@ -881,6 +882,12 @@ bram_block1_in: Dual_Port_BRAM
          data_input_b => (others => '0'), 
          addr_b => bram_addr_B_out
          );
+       
+    --signals for verification  
+    doax00_s <= bram_block0A_x(31 downto 16);
+    doax01_s <= bram_block0A_x(15 downto 0);
+    dobx00_s <= bram_block0B_x(31 downto 16);
+    dobx01_s <= bram_block0B_x(15 downto 0);
           
     bram_block_x1_out: Dual_Port_BRAM
     generic map(

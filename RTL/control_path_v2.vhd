@@ -496,7 +496,8 @@ end if;
 end process;
 
 process(sel_bram_out_reg1, sel_bram_out_reg2, sel_bram_out_reg3, sel_bram_out_reg4, sel_bram_out_s, bram_output_xy_addr_reg1, 
-        bram_output_xy_addr_reg2, bram_output_xy_addr_reg3, bram_output_xy_addr_reg4, bram_output_xy_addr_s)
+        bram_output_xy_addr_reg2, bram_output_xy_addr_reg3, bram_output_xy_addr_reg4, bram_output_xy_addr_s, we_out_pipe_s,
+        we_out_reg1, we_out_reg2, we_out_reg3)
 begin
 
 sel_bram_out_next1 <= sel_bram_out_s;

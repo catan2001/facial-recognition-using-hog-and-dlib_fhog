@@ -138,8 +138,8 @@ case state_bram_to_dram_r is
 
     when loop_bram_to_dram1 =>
         
-        if(z_reg = std_logic_vector(unsigned(width_2_reg) - 1)) then
-            if(row_cnt_reg = std_logic_vector(unsigned(height_reg)-1)) then
+        if(z_reg = std_logic_vector(resize(unsigned(width_4_reg),9))) then
+            if(row_cnt_reg = std_logic_vector(unsigned(height_reg)-3)) then
                 bram_to_dram_finished_s <= '1';
                 state_bram_to_dram_n <= init_loop_bram_to_dram;
             else

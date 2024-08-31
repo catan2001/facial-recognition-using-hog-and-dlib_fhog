@@ -149,7 +149,7 @@ case state_control_logic_r is
             state_control_logic_n <= init_loop_row;
         else
             row_position_next <= std_logic_vector(unsigned(row_position_reg) + 1);
-            bram_output_xy_addr_s <= std_logic_vector(resize((resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg) - 1), 9) + unsigned(row_position_reg)), 10));
+            bram_output_xy_addr_s <= std_logic_vector((resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg) - 1), 10) + resize(unsigned(row_position_reg),10)));
         end if;
 
 end case;
