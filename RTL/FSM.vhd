@@ -23,8 +23,6 @@ entity FSM is
   
   --ctrl log
   cycle_num: out std_logic_vector(5 downto 0); 
-  sel_bram_out_fsm: out std_logic_vector(2 downto 0); 
-  sel_filter_fsm: out std_logic_vector(2 downto 0);
   
   ready: out std_logic;
   sel_bram_addr: out std_logic;
@@ -227,8 +225,6 @@ end process;
 
 ready <= ready_reg;
 sel_bram_addr <= sel_bram_addr_reg;
-sel_bram_out_fsm <= sel_bram_out_fsm_reg;
-sel_filter_fsm <= sel_filter_fsm_reg;
 we_out <= we_out_reg;
 cycle_num <= cycle_num_reg;
 dram_row_ptr0 <= dram_row_ptr0_s;

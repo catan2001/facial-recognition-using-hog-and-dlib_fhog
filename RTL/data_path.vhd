@@ -6,7 +6,8 @@ entity data_path is
           BRAM_SIZE:natural:=1024;
           ADDR_WIDTH:natural:=10;
           PIX_WIDTH:natural:=16);
-  Port ( --data signals 
+  Port ( 
+        --data signals 
         data_in1: in std_logic_vector(2*WIDTH-1 downto 0);
         data_in2: in std_logic_vector(2*WIDTH-1 downto 0);
         data_out1: out std_logic_vector(2*WIDTH-1 downto 0);

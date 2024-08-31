@@ -89,8 +89,6 @@ component control_logic is
     reinit_pipe: in std_logic;
     en_pipe: in std_logic;
     cycle_num: in std_logic_vector(5 downto 0); 
-    sel_bram_out_fsm: in std_logic_vector(2 downto 0); --pazi
-    sel_filter_fsm: in std_logic_vector(2 downto 0);
     we_out_fsm: in std_logic_vector(15 downto 0);
     pipe_finished: out std_logic;
     --out sig
@@ -153,8 +151,6 @@ component FSM is
   
   --ctrl log
   cycle_num: out std_logic_vector(5 downto 0); 
-  sel_bram_out_fsm: out std_logic_vector(2 downto 0); 
-  sel_filter_fsm: out std_logic_vector(2 downto 0);
   
   ready: out std_logic;
   sel_bram_addr: out std_logic;
@@ -241,8 +237,6 @@ signal k_s: std_logic_vector(9 downto 0);
 signal bram_output_xy_addr_s: std_logic_vector(9 downto 0);
 signal cycle_num_s: std_logic_vector(5 downto 0); 
 signal row_position_s: std_logic_vector(8 downto 0);
-signal sel_bram_out_fsm_s: std_logic_vector(2 downto 0); 
-signal sel_filter_fsm_s: std_logic_vector(2 downto 0);
 signal sel_filter_s: std_logic_vector(2 downto 0);
 signal sel_bram_out_s: std_logic_vector(2 downto 0); 
 signal en_pipe_s: std_logic;
@@ -324,8 +318,6 @@ port map(
     en_pipe => en_pipe_s,
     reinit_pipe => reinit_pipe_s,
     cycle_num => cycle_num_s,
-    sel_bram_out_fsm => sel_bram_out_fsm_s,
-    sel_filter_fsm => sel_filter_fsm_s,
     we_out_fsm => we_out_fsm_s,
     pipe_finished => pipe_finished_s,
     --out sig
@@ -380,8 +372,6 @@ Port map(
   
   --ctrl log
   cycle_num => cycle_num_s,
-  sel_bram_out_fsm => sel_bram_out_fsm_s,
-  sel_filter_fsm => sel_filter_fsm_s,
   
   ready => ready,
   sel_bram_addr => sel_bram_addr_s,

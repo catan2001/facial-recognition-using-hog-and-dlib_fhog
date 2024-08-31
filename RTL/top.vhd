@@ -77,11 +77,7 @@ signal dram_out_addr_y_s: std_logic_vector(31 downto 0);
 
 --SIGNALS FOR VERIFICATION:----------------------------------------------------------------------------
 signal data_out11_s, data_out12_s, data_out13_s, data_out14_s, data_out21_s, data_out22_s, data_out23_s, data_out24_s: std_logic_vector(15 downto 0); 
-
-
-
 ---------------------------------------------------------------------------------------------------------------------
-
 
 component data_path is
   generic(WIDTH:natural:=32;

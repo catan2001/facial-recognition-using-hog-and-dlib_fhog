@@ -33,9 +33,6 @@ end Dual_Port_BRAM;
 
 architecture Behavioral of Dual_Port_BRAM is
 
---attribute ram_style : string;
---attribute ram_style of Dual_Port_BRAM : signal is "block";
-
 type ram_type is array(0 to BRAM_SIZE - 1) of std_logic_vector(WIDTH - 1 downto 0);
 signal bram_block : ram_type  := (others => (others => '0'));
 

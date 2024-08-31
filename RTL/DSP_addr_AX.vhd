@@ -21,9 +21,9 @@ attribute use_dsp : string;
 attribute use_dsp of Behavioral : architecture is "yes";
 
 signal mux_out1: std_logic_vector(5 downto 0);
-signal mux_out2, reg_mux_out2: std_logic_vector(9 downto 0);
+signal mux_out2: std_logic_vector(9 downto 0);
 
-signal mult_out, reg_mult: std_logic_vector(14 downto 0);
+signal mult_out: std_logic_vector(14 downto 0);
 signal adder_out: std_logic_vector(14 downto 0);
 
 begin
@@ -40,29 +40,10 @@ else
 end if;
 end process;
 
-process(mux_out1, width_2)
-begin
 mult_out <= std_logic_vector(unsigned(mux_out1) * unsigned(width_2));
-end process;
 
---reg_middle: process(clk) is
---begin
---    if(rising_edge(clk)) then
---        reg_mult <= mult_out;
---        reg_mux_out2 <= mux_out2;
---    end if;
---end process;
+adder_out <= std_logic_vector(unsigned(mult_out) + resize(unsigned(mux_out2),15));
 
-process(mult_out, mux_out2) is
-begin
-    adder_out <= std_logic_vector(unsigned(mult_out) + resize(unsigned(mux_out2),15));
-end process;
-
---reg_out: process(clk) is
---begin
---    if(rising_edge(clk)) then
-        res <= std_logic_vector(resize(unsigned(adder_out),10));
---    end if;
---end process;
+res <= std_logic_vector(resize(unsigned(adder_out),10));
 
 end Behavioral;
