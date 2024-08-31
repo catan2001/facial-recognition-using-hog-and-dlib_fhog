@@ -32,6 +32,7 @@ entity FSM is
   
   reinit: out std_logic;
   pipe_br2dr: out std_logic;
+  reinit_pipe: out std_logic;
   en_dram_to_bram: out std_logic;
   en_pipe: out std_logic;
   en_bram_to_dram:out std_logic);
@@ -64,6 +65,7 @@ signal start_reg, start_next: std_logic;
 
 signal reinit_s: std_logic := '0';
 signal pipe_br2dr_s: std_logic:='0';
+signal reinit_pipe_s: std_logic:='0';
 signal en_dram_to_bram_s: std_logic := '0';
 signal en_pipe_s: std_logic := '0';
 signal en_bram_to_dram_s: std_logic := '0';
@@ -189,12 +191,14 @@ case state_r is
             en_dram_to_bram_s <= '0';
             en_bram_to_dram_s <= '0';
             we_out_next <= X"000F";
+            reinit_pipe_s <= '1';
             state_n <= pipe;
         end if;       
         
      when pipe =>
      
         if(pipe_finished = '1') then
+            reinit_pipe_s <= '0';
             en_pipe_s <= '0';
             x_next <= std_logic_vector(unsigned(x_reg)+4);
             
@@ -234,5 +238,6 @@ en_pipe <= en_pipe_s;
 en_bram_to_dram <= en_bram_to_dram_s;
 reinit <= reinit_s;
 pipe_br2dr <= pipe_br2dr_s;
+reinit_pipe <= reinit_pipe_s;
 
 end Behavioral;

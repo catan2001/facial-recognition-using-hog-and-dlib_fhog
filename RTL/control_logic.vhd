@@ -11,6 +11,7 @@ entity control_logic is
     --sig for FSM
     reinit: in std_logic;
     br2dr: in std_logic;
+    reinit_pipe: in std_logic;
     en_pipe: in std_logic;
     cycle_num: in std_logic_vector(5 downto 0); 
     sel_bram_out_fsm: in std_logic_vector(2 downto 0); 
@@ -86,21 +87,28 @@ end process;
 
 process(state_control_logic_r, width_2, sel_filter_reg, sel_bram_out_reg,
         row_position_reg, cycle_num_reg, cnt_init_reg, width_2_reg, sel_filter_fsm, 
-        cycle_num, sel_bram_out_fsm, en_pipe, reinit, br2dr)
+        cycle_num, sel_bram_out_fsm, en_pipe, reinit, br2dr, reinit_pipe)
 begin
 
 state_control_logic_n <= state_control_logic_r;
 
 width_2_next <= width_2_reg;
 
+if(br2dr = '1' or reinit = '1') then
+    we_out_next <= (others => '0');     
+elsif(reinit_pipe = '1') then
+    we_out_next <= x"000F";
+else
+    we_out_next <= we_out_reg;
+end if;
+
 if(reinit = '1') then
-    sel_filter_next <= sel_filter_fsm;
-    sel_bram_out_next <= sel_bram_out_fsm;
+    sel_filter_next <= (others => '0');
+    sel_bram_out_next <= (others => '0');
 else
     sel_filter_next <= sel_filter_reg;
     sel_bram_out_next <= sel_bram_out_reg;
 end if;
-
 
 cycle_num_next <= cycle_num;
 row_position_next <= row_position_reg;
@@ -113,12 +121,6 @@ case state_control_logic_r is
         width_2_next <= width_2;
         pipe_finished_s <= '0';
         
-        if(br2dr = '1' or reinit = '1') then
-            we_out_next <= we_out_fsm;     
-        else
-            we_out_next <= we_out_reg;
-        end if;
-            
         if(en_pipe = '1') then
             row_position_next <= (others => '0');
             state_control_logic_n <= loop_row;

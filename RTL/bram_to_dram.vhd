@@ -139,28 +139,33 @@ case state_bram_to_dram_r is
     when loop_bram_to_dram1 =>
         
         if(z_reg = std_logic_vector(unsigned(width_2_reg) - 1)) then
-            row_cnt_next <= std_logic_vector(unsigned(row_cnt_reg)+1);
-            if(sel_dram_reg = std_logic_vector(unsigned(bram_height_reg)-1)) then
-                y_next <= std_logic_vector(unsigned(y_reg)+1);
-                if(y_reg = std_logic_vector(unsigned(cycle_num_out_reg)-1)) then
-                    bram_to_dram_finished_s <= '1';
-                    state_bram_to_dram_n <= init_loop_bram_to_dram;
+            if(row_cnt_reg = std_logic_vector(unsigned(height_reg)-1)) then
+                bram_to_dram_finished_s <= '1';
+                state_bram_to_dram_n <= init_loop_bram_to_dram;
+            else
+                row_cnt_next <= std_logic_vector(unsigned(row_cnt_reg)+1);
+                if(sel_dram_reg = std_logic_vector(unsigned(bram_height_reg)-1)) then
+                    y_next <= std_logic_vector(unsigned(y_reg)+1);
+                    if(y_reg = std_logic_vector(unsigned(cycle_num_out_reg)-1)) then
+                        bram_to_dram_finished_s <= '1';
+                        state_bram_to_dram_n <= init_loop_bram_to_dram;
+                    else
+                        z_next <= (others => '0');
+                        sel_dram_next <= (others => '0');
+                        dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
+                        dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
+                    end if;
                 else
-                    z_next <= (others => '0');
-                    sel_dram_next <= (others => '0');
                     dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
                     dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
+                    sel_dram_next <= std_logic_vector(unsigned(sel_dram_reg)+1);
+                    z_next <= (others => '0');
                 end if;
-            else
-                dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
-                dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
-                sel_dram_next <= std_logic_vector(unsigned(sel_dram_reg)+1);
-                z_next <= (others => '0');
             end if;
         else
-            bram_addr_bram_to_dram_A_s <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+unsigned(z_reg)*2,10));
-            bram_addr_bram_to_dram_B_s <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+unsigned(z_reg)*2+1,10));
-            z_next <= std_logic_vector(unsigned(z_reg)+1);
+            bram_addr_bram_to_dram_A_s <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+shift_left(unsigned(z_reg),1),10));
+            bram_addr_bram_to_dram_B_s <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+shift_left(unsigned(z_reg),1)+1,10));
+            z_next <= std_logic_vector(unsigned(z_reg)+1);   
         end if;
 end case;
 end process;
