@@ -31,6 +31,7 @@ entity FSM is
   we_out: out std_logic_vector(15 downto 0); 
   
   reinit: out std_logic;
+  pipe_br2dr: out std_logic;
   en_dram_to_bram: out std_logic;
   en_pipe: out std_logic;
   en_bram_to_dram:out std_logic);
@@ -62,6 +63,7 @@ signal ready_reg, ready_next: std_logic;
 signal start_reg, start_next: std_logic;
 
 signal reinit_s: std_logic := '0';
+signal pipe_br2dr_s: std_logic:='0';
 signal en_dram_to_bram_s: std_logic := '0';
 signal en_pipe_s: std_logic := '0';
 signal en_bram_to_dram_s: std_logic := '0';
@@ -198,6 +200,7 @@ case state_r is
             
             if(x_reg = std_logic_vector(unsigned(effective_row_limit_reg) - 4)) then
                 we_out_next <= X"0000";
+                pipe_br2dr_s <= '1';
                 state_n <= br2dr;
             else
                 state_n <= ctrl_loop;
@@ -206,10 +209,11 @@ case state_r is
             en_pipe_s <= '1';
         end if;
         
-     when br2dr =>
+     when br2dr => 
         sel_bram_addr_next <= '0';
         en_bram_to_dram_s <= '1';
         if(bram_to_dram_finished = '1') then
+            pipe_br2dr_s <= '0';
             en_bram_to_dram_s <= '0';
             state_n <= idle;
         end if;
@@ -229,5 +233,6 @@ en_dram_to_bram <= en_dram_to_bram_s;
 en_pipe <= en_pipe_s;
 en_bram_to_dram <= en_bram_to_dram_s;
 reinit <= reinit_s;
+pipe_br2dr <= pipe_br2dr_s;
 
 end Behavioral;

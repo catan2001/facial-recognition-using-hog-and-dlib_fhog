@@ -85,6 +85,7 @@ component control_logic is
     width_2: in std_logic_vector(8 downto 0);
     --sig for FSM
     reinit: in std_logic;
+    br2dr: in std_logic;
     en_pipe: in std_logic;
     cycle_num: in std_logic_vector(5 downto 0); 
     sel_bram_out_fsm: in std_logic_vector(2 downto 0); --pazi
@@ -159,6 +160,7 @@ component FSM is
   we_out: out std_logic_vector(15 downto 0); 
   
   reinit: out std_logic;
+  pipe_br2dr: out std_logic;
   en_dram_to_bram: out std_logic;
   en_pipe: out std_logic;
   en_bram_to_dram:out std_logic);
@@ -253,6 +255,7 @@ signal bram_addr_bram_to_dram_A_s: std_logic_vector(9 downto 0);
 --FSM
 signal we_out_fsm_s: std_logic_vector(15 downto 0); --we_out connecting FSM and control_logic
 signal reinit_s: std_logic;
+signal pipe_br2dr_s: std_logic;
 signal sel_bram_addr_s: std_logic;
 
 signal const1_s: std_logic_vector(1 downto 0):="01";
@@ -314,6 +317,7 @@ port map(
     width_2 => width_2,
     --sig for FSM
     reinit => reinit_s,
+    br2dr => pipe_br2dr_s,
     en_pipe => en_pipe_s,
     cycle_num => cycle_num_s,
     sel_bram_out_fsm => sel_bram_out_fsm_s,
@@ -380,6 +384,7 @@ Port map(
   we_out => we_out_fsm_s,
   
   reinit => reinit_s,
+  pipe_br2dr => pipe_br2dr_s,
   en_dram_to_bram => en_dram_to_bram_s,
   en_pipe => en_pipe_s,
   en_bram_to_dram => en_bram_to_dram_s);
