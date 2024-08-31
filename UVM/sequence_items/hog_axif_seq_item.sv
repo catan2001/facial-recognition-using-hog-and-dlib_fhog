@@ -1,5 +1,5 @@
 `ifndef HOG_AXIF_SEQ_ITEM_SV
-	`def HOG_AXIF_SEQ_ITEM_SV
+	`define HOG_AXIF_SEQ_ITEM_SV
 
 	parameter integer C_S_AXI_HP_DATA_WIDTH	= 64;
 	parameter integer C_S_AXI_HP_ADDR_WIDTH	= 32;
@@ -14,8 +14,8 @@
 		rand logic                                     		s_axi_aresetn;
 		rand logic	[C_S_AXI_HP_ADDR_WIDTH - 1 : 0]        	s_axi_awaddr;
 		rand logic	[2 : 0]                                	s_axi_awprot;
-		rand logic	                                       	s_axi_awvalid
-		rand logic	                                       	s_axi_awready
+		rand logic	                                       	s_axi_awvalid;
+		rand logic	                                       	s_axi_awready;
 		rand logic [C_S_AXI_HP_DATA_WIDTH - 1 : 0]	      	s_axi_wdata;
 		rand logic [(C_S_AXI_HP_DATA_WIDTH/8) - 1 : 0]    	s_axi_wstrb;
 		rand logic	                                       	s_axi_wvalid;

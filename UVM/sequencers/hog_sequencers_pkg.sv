@@ -6,7 +6,7 @@
 			`include "uvm_macros.svh" // Include the UVM macros
         
         // including sequencers:
-            `include "hog_axif_sequencer.sv"
+        //    `include "hog_axif_sequencer.sv"
             `include "hog_axil_sequencer.sv"
 	endpackage 
 
