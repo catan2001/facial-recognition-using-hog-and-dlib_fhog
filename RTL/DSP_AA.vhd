@@ -39,18 +39,13 @@ begin
         if falling_edge(clk) then
             d1 <= signed(din);
             d2 <= resize(d1, WIDTH_INTERIM+2);
-            const <= signed(cin);
-            
+            const <= signed(cin);     
             add <= resize(signed(ain), WIDTH_INTERIM) + resize(signed(bin), WIDTH_INTERIM);
-            
-            --mult <= add * const;
-            mult_reg <= mult;
-            --p <= mult + d2;
-            
+            mult_reg <= mult;         
         end if; 
     end process;
-     mult <= add * const;
-    --pout <= std_logic_vector(p(18 downto 3));
+    
+    mult <= add * const;
     p <= mult_reg + d2;
     pout <= std_logic_vector(p(18 downto 3));
 
