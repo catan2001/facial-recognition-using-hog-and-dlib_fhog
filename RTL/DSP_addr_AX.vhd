@@ -4,7 +4,6 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity DSP_addr_AX is
   Port ( 
-    clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
     a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
