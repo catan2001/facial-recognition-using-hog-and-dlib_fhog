@@ -69,6 +69,8 @@ component bram_to_dram is
     --sig for FSM
     en_bram_to_dram: in std_logic;
     bram_to_dram_finished: out std_logic;
+    reinit: in std_logic;
+    row_cnt_fsm: in std_logic_vector(10 downto 0);
     --bram_to_dram
     bram_addr_bram_to_dram_A: out std_logic_vector(9 downto 0);
     bram_addr_bram_to_dram_B: out std_logic_vector(9 downto 0);
@@ -89,6 +91,9 @@ component control_logic is
     reinit_pipe: in std_logic;
     en_pipe: in std_logic;
     cycle_num: in std_logic_vector(5 downto 0); 
+    sel_bram_out_fsm: in std_logic_vector(2 downto 0); --pazi
+    sel_filter_fsm: in std_logic_vector(2 downto 0);
+    we_out_fsm: in std_logic_vector(15 downto 0);
     pipe_finished: out std_logic;
     --out sig
     bram_output_xy_addr:out std_logic_vector(9 downto 0);
@@ -150,6 +155,8 @@ component FSM is
   
   --ctrl log
   cycle_num: out std_logic_vector(5 downto 0); 
+  sel_bram_out_fsm: out std_logic_vector(2 downto 0); 
+  sel_filter_fsm: out std_logic_vector(2 downto 0);
   
   ready: out std_logic;
   sel_bram_addr: out std_logic;
@@ -160,7 +167,9 @@ component FSM is
   reinit_pipe: out std_logic;
   en_dram_to_bram: out std_logic;
   en_pipe: out std_logic;
-  en_bram_to_dram:out std_logic);
+  en_bram_to_dram:out std_logic;
+  
+  row_cnt: out std_logic_vector(10 downto 0));
 end component;
 
 component DSP_addr_A0
@@ -197,6 +206,7 @@ end component;
 
 component DSP_addr_AX
   Port ( 
+    clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
     a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
@@ -210,6 +220,7 @@ end component;
 
 component DSP_addr_BX
   Port (     
+    clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
     a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
@@ -234,6 +245,8 @@ signal k_s: std_logic_vector(9 downto 0);
 signal bram_output_xy_addr_s: std_logic_vector(9 downto 0);
 signal cycle_num_s: std_logic_vector(5 downto 0); 
 signal row_position_s: std_logic_vector(8 downto 0);
+signal sel_bram_out_fsm_s: std_logic_vector(2 downto 0); 
+signal sel_filter_fsm_s: std_logic_vector(2 downto 0);
 signal sel_filter_s: std_logic_vector(2 downto 0);
 signal sel_bram_out_s: std_logic_vector(2 downto 0); 
 signal en_pipe_s: std_logic;
@@ -246,10 +259,12 @@ signal bram_to_dram_finished_s: std_logic;
 signal bram_addr_bram_to_dram_A_s: std_logic_vector(9 downto 0);
 
 --FSM
+signal we_out_fsm_s: std_logic_vector(15 downto 0); --we_out connecting FSM and control_logic
 signal reinit_s: std_logic;
 signal pipe_br2dr_s: std_logic;
 signal reinit_pipe_s: std_logic;
 signal sel_bram_addr_s: std_logic;
+signal row_cnt_s: std_logic_vector(10 downto 0);
 
 signal const1_s: std_logic_vector(1 downto 0):="01";
 signal const2_s: std_logic_vector(1 downto 0):="00";
@@ -314,6 +329,9 @@ port map(
     en_pipe => en_pipe_s,
     reinit_pipe => reinit_pipe_s,
     cycle_num => cycle_num_s,
+    sel_bram_out_fsm => sel_bram_out_fsm_s,
+    sel_filter_fsm => sel_filter_fsm_s,
+    we_out_fsm => we_out_fsm_s,
     pipe_finished => pipe_finished_s,
     --out sig
     bram_output_xy_addr => bram_output_xy_addr_s,
@@ -339,6 +357,8 @@ port map(
     --sig for FSM
     en_bram_to_dram => en_bram_to_dram_s,
     bram_to_dram_finished => bram_to_dram_finished_s,
+    reinit => reinit_s,
+    row_cnt_fsm => row_cnt_s,
     --bram_to_dram
     bram_addr_bram_to_dram_A => bram_addr_bram_to_dram_A_s,
     bram_addr_bram_to_dram_B => bram_output_addr_B,
@@ -367,16 +387,22 @@ Port map(
   
   --ctrl log
   cycle_num => cycle_num_s,
+  sel_bram_out_fsm => sel_bram_out_fsm_s,
+  sel_filter_fsm => sel_filter_fsm_s,
   
   ready => ready,
   sel_bram_addr => sel_bram_addr_s,
+  we_out => we_out_fsm_s,
   
   reinit => reinit_s,
   pipe_br2dr => pipe_br2dr_s,
   reinit_pipe => reinit_pipe_s,
   en_dram_to_bram => en_dram_to_bram_s,
   en_pipe => en_pipe_s,
-  en_bram_to_dram => en_bram_to_dram_s);
+  en_bram_to_dram => en_bram_to_dram_s,
+  
+  --bram2dram
+  row_cnt => row_cnt_s);
   
 DSP_addr_A0_l: DSP_addr_A0
 Port map( 
@@ -408,6 +434,7 @@ Port map(
     
 DSP_addr_AX_l: DSP_addr_AX
 Port map( 
+    clk => clk,
     width_2 => width_2,
     a => i_s,
     b => cycle_num_s, 
@@ -418,6 +445,7 @@ Port map(
     
 DSP_addr_BX_l: DSP_addr_BX
 Port map(    
+    clk => clk,
     width_2 => width_2,
     a => i_s,
     b => cycle_num_s, 

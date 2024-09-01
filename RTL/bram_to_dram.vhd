@@ -20,6 +20,8 @@ entity bram_to_dram is
     --sig for FSM
     en_bram_to_dram: in std_logic;
     bram_to_dram_finished: out std_logic;
+    reinit: in std_logic;
+    row_cnt_fsm: in std_logic_vector(10 downto 0);
     --bram_to_dram
     bram_addr_bram_to_dram_A: out std_logic_vector(9 downto 0);
     bram_addr_bram_to_dram_B: out std_logic_vector(9 downto 0);
@@ -104,8 +106,13 @@ state_bram_to_dram_n <= state_bram_to_dram_r;
 
 sel_dram_next <= sel_dram_reg;
 y_next <= y_reg;
-row_cnt_next <= row_cnt_reg;
 z_next <= z_reg;
+
+if(reinit = '1') then
+    row_cnt_next <= row_cnt_fsm;
+else
+    row_cnt_next <= row_cnt_reg;
+end if;
 
 width_next <= width_reg;
 width_2_next <= width_2_reg;
@@ -117,7 +124,9 @@ dram_x_addr_next <= dram_x_addr_reg;
 dram_y_addr_next <= dram_y_addr_reg;
 
 case state_bram_to_dram_r is
+
     when init_loop_bram_to_dram =>
+    
         width_next <= width;
         width_2_next <= width_2;
         width_4_next <= width_4;

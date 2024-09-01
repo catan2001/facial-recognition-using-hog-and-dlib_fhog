@@ -123,7 +123,7 @@ impure function dram_init return dram_type is
     variable data : std_logic_vector(15 downto 0);
     variable dram_rows : rows_type;
     variable dram : dram_type;
-    file text_file : text open read_mode is "C:\Users\Andjela\Desktop\psds\gray_normalised_velika.txt";
+    file text_file : text open read_mode is "/home/koshek/Desktop/ml_projekat/ESL/VP/monica492_600_resized_to_300/gray_normalised.txt";
 begin
     for row in 0 to IMG_HEIGHT - 1 loop
         readline(text_file, row_text);
@@ -211,7 +211,7 @@ port map(
                     dram_y_addr_s <= x"000244D8";
                     cycle_num_limit_s <= "001000";
                     cycle_num_out_s <= "001000";
-                    rows_num_s <= "0010000100";
+                    rows_num_s <= "0010000000";
                     effective_row_limit_s <= "0100110100";
             wait until falling_edge(clk_s);
         end loop;
@@ -230,7 +230,7 @@ port map(
                     dram_y_addr_s <= x"000244D8";
                     cycle_num_limit_s <= "001000";
                     cycle_num_out_s <= "001000";
-                    rows_num_s <= "0010000100";
+                    rows_num_s <= "0010000000";
                     effective_row_limit_s <= "0100110100";
                 wait until falling_edge(clk_s);
                 end loop;

@@ -23,6 +23,8 @@ entity FSM is
   
   --ctrl log
   cycle_num: out std_logic_vector(5 downto 0); 
+  sel_bram_out_fsm: out std_logic_vector(2 downto 0); 
+  sel_filter_fsm: out std_logic_vector(2 downto 0);
   
   ready: out std_logic;
   sel_bram_addr: out std_logic;
@@ -33,7 +35,10 @@ entity FSM is
   reinit_pipe: out std_logic;
   en_dram_to_bram: out std_logic;
   en_pipe: out std_logic;
-  en_bram_to_dram:out std_logic);
+  en_bram_to_dram:out std_logic;
+  
+  --bram2dram
+  row_cnt: out std_logic_vector(10 downto 0));
 end FSM;
 
 architecture Behavioral of FSM is
@@ -43,9 +48,7 @@ type state_t is
     (idle, dr2br, ctrl_loop, pipe, br2dr, reint);
 signal state_r, state_n : state_t;
 
-signal sel_bram_addr_reg, sel_bram_addr_next: std_logic;
-signal sel_bram_out_fsm_reg, sel_bram_out_fsm_next: std_logic_vector(2 downto 0); 
-signal sel_filter_fsm_reg, sel_filter_fsm_next: std_logic_vector(2 downto 0);
+signal sel_bram_addr_reg, sel_bram_addr_next: std_logic; 
 
 signal cycle_num_limit_reg, cycle_num_limit_next: std_logic_vector(5 downto 0);
 signal rows_num_reg, rows_num_next: std_logic_vector(9 downto 0); 
@@ -68,6 +71,8 @@ signal en_dram_to_bram_s: std_logic := '0';
 signal en_pipe_s: std_logic := '0';
 signal en_bram_to_dram_s: std_logic := '0';
 
+signal row_cnt_s: std_logic_vector(10 downto 0);
+
 begin
 
 --init
@@ -78,8 +83,6 @@ if(rising_edge(clk)) then
     if reset = '1' then
         state_r <= idle;
         
-        sel_filter_fsm_reg <= (others => '0');
-        sel_bram_out_fsm_reg <= (others => '0');
         sel_bram_addr_reg <= '0';
         
         we_out_reg <= X"000F";
@@ -99,8 +102,6 @@ if(rising_edge(clk)) then
         ready_reg <= ready_next;
         --start_reg <= start_next;
 
-        sel_filter_fsm_reg <= sel_filter_fsm_next;
-        sel_bram_out_fsm_reg <= sel_bram_out_fsm_next;
         sel_bram_addr_reg <= sel_bram_addr_next;
 
         we_out_reg <= we_out_next;
@@ -113,9 +114,9 @@ if(rising_edge(clk)) then
 end if;
 end process;
 
-process(state_r, rows_num_reg, cycle_num_limit_reg, effective_row_limit_reg, sel_filter_fsm_reg, sel_bram_out_fsm_reg,
+process(state_r, rows_num_reg, cycle_num_limit_reg, effective_row_limit_reg,
         sel_bram_addr_reg, x_reg, cycle_num_reg, cnt_init_reg, we_out_reg, rows_num, cycle_num_limit, effective_row_limit,
-        start, dram_to_bram_finished, cycle_num_next, bram_to_dram_finished, pipe_finished, x_next,
+        start, dram_to_bram_finished, bram_to_dram_finished, pipe_finished, x_next,
         ready_reg)
         --start_reg, start_next 
 begin
@@ -128,8 +129,6 @@ effective_row_limit_next <= effective_row_limit_reg;
 ready_next <= ready_reg;
 --start_next <= start_reg;
 
-sel_filter_fsm_next <= sel_filter_fsm_reg;
-sel_bram_out_fsm_next <= sel_bram_out_fsm_reg;
 sel_bram_addr_next <= sel_bram_addr_reg;
 
 x_next <= x_reg;
@@ -163,22 +162,27 @@ case state_r is
         end if;
       
     when ctrl_loop =>
-        if(cycle_num_next = std_logic_vector(unsigned(cycle_num_limit_reg)-1) and x_reg = std_logic_vector(resize(unsigned(std_logic_vector(12*unsigned(cycle_num_next))),10))) then  
+    
+        if(cycle_num_reg = cycle_num_limit_reg and x_reg = std_logic_vector(12 + shift_left(resize(unsigned(cycle_num_limit_reg), 10), 4))) then  
+ 
             dram_row_ptr0_s <= std_logic_vector(resize(unsigned(std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_reg))),11));
             dram_row_ptr1_s <= std_logic_vector(resize(unsigned(std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_reg) + 1)),11));
             cnt_init_next <= std_logic_vector(unsigned(cnt_init_reg) + 1);
             x_next <= std_logic_vector(unsigned(x_reg) + 4);
             cycle_num_next <= (others => '0');
-            sel_filter_fsm_next <= (others => '0');
-            sel_bram_out_fsm_next <= (others => '0');
-            reinit_s <= '1';
             we_out_next <= (others => '0');
+            row_cnt_s <= std_logic_vector(resize((shift_left((unsigned(rows_num) - 1), 1)*unsigned(cnt_init_reg)), 11));
+            
+            reinit_s <= '1';
+            
             state_n <= reint;
+        --end if;
         else
             sel_bram_addr_next <= '1'; 
             cycle_num_next <= x_reg(9 downto 4);
             state_n <= pipe;
         end if;
+        
         
      when reint =>
         en_dram_to_bram_s <= '1';
@@ -235,5 +239,8 @@ en_bram_to_dram <= en_bram_to_dram_s;
 reinit <= reinit_s;
 pipe_br2dr <= pipe_br2dr_s;
 reinit_pipe <= reinit_pipe_s;
+
+--bram2dram
+row_cnt <= row_cnt_s;
 
 end Behavioral;
