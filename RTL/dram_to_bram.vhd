@@ -59,7 +59,7 @@ signal dram_row_ptr0_reg, dram_row_ptr0_next: std_logic_vector(10 downto 0);
 signal dram_row_ptr1_reg, dram_row_ptr1_next: std_logic_vector(10 downto 0);
 
 signal dram_to_bram_finished_s: std_logic;
-signal burst_len_read_s: std_logic_vector(7 downto 0);
+--signal burst_len_read_s: std_logic_vector(7 downto 0);
 
 begin
 
@@ -140,6 +140,7 @@ end if;
 case state_dram_to_bram_r is
 
     when loop_dram_to_bram0 =>
+    
         width_2_next <= width_2;
         width_4_next <= width_4;
         height_next <= height;
@@ -184,18 +185,19 @@ case state_dram_to_bram_r is
       
                 if(j_reg = std_logic_vector(unsigned(bram_height_reg)-2)) then
                     i_next <= std_logic_vector(unsigned(i_reg) + 1);
+                    --we_in_next <= X"0000000F";
                     if(i_next = cycle_num_limit_reg) then 
                         we_in_next <= (others => '0');
                         state_dram_to_bram_n <= end_dram_to_bram;
                     else
                         j_next <= (others => '0');
-                        dram_addr0_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr0_reg)*unsigned(width_4_reg),32));
-                        dram_addr1_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr1_reg)*unsigned(width_4_reg),32));
+                        dram_addr0_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr0_next)*unsigned(width_4_reg),32));
+                        dram_addr1_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr1_next)*unsigned(width_4_reg),32));
                     end if;
                 else
                     j_next <= std_logic_vector(unsigned(j_reg) + 2);
-                    dram_addr0_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr0_reg)*unsigned(width_4_reg),32));
-                    dram_addr1_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr1_reg)*unsigned(width_4_reg),32));
+                    dram_addr0_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr0_next)*unsigned(width_4_reg), 32));
+                    dram_addr1_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr1_next)*unsigned(width_4_reg), 32));
                 end if;
             end if;    
         else
@@ -204,6 +206,7 @@ case state_dram_to_bram_r is
 
     when end_dram_to_bram =>
         dram_to_bram_finished_s <= '1';
+        state_dram_to_bram_n <= loop_dram_to_bram0;
 end case;
 end process;
 
@@ -214,7 +217,7 @@ k <= k_reg;
 dram_addr0 <= dram_addr0_s;
 dram_addr1 <= dram_addr1_s;
 dram_to_bram_finished <= dram_to_bram_finished_s;
-burst_len_read_s <= std_logic_vector(resize((unsigned(width_4_reg) - 1),8));
-burst_len_read <= burst_len_read_s;
+--burst_len_read_s <= std_logic_vector(resize((unsigned(width_4_reg) - 1),8));
+burst_len_read <= std_logic_vector(resize((unsigned(width_4_reg) - 1),8));
 
 end Behavioral;

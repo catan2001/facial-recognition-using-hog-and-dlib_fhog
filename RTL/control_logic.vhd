@@ -13,7 +13,10 @@ entity control_logic is
     br2dr: in std_logic;
     reinit_pipe: in std_logic;
     en_pipe: in std_logic;
-    cycle_num: in std_logic_vector(5 downto 0);
+    cycle_num: in std_logic_vector(5 downto 0); 
+    sel_bram_out_fsm: in std_logic_vector(2 downto 0); 
+    sel_filter_fsm: in std_logic_vector(2 downto 0);
+    we_out_fsm: in std_logic_vector(15 downto 0);
     pipe_finished: out std_logic;
     --out sig
     bram_output_xy_addr:out std_logic_vector(9 downto 0);
@@ -83,8 +86,8 @@ end process;
 
 
 process(state_control_logic_r, width_2, sel_filter_reg, sel_bram_out_reg,
-        row_position_reg, cycle_num_reg, cnt_init_reg, width_2_reg,
-        cycle_num, en_pipe, reinit, br2dr, reinit_pipe, we_out_reg)
+        row_position_reg, cycle_num_reg, cnt_init_reg, width_2_reg, sel_filter_fsm, 
+        cycle_num, sel_bram_out_fsm, en_pipe, reinit, br2dr, reinit_pipe)
 begin
 
 state_control_logic_n <= state_control_logic_r;
