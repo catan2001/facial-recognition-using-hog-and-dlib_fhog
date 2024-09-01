@@ -110,11 +110,11 @@ signal data_in_s, data_out_s: data_t;
 
 signal ready_s: std_logic; 
 
-constant IMG_WIDTH : natural := 152;
-constant IMG_HEIGHT : natural := 152;
+constant IMG_WIDTH : natural := 248;
+constant IMG_HEIGHT : natural := 302;
 
-type rows_type is array(0 to IMG_HEIGHT - 1) of std_logic_vector(15 downto 0);
-type dram_type is array(0 to IMG_WIDTH - 1) of rows_type;
+type rows_type is array(0 to IMG_WIDTH - 1) of std_logic_vector(15 downto 0);
+type dram_type is array(0 to IMG_HEIGHT - 1) of rows_type;
 
 impure function dram_init return dram_type is
     variable row_text : line;
@@ -123,7 +123,7 @@ impure function dram_init return dram_type is
     variable data : std_logic_vector(15 downto 0);
     variable dram_rows : rows_type;
     variable dram : dram_type;
-    file text_file : text open read_mode is "C:\Users\Andjela\Desktop\psds\gray_normalised.txt";
+    file text_file : text open read_mode is "C:\Users\Andjela\Desktop\psds\gray_normalised_velika.txt";
 begin
     for row in 0 to IMG_HEIGHT - 1 loop
         readline(text_file, row_text);
@@ -201,37 +201,37 @@ port map(
             data_in_s(0) <= x"0000000000000000"; 
             data_in_s(1) <= x"0000000000000000";
                                
-                    width_s <= "0010011000";
-                    width_4_s <= "00100110";
-                    width_2_s <= "001001100";
-                    height_s <= "00010011000";
+                    width_s <= "0011111000";
+                    width_4_s <= "00111110";
+                    width_2_s <= "001111100";
+                    height_s <= "00100101110";
                     bram_height_s <= "10000"; 
                     dram_in_addr_s <= x"00000000";
-                    dram_x_addr_s <= x"00005A40";
-                    dram_y_addr_s <= x"0000B350";
-                    cycle_num_limit_s <= "001101";
-                    cycle_num_out_s <= "001001";
-                    rows_num_s <= "0011010111";
-                    effective_row_limit_s <= "0010011000";
+                    dram_x_addr_s <= x"00012490";
+                    dram_y_addr_s <= x"000244D8";
+                    cycle_num_limit_s <= "001000";
+                    cycle_num_out_s <= "001000";
+                    rows_num_s <= "0010000100";
+                    effective_row_limit_s <= "0100110100";
             wait until falling_edge(clk_s);
         end loop;
         
-            for a in 0 to 75 loop
-                for b in 0 to 37 loop
+            for a in 0 to 150 loop
+                for b in 0 to 61 loop
                     data_in_s(0) <= dram(2*a)(4*b)&dram(2*a)(4*b+1)&dram(2*a)(4*b+2)&dram(2*a)(4*b+3); 
                     data_in_s(1) <= dram(2*a+1)(4*b)&dram(2*a+1)(4*b+1)&dram(2*a+1)(4*b+2)&dram(2*a+1)(4*b+3);
-                    width_s <= "0010011000";
-                    width_4_s <= "00100110";
-                    width_2_s <= "001001100";
-                    height_s <= "00010011000";
+                    width_s <= "0011111000";
+                    width_4_s <= "00111110";
+                    width_2_s <= "001111100";
+                    height_s <= "00100101110";
                     bram_height_s <= "10000"; 
                     dram_in_addr_s <= x"00000000";
-                    dram_x_addr_s <= x"00005A40";
-                    dram_y_addr_s <= x"0000B350";
-                    cycle_num_limit_s <= "001101";
-                    cycle_num_out_s <= "001101";
-                    rows_num_s <= "0011010111";
-                    effective_row_limit_s <= "0010011000";
+                    dram_x_addr_s <= x"00012490";
+                    dram_y_addr_s <= x"000244D8";
+                    cycle_num_limit_s <= "001000";
+                    cycle_num_out_s <= "001000";
+                    rows_num_s <= "0010000100";
+                    effective_row_limit_s <= "0100110100";
                 wait until falling_edge(clk_s);
                 end loop;
             end loop;  
