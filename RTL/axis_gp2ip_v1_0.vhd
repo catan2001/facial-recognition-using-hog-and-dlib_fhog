@@ -23,12 +23,13 @@ entity axis_gp2ip_v1_0 is
 		ctrl_reg : out std_logic;
 		width_reg : out std_logic_vector(9 downto 0);
 		width_4_reg : out std_logic_vector(7 downto 0);
-    	width_2_reg: out std_logic_vector(8 downto 0);
+		width_2_reg: out std_logic_vector(8 downto 0);
 		height_reg : out std_logic_vector(10 downto 0);
-		cycle_num_limit_reg: out std_logic_vector(5 downto 0); --2*bram_width/width
-		cycle_num_out_reg: out std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
-		rows_num_reg: out std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
-		effective_row_limit_reg: out std_logic_vector(11 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL/accumulated_loss
+		cycle_num_in_reg : out std_logic_vector(5 downto 0); --2*bram_width/width
+		cycle_num_out_reg : out std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
+		rows_num_reg : out std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
+		effective_row_limit_reg : out std_logic_vector(11 downto 0); --(height/PTS_PER_ROW)/accumulated_loss
+		bram_height : out std_logic_vector(4 downto 0);
 		dram_in_addr_reg : out std_logic_vector(C_S00_AXI_DATA_WIDTH-1 downto 0);
 		dram_x_addr_reg : out std_logic_vector(C_S00_AXI_DATA_WIDTH-1 downto 0);
 		dram_y_addr_reg : out std_logic_vector(C_S00_AXI_DATA_WIDTH-1 downto 0);
@@ -75,15 +76,16 @@ architecture arch_imp of axis_gp2ip_v1_0 is
 		ctrl_reg : out std_logic;
 		width_reg : out std_logic_vector(9 downto 0);
 		width_4_reg : out std_logic_vector(7 downto 0);
-    	width_2_reg: out std_logic_vector(8 downto 0);
+		width_2_reg: out std_logic_vector(8 downto 0);
 		height_reg : out std_logic_vector(10 downto 0);
-		cycle_num_limit_reg: out std_logic_vector(5 downto 0); --2*bram_width/width
-		cycle_num_out_reg: out std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
-		rows_num_reg: out std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
-		effective_row_limit_reg: out std_logic_vector(9 downto 0); --(height/PTS_PER_ROW)/accumulated_loss
-		dram_in_addr_reg : out std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-		dram_x_addr_reg : out std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-		dram_y_addr_reg : out std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+		cycle_num_in_reg : out std_logic_vector(5 downto 0); --2*bram_width/width
+		cycle_num_out_reg : out std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
+		rows_num_reg : out std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
+		effective_row_limit_reg : out std_logic_vector(11 downto 0); --(height/PTS_PER_ROW)/accumulated_loss
+		bram_height : out std_logic_vector(4 downto 0);
+		dram_in_addr_reg : out std_logic_vector(C_S00_AXI_DATA_WIDTH-1 downto 0);
+		dram_x_addr_reg : out std_logic_vector(C_S00_AXI_DATA_WIDTH-1 downto 0);
+		dram_y_addr_reg : out std_logic_vector(C_S00_AXI_DATA_WIDTH-1 downto 0);
 		--AXI
 		S_AXI_ACLK	: in std_logic;
 		S_AXI_ARESETN	: in std_logic;
@@ -124,13 +126,15 @@ axis_gp2ip_v1_0_S00_AXI_inst : axis_gp2ip_v1_0_S00_AXI
 		width_4_reg => width_4_reg,
     	width_2_reg => width_2_reg,
 		height_reg => height_reg,
-		cycle_num_limit_reg => cycle_num_limit_reg,
+		cycle_num_in_reg => cycle_num_in_reg,
 		cycle_num_out_reg => cycle_num_out_reg,
 		rows_num_reg => rows_num_reg,
 		effective_row_limit_reg => effective_row_limit_reg,
+		bram_height => bram_height,
 		dram_in_addr_reg => dram_in_addr_reg,
 		dram_x_addr_reg => dram_x_addr_reg,
 		dram_y_addr_reg  => dram_y_addr_reg,
+
 		S_AXI_ACLK	=> s00_axi_aclk,
 		S_AXI_ARESETN	=> s00_axi_aresetn,
 		S_AXI_AWADDR	=> s00_axi_awaddr,
