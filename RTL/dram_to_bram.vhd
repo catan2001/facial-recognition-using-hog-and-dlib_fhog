@@ -37,7 +37,7 @@ architecture Behavioral of dram_to_bram is
 
 --states dram to bram
 type state_dram_to_bram_t is 
-    (loop_dram_to_bram0, loop_dram_to_bram1, end_dram_to_bram, loop_dram_to_bram_axi);
+    (loop_dram_to_bram0, loop_dram_to_bram1, loop_dram_to_bram_axi, end_dram_to_bram);
 signal state_dram_to_bram_r, state_dram_to_bram_n : state_dram_to_bram_t;
 
 signal width_2_reg, width_2_next: std_logic_vector(8 downto 0);
@@ -147,6 +147,8 @@ case state_dram_to_bram_r is
         bram_height_next <= bram_height;
         cycle_num_limit_next <= cycle_num_limit;
         dram_in_addr_next <= dram_in_addr;
+        dram_to_bram_finished_s <= '0';
+        
         
         if(en_dram_to_bram = '1') then 
             i_next <= (others => '0');
@@ -171,6 +173,7 @@ case state_dram_to_bram_r is
            
             if(dram_row_ptr1_reg = std_logic_vector(unsigned(height_reg)-1)) then 
                 we_in_next <= (others => '0');
+                --dram_to_bram_finished_s <= '1';
                 state_dram_to_bram_n <= end_dram_to_bram;
             else
                 dram_row_ptr0_next <= std_logic_vector(unsigned(dram_row_ptr0_reg) + 2);
@@ -188,6 +191,7 @@ case state_dram_to_bram_r is
                     --we_in_next <= X"0000000F";
                     if(i_next = cycle_num_limit_reg) then 
                         we_in_next <= (others => '0');
+                        --dram_to_bram_finished_s <= '1';
                         state_dram_to_bram_n <= end_dram_to_bram;
                     else
                         j_next <= (others => '0');
@@ -203,10 +207,12 @@ case state_dram_to_bram_r is
         else
             k_next <= std_logic_vector(unsigned(k_reg) + 2);  
         end if;
+        
+        when end_dram_to_bram =>
+            dram_to_bram_finished_s <= '1';
+            state_dram_to_bram_n <= loop_dram_to_bram0;
+            
 
-    when end_dram_to_bram =>
-        dram_to_bram_finished_s <= '1';
-        state_dram_to_bram_n <= loop_dram_to_bram0;
 end case;
 end process;
 

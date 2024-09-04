@@ -97,7 +97,7 @@ width_2_next <= width_2_reg;
 if(br2dr = '1' or reinit = '1') then
     we_out_next <= (others => '0');     
 elsif(reinit_pipe = '1') then
-    we_out_next <= x"000F";
+    we_out_next <= X"000F";
 else
     we_out_next <= we_out_reg;
 end if;

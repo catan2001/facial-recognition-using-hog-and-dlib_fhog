@@ -99,7 +99,7 @@ end process;
 
 process(state_bram_to_dram_r, sel_dram_reg, y_reg, row_cnt_reg, z_reg, width, width_2, width_4, height, bram_height, cycle_num_out,
         dram_x_addr, dram_y_addr, en_bram_to_dram, width_reg, width_2_reg, width_4_reg, height_reg, bram_height_reg,
-        cycle_num_out_reg, dram_x_addr_reg, dram_y_addr_reg) 
+        cycle_num_out_reg, dram_x_addr_reg, dram_y_addr_reg, reinit) 
 begin
 
 state_bram_to_dram_n <= state_bram_to_dram_r;
@@ -135,6 +135,7 @@ case state_bram_to_dram_r is
         cycle_num_out_next <= cycle_num_out;
         dram_x_addr_next <= dram_x_addr;
         dram_y_addr_next <= dram_y_addr;
+        bram_to_dram_finished_s <= '0';
         
         if(en_bram_to_dram = '1') then
             y_next <= (others => '0');

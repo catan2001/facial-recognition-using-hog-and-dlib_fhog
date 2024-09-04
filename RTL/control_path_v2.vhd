@@ -143,6 +143,7 @@ component FSM is
   pipe_finished: in std_logic;
   bram_to_dram_finished: in std_logic;
   
+  
   cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
   rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
   effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
@@ -306,7 +307,7 @@ port map(
     en_dram_to_bram => en_dram_to_bram_s,
     dram_row_ptr0 => dram_row_ptr0_s,
     dram_row_ptr1 => dram_row_ptr1_s, 
-    dram_to_bram_finished => dram_to_bram_finished_s, 
+    dram_to_bram_finished => dram_to_bram_finished_s,
     
     --out signals
     we_in => we_in,
