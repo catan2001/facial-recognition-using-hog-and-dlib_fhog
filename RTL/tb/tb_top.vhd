@@ -1,24 +1,3 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 08/20/2024 04:31:09 PM
--- Design Name: 
--- Module Name: tb_top - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
-----------------------------------------------------------------------------------
-
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL; 
@@ -140,7 +119,9 @@ begin
     return dram;
 end function;
 
-signal dram : dram_type := dram_init;
+signal dram1 : dram_type := dram_init;
+signal dram2 : dram_type := dram_init;
+signal dram3 : dram_type := dram_init;
 
 begin
 
@@ -200,6 +181,8 @@ port map(
         en_axi_s <= '1';
         
         for c in 0 to 3 loop
+            report "a: " & integer'image(a) & " b: " & integer'image(b) & " c: " & integer'image(c) & " d: " & integer'image(d) & " e: " & integer'image(e);
+        
             data_in_s(0) <= x"0000000000000000"; 
             data_in_s(1) <= x"0000000000000000";
                                
@@ -220,8 +203,11 @@ port map(
         
             for a in 0 to 63 loop
                 for b in 0 to 61 loop
-                    data_in_s(0) <= dram(2*a)(4*b)&dram(2*a)(4*b+1)&dram(2*a)(4*b+2)&dram(2*a)(4*b+3); 
-                    data_in_s(1) <= dram(2*a+1)(4*b)&dram(2*a+1)(4*b+1)&dram(2*a+1)(4*b+2)&dram(2*a+1)(4*b+3);
+                    report "a: " & integer'image(a) & " b: " & integer'image(b) & " d: " & integer'image(d) & " e: " & integer'image(e);
+                    
+                    
+                    data_in_s(0) <= dram1(2*a)(4*b)&dram1(2*a)(4*b+1)&dram1(2*a)(4*b+2)&dram1(2*a)(4*b+3); 
+                    data_in_s(1) <= dram1(2*a+1)(4*b)&dram1(2*a+1)(4*b+1)&dram1(2*a+1)(4*b+2)&dram1(2*a+1)(4*b+3);
                     width_s <= "0011111000";
                     width_4_s <= "00111110";
                     width_2_s <= "001111100";
@@ -238,24 +224,14 @@ port map(
                 end loop;
             end loop;  
             
-            wait for 197 us;
+            wait for 196970 ns;
             
-            for d in 0 to 63 loop
+            for d in 62 to 125 loop
                 for e in 0 to 61 loop
-                    data_in_s(0) <= dram(2*d)(4*e)&dram(2*d)(4*e+1)&dram(2*d)(4*e+2)&dram(2*d)(4*e+3); 
-                    data_in_s(1) <= dram(2*d+1)(4*e)&dram(2*d+1)(4*e+1)&dram(2*d+1)(4*e+2)&dram(2*d+1)(4*e+3);
-                    width_s <= "0011111000";
-                    width_4_s <= "00111110";
-                    width_2_s <= "001111100";
-                    height_s <= "00100101110";
-                    bram_height_s <= "10000"; 
-                    dram_in_addr_s <= x"00000000";
-                    dram_x_addr_s <= x"00012490";
-                    dram_y_addr_s <= x"000244D8";
-                    cycle_num_limit_s <= "001000";
-                    cycle_num_out_s <= "001000";
-                    rows_num_s <= "0010000000";
-                    effective_row_limit_s <= "0100110100";
+                    report " d: " & integer'image(d) & " e: " & integer'image(e);
+                    
+                    data_in_s(0) <= dram2(2*d)(4*e)&dram2(2*d)(4*e+1)&dram2(2*d)(4*e+2)&dram2(2*d)(4*e+3); 
+                    data_in_s(1) <= dram2(2*d+1)(4*e)&dram2(2*d+1)(4*e+1)&dram2(2*d+1)(4*e+2)&dram2(2*d+1)(4*e+3);
                 wait until falling_edge(clk_s);
                 end loop;
             end loop;  
