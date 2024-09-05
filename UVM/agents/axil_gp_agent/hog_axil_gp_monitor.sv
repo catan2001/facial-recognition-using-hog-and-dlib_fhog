@@ -1,23 +1,21 @@
 import uvm_pkg::*;      // import the UVM library
     `include "uvm_macros.svh" 
-import hog_seq_items_pkg::*;
-    `include "hog_axil_seq_item.svh"
 
-`ifndef HOG_AXIF_SEQUENCER_SV
-	`define HOG_AXIF_SEQUENCER_SV
+`ifndef HOG_AXIL_SEQUENCER_SV
+	`define HOG_AXIL_SEQUENCER_SV
 
-	class axi_lite_gp_monitor extends uvm_monitor;
+	class hog_axil_gp_monitor extends uvm_monitor;
 		// Define a monitor class that extends uvm_monitor
-		`uvm_component_utils(axi_lite_gp_monitor)
+		`uvm_component_utils(hog_axil_gp_monitor)
 		// Register the monitor with the UVM factory
 
 		// Virtual interface to the DUT
 		virtual interface axil_gp_if vif;
 
-		uvm_analysis_port #(axi_lite_seq_item) ap;
+		uvm_analysis_port #(hog_axil_seq_item) ap;
 		// Analysis port to send observed transactions to other components like scoreboards
 
-		function new(string name, uvm_component parent);
+		function new(string name = "hog_axil_gp_monitor", uvm_component parent = null);
 			// Constructor for the monitor
 			super.new(name, parent);
 			// Call the base class constructor with the name and parent arguments

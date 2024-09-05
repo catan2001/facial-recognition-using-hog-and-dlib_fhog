@@ -17,12 +17,12 @@
 		rand bit read, write;
 
 		`uvm_object_utils_begin(hog_axil_seq_item)
-			`uvm_field_int(s_axi_awaddr, UVM_DEFAULT)
-			`uvm_field_int(s_axi_wdata, UVM_DEFAULT)
-			`uvm_field_int(s_axi_araddr, UVM_DEFAULT)
-			`uvm_field_int(s_axi_rdata, UVM_DEFAULT)
-			`uvm_field_int(read, UVM_DEFAULT)
-			`uvm_field_int(write, UVM_DEFAULT)
+			`uvm_field_int(s_axi_awaddr, UVM_DEFAULT);
+			`uvm_field_int(s_axi_wdata, UVM_DEFAULT);
+			`uvm_field_int(s_axi_araddr, UVM_DEFAULT);
+			`uvm_field_int(s_axi_rdata, UVM_DEFAULT);
+			`uvm_field_int(read, UVM_DEFAULT);
+			`uvm_field_int(write, UVM_DEFAULT);
 		`uvm_object_utils_end
 
 		// constructor
@@ -30,6 +30,6 @@
 			super.new(name);
 		endfunction : new
 
-	endclass;
+	endclass : hog_axil_seq_item;
 
 `endif

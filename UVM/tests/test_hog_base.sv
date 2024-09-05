@@ -1,11 +1,9 @@
-
 `ifndef TEST_HOG_BASE_SV
-`define TEST_HOG_BASE_SV
+	`define TEST_HOG_BASE_SV
 
 	class test_hog_base extends uvm_test;
 
 		hog_environment env;
-		//hog_config cfg;
 
 		`uvm_component_utils(test_hog_base)
 
@@ -16,8 +14,6 @@
 		function void build_phase(uvm_phase phase);
 			super.build_phase(phase);
 			env = hog_environment::type_id::create("env", this);
-			//cfg = hog_config::type_id::create("cfg");
-			//uvm_config_db#(hog_config)::set(this, "*", "hog_config", cfg);
 		endfunction : build_phase
 
 		function void end_of_elaboration_phase(uvm_phase phase);

@@ -14,19 +14,15 @@ class test_hog_simple extends test_hog_base;
     function void build_phase(uvm_phase phase);
         super.build_phase(phase); 
             `uvm_info(get_type_name(),"Starting build phase...",UVM_LOW)
-
         axil_simple_seq = hog_axil_simple_seq::type_id::create("axil_simple_seq");    
     endfunction : build_phase
 
-
     task main_phase(uvm_phase phase);
         phase.raise_objection(this);
-        axil_simple_seq.start(env.axil_gp_agent.axil_seqr);
+        axil_simple_seq.start(env.axil_gp_agent.axil_seqr); // TODO: possible error here...
         phase.drop_objection(this);
         
     endtask
-
-
 
 endclass : test_hog_simple
 

@@ -1,6 +1,6 @@
 `ifndef HOG_AXIL_BASE_SEQ_SV
 	`define HOG_AXIL_BASE_SEQ_SV
-
+    
 	class hog_axil_base_seq extends uvm_sequence#(hog_axil_seq_item);
 
 	`uvm_object_utils(hog_axil_base_seq)

@@ -17,18 +17,20 @@
 			if (!uvm_config_db#(virtual axil_gp_if)::get(null, "*", "axil_gp_if", vif))
 				`uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
 		endfunction // build_phase
-
-		task run_phase(uvm_phase phase);
+        
+		task main_phase(uvm_phase phase);
 			forever begin
 				@(posedge vif.clk);	 
-				if (!vif.rst) begin
+				if (vif.rst) begin // reset is active when '0'
 					seq_item_port.get_next_item(req); // Fetch transaction
 
 					`uvm_info(get_type_name(), $sformatf("Driver sending...\n%s", req.sprint()), UVM_HIGH)
 
 					if(!req.read & req.write) begin // Write transaction
+					    $display("Driving write transaction:");
 						axi_lite_write(req.s_axi_awaddr, req.s_axi_wdata);
 					end else if(req.read & !req.write) begin
+						$display("Driving read transaction:");
 						axi_lite_read(req.s_axi_araddr, req.s_axi_rdata);					
 					end
 
@@ -38,13 +40,13 @@
 				end
 
 			end
-		endtask : run_phase
+		endtask : main_phase
 
 		task automatic axi_lite_write(input bit [4 : 0] address, input bit [31 : 0] data); // prevent variables to be shared between calls.
-			vif.s_axi_awaddr = req.s_axi_awaddr;
+			vif.s_axi_awaddr = address;
 			vif.s_axi_awprot = 3'b000;
 			vif.s_axi_awvalid = 1;
-			vif.s_axi_wdata = req.s_axi_wdata;
+			vif.s_axi_wdata = data;
 			vif.s_axi_wstrb = 4'b1111;
 			vif.s_axi_wvalid = 1;
 			vif.s_axi_bready = 1;
@@ -54,7 +56,7 @@
 			
 			// Wait for slave to respond valid...
 			wait(vif.s_axi_bvalid)
-			assert(vif.bresp == 2'b00) else
+			assert(vif.s_axi_bresp == 2'b00) else
 				`uvm_error(get_type_name(), $sformatf("Error occured! Slave Response indicated failure!"));
 
 			// clear the valid signals after response is recieved...
@@ -70,34 +72,31 @@
 		endtask;
 
 		task automatic axi_lite_read(input bit [4 : 0] address, input bit [31 : 0] data); // prevent variables to be shared between calls.
-			vif.s_axi_araddr = req.s_axi_araddr;
+			vif.s_axi_araddr = address;
 			vif.s_axi_arprot = 3'b000;
 			vif.s_axi_arvalid = 1;
-			vif.s_axi_rdata = req.s_axi_rdata;
-			vif.s_axi_rstrb = 4'b1111;
-			vif.s_axi_rvalid = 1;
 			vif.s_axi_rready = 1;
 
 			// Wait for slave to be ready...
-			wait(vif.s_axi_aready && vif.s_axi_arready)
+			wait(vif.s_axi_arready)
 			
 			// Wait for slave to respond valid...
 			wait(vif.s_axi_rvalid)
-			assert(vif.rresp == 2'b00) else
+			assert(vif.s_axi_rresp == 2'b00) else
 				`uvm_error(get_type_name(), $sformatf("Error occured! Slave Response indicated failure!"));
 
 			// clear the valid signals after response is recieved...
-			vif.s_axi_awvalid = 0;
-    		vif.s_axi_wvalid = 0;
-    		vif.s_axi_wdata = 0;	      
+			vif.s_axi_arvalid = 0;
+    		vif.s_axi_araddr = 0;	      
 
-			wait(!vif.s_axi_bvalid);
-
-    		// Deassert write response ready	
-    		vif.s_axi_bready = 0;
+			wait(!vif.s_axi_rvalid);
+			// read data
+			data = vif.s_axi_rdata;
+    		// Deassert read response ready	
+    		vif.s_axi_rready = 0;
 	
 		endtask;
-
+        
 	endclass : hog_axil_gp_driver
 
 `endif

@@ -1,6 +1,5 @@
 `ifndef HOG_AXIL_SEQUENCER_SV
 	`define HOG_AXIL_SEQUENCER_SV
-
 	class hog_axil_sequencer extends uvm_sequencer#(hog_axil_seq_item);
 
 		`uvm_component_utils(hog_axil_sequencer)
