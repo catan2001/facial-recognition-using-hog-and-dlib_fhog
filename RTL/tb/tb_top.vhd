@@ -102,7 +102,7 @@ impure function dram_init return dram_type is
     variable data : std_logic_vector(15 downto 0);
     variable dram_rows : rows_type;
     variable dram : dram_type;
-    file text_file : text open read_mode is "/home/koshek/Desktop/ml_projekat/ESL/VP/monica492_600_resized_to_300/gray_normalised.txt";
+    file text_file : text open read_mode is "C:/Users/Andjela/Desktop/psds/gray_normalised_velika.txt";
 begin
     for row in 0 to IMG_HEIGHT - 1 loop
         readline(text_file, row_text);
@@ -175,6 +175,8 @@ port map(
         variable c: integer := 0;
         variable d: integer := 0;
         variable e: integer := 0;
+        variable f: integer := 0;
+        variable g: integer := 0;
     begin
         reset_s <= '0', '1' after 10ns, '0' after 25ns;
         start_s <= '0', '1' after 45ns, '0' after 75ns;
@@ -224,7 +226,7 @@ port map(
                 end loop;
             end loop;  
             
-            wait for 196970 ns;
+            wait for 196980 ns;
             
             for d in 62 to 125 loop
                 for e in 0 to 61 loop
@@ -232,7 +234,17 @@ port map(
                     
                     data_in_s(0) <= dram2(2*d)(4*e)&dram2(2*d)(4*e+1)&dram2(2*d)(4*e+2)&dram2(2*d)(4*e+3); 
                     data_in_s(1) <= dram2(2*d+1)(4*e)&dram2(2*d+1)(4*e+1)&dram2(2*d+1)(4*e+2)&dram2(2*d+1)(4*e+3);
-                wait until falling_edge(clk_s);
+                wait until rising_edge(clk_s);
+                end loop;
+            end loop;  
+            
+            wait for 376250 ns;
+            
+            for f in 125 to 150 loop
+                for g in 0 to 61 loop
+                    data_in_s(0) <= dram3(2*f)(4*g)&dram3(2*f)(4*g+1)&dram3(2*f)(4*g+2)&dram3(2*f)(4*g+3); 
+                    data_in_s(1) <= dram3(2*f+1)(4*g)&dram3(2*f+1)(4*g+1)&dram3(2*f+1)(4*g+2)&dram3(2*f+1)(4*g+3);
+                wait until rising_edge(clk_s);
                 end loop;
             end loop;  
  
