@@ -7,7 +7,7 @@
 - [x] reset check
 
 - [x] convert to complete UVM
-- [] add monitor
+- [x] add monitor (TODO: add port for scoreboard)
 - [] add scoreboard
 - [] add checker
 ## AXI HP FULL

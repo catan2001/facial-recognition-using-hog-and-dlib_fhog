@@ -24,7 +24,7 @@
 		logic [2 : 0]                                s_axi_arprot = 3'b000; // Protection Type // Master
 		logic                                        s_axi_arvalid; // Read Address Valid // Master
 		logic                                        s_axi_arready; // Read Address Ready // Slave
-		logic [C_S_AXI_GP_ADDR_WIDTH - 1 : 0]        s_axi_rdata; // Read Data // Slave
+		logic [C_S_AXI_GP_DATA_WIDTH - 1 : 0]        s_axi_rdata; // Read Data // Slave
 		logic [1 : 0]                                s_axi_rresp; // Read response // Slave
 		logic                                        s_axi_rvalid; // Read valid // Slave
 		logic                                        s_axi_rready; // Read Ready // Master
