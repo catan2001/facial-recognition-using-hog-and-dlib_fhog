@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 entity axi_stream_v1_0_S00_AXIS is
 	generic (
 		-- Users to add parameters here
-
+		
 		-- User parameters ends
 		-- Do not modify the parameters beyond this line
 
@@ -78,7 +78,7 @@ architecture arch_imp of axi_stream_v1_0_S00_AXIS is
 	-- sink has accepted all the streaming data and stored in FIFO
 	signal writes_done : std_logic;
 
-	type BYTE_FIFO_TYPE is array (0 to (NUMBER_OF_INPUT_WORDS-1)) of std_logic_vector(((C_S_AXIS_TDATA_WIDTH/4)-1)downto 0);
+	type BYTE_FIFO_TYPE is array (0 to (NUMBER_OF_INPUT_WORDS-1)) of std_logic_vector(((C_S_AXIS_TDATA_WIDTH/8)-1)downto 0);
 begin
 	-- I/O Connections assignments
 
