@@ -4,8 +4,10 @@
 	class hog_environment extends uvm_env;
 
 	hog_axil_gp_agent axil_gp_agent;
+    hog_axis_hp0_agent axis_hp0_agent;
 
 	virtual interface axil_gp_if axil_vif;
+    virtual interface axis_hp0_if axis_hp0_vif;
 
 	`uvm_component_utils(hog_environment);
 
@@ -20,10 +22,16 @@
         if (!uvm_config_db#(virtual axil_gp_if)::get(this, "", "axil_gp_if", axil_vif))
             `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".axil_vif"})
 
+        if (!uvm_config_db#(virtual axis_hp0_if)::get(this, "", "axis_hp0_if", axis_hp0_vif))
+            `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".axis_hp0_vif"})
 
         uvm_config_db#(virtual axil_gp_if)::set(this, "axil_gp_agent", "axil_gp_if", axil_vif);
+        uvm_config_db#(virtual axis_hp0_if)::set(this, "axis_hp0_agent", "axis_hp0_if", axis_hp0_vif);
 
         axil_gp_agent = hog_axil_gp_agent::type_id::create("axil_gp_agent",this);
+        axis_hp0_agent = hog_axis_hp0_agent::type_id::create("axis_hp0_agent",this);
+
+        
         //Dodavanje scoreboard-a
     endfunction : build_phase   
     

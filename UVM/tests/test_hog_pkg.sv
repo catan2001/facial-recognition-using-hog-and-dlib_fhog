@@ -6,7 +6,10 @@ package test_hog_pkg;
 		import uvm_pkg::*;
 		`include "uvm_macros.svh"
 
+		// importing agents:
 		import hog_axil_gp_agent_pkg::*;
+		import hog_axis_hp0_agent_pkg::*;
+
 		import hog_seq_pkg::*;
 
 		`include "hog_environment.sv"

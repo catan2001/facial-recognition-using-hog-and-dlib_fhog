@@ -14,7 +14,7 @@
 		endfunction // new
 		
 		function void build_phase(uvm_phase phase);
-			if (!uvm_config_db#(virtual axil_gp_if)::get(null, "*", "axis_hp0_if", vif))
+			if (!uvm_config_db#(virtual axis_hp0_if)::get(null, "*", "axis_hp0_if", vif))
 				`uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
 		endfunction // build_phase
 
@@ -27,11 +27,11 @@
 					`uvm_info(get_type_name(), $sformatf("Driver sending...\n%s", req.sprint()), UVM_HIGH)
 
 					if(!req.read & req.write) begin // Write transaction
-					    $display("Driving write transaction:");
-						axi_stream_write(req.s00_axis_tdata);
+					    $display("Driving AXIS_HP0 write transaction:");
+						axi_stream_write(req.s00_axis_tdata, req.tlast);
 					end else if(req.read & !req.write) begin
-						$display("Driving read transaction:");
-						axi_stream_read(req.m00_axis_tdata);					
+						$display("Driving AXIS_HP0 read transaction:");
+						axi_stream_read(req.m00_axis_tdata, req.tlast);					
 					end
 
 					seq_item_port.item_done(); // Complete transaction
@@ -41,8 +41,8 @@
 			end
 		endtask : main_phase
 
-        task automatic axi_lite_write(input bit [63 : 0] data); // prevent variables to be shared between calls.
-			// vif.s00_axis_tlast = ????
+        task automatic axi_stream_write(input bit [63 : 0] data, input bit tlast); // prevent variables to be shared between calls.
+			vif.s00_axis_tlast = tlast;
 			vif.s00_axis_tdata = data;
 			vif.s00_axis_tstrb = 8'b11111111;
 			vif.s00_axis_tvalid = 1;
@@ -53,13 +53,13 @@
 			// clear the valid signals after response is recieved...
 			vif.s00_axis_tvalid = 0;
 
-            if(vif.s00_axis_tlast) begin
-                vif.s00_axis_tlast = 0;
+            if(tlast) begin
+                tlast = 0;
             end
 
 		endtask;
 
-        task automatic axi_lite_read(input bit [63 : 0] data); // prevent variables to be shared between calls.
+        task automatic axi_stream_read(input bit [63 : 0] data, input bit tlast); // prevent variables to be shared between calls.
 			vif.m00_axis_tready = 1;
 
 			// Wait for slave to be valid...
@@ -69,10 +69,7 @@
                 data = vif.m00_axis_tdata;
             end 
 
-            // TODO: WHAT TO DO WITH TLAST????
-            //if(vif.m00_axis_tlast) begin
-            //    vif.s00_axis_tlast = 0;
-            //end
+            tlast = vif.m00_axis_tlast;
 	
 		endtask;
         

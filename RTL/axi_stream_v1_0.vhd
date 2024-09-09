@@ -24,7 +24,7 @@ entity axi_stream_v1_0 is
 		-- Do not modify the ports beyond this line
 
 
-		-- Ports of Axi Slave Bus Interface S00_AXIS
+		-- Ports of Axi Slave Bus Interface S00_AXIS // DUT inputs
 		s00_axis_aclk	: in std_logic;
 		s00_axis_aresetn	: in std_logic;
 		s00_axis_tready	: out std_logic;
@@ -33,7 +33,7 @@ entity axi_stream_v1_0 is
 		s00_axis_tlast	: in std_logic;
 		s00_axis_tvalid	: in std_logic;
 
-		-- Ports of Axi Master Bus Interface M00_AXIS
+		-- Ports of Axi Master Bus Interface M00_AXIS // DUT outputs
 		m00_axis_aclk	: in std_logic;
 		m00_axis_aresetn	: in std_logic;
 		m00_axis_tvalid	: out std_logic;

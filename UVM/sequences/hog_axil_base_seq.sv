@@ -15,7 +15,7 @@
 		uvm_phase phase = get_starting_phase();
 		if (phase != null)
 			phase.raise_objection(this, {"Running sequence '", get_full_name(), "'"});
-		uvm_test_done.set_drain_time(this, 200ms);      
+		uvm_test_done.set_drain_time(this, 200ms);  // TODO: NOTE THIS!     
 	endtask : pre_body
 
 	// objections are dropped in post_body
