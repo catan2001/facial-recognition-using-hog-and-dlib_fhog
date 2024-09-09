@@ -20,11 +20,13 @@ entity FSM is
   --dram2bram
   dram_row_ptr0: out std_logic_vector(10 downto 0);
   dram_row_ptr1: out std_logic_vector(10 downto 0); 
+  realloc_last_rows: out std_logic;
   
   --ctrl log
-  cycle_num: out std_logic_vector(5 downto 0); 
+  cycle_num: out std_logic_vector(5 downto 0);
+  cycle_num0: out std_logic_vector(5 downto 0); 
   sel_bram_out_fsm: out std_logic_vector(2 downto 0); 
-  sel_filter_fsm: out std_logic_vector(2 downto 0);
+  sel_filter: in std_logic_vector(2 downto 0);
   
   ready: out std_logic;
   sel_bram_addr: out std_logic;
@@ -72,6 +74,9 @@ signal en_pipe_s: std_logic := '0';
 signal en_bram_to_dram_s: std_logic := '0';
 
 signal row_cnt_s: std_logic_vector(10 downto 0);
+signal realloc_last_rows_s: std_logic := '0';
+
+signal reinit_const: std_logic_vector(4 downto 0) := "01100";
 
 begin
 
@@ -117,7 +122,7 @@ end process;
 process(state_r, rows_num_reg, cycle_num_limit_reg, effective_row_limit_reg,
         sel_bram_addr_reg, x_reg, cycle_num_reg, cnt_init_reg, we_out_reg, rows_num, cycle_num_limit, effective_row_limit,
         start, dram_to_bram_finished, bram_to_dram_finished, pipe_finished, x_next,
-        ready_reg)
+        ready_reg, sel_filter, reinit_const)
         --start_reg, start_next 
 begin
 
@@ -163,7 +168,7 @@ case state_r is
       
     when ctrl_loop =>
     
-          if(cycle_num_reg = std_logic_vector(unsigned(cycle_num_limit_reg)-1) and x_reg = std_logic_vector(12 + shift_left(resize(((unsigned(cycle_num_limit_reg) - 1)*unsigned(cnt_init_reg)), 10), 4))) then  
+          if(cycle_num_reg = std_logic_vector(unsigned(cycle_num_limit_reg)-1) and x_reg = std_logic_vector(resize(unsigned(reinit_const), 10) + shift_left(resize(((unsigned(cycle_num_limit_reg) - 1)*unsigned(cnt_init_reg)), 10), 4))) then  
        
  
             dram_row_ptr0_s <= std_logic_vector(resize(unsigned(std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_reg))),11));
@@ -182,8 +187,19 @@ case state_r is
             state_n <= reint;
         --end if;
         else
+        
+            if(cycle_num_reg = std_logic_vector(unsigned(cycle_num_limit_reg)-1)) then
+              if(sel_filter = "001") then
+                realloc_last_rows_s <= '1';
+                
+              elsif(sel_filter = "010") then
+                realloc_last_rows_s <= '0';
+              
+              end if;
+            end if;
+        
             sel_bram_addr_next <= '1'; 
-            cycle_num_next <= std_logic_vector(resize((resize(unsigned(x_reg(9 downto 4)), 12) - (unsigned(cnt_init_reg)-1)*(unsigned(cycle_num_limit_reg)-1)), 6));
+            cycle_num_next <= std_logic_vector(resize((resize(unsigned(x_reg(9 downto 4)), 12) - (unsigned(cnt_init_reg)-1)*(unsigned(cycle_num_limit_reg))), 6));
             --x_next <= std_logic_vector(unsigned(x_reg)+4);
             state_n <= pipe;
         end if;
@@ -194,6 +210,10 @@ case state_r is
         reinit_s <= '0';
         we_out_next <= X"0000";
         --sel_bram_addr_next <= '0';
+        
+        if(cnt_init_reg = "000010") then
+            reinit_const <= "11100"; 
+        end if;
         
             if(dram_to_bram_finished = '1') then
                 en_dram_to_bram_s <= '0';
@@ -206,14 +226,6 @@ case state_r is
                     reinit_pipe_s <= '1';
                     state_n <= pipe;
             end if;
-        
---        if(dram_to_bram_finished = '1' and bram_to_dram_finished = '1') then
---            en_dram_to_bram_s <= '0';
---            en_bram_to_dram_s <= '0';
---            we_out_next <= X"000F";
---            reinit_pipe_s <= '1';
---            state_n <= pipe;
---        end if;       
         
      when pipe =>
      
@@ -258,6 +270,11 @@ en_bram_to_dram <= en_bram_to_dram_s;
 reinit <= reinit_s;
 pipe_br2dr <= pipe_br2dr_s;
 reinit_pipe <= reinit_pipe_s;
+realloc_last_rows <= realloc_last_rows_s;
+
+
+cycle_num0 <= cycle_num_reg when realloc_last_rows_s = '0' else
+              (others => '0');
 
 --bram2dram
 row_cnt <= row_cnt_s;

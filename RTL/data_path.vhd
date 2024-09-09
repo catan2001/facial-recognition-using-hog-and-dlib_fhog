@@ -19,10 +19,13 @@ entity data_path is
         sel_bram_out: in std_logic_vector(2 downto 0);
         sel_filter: in std_logic_vector(2 downto 0);
         sel_dram: in std_logic_vector(4 downto 0);
-        bram_addrA_l_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-        bram_addrB_l_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-        bram_addrA_h_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-        bram_addrB_h_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
+        realloc_last_rows: in std_logic;
+        bram_addrA_l_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);  --0-3
+        bram_addrB_l_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);  --0-3
+        bram_addrA_h_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);  --4-11
+        bram_addrB_h_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);  --4-11
+        bram_addrA12_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0); --12-15
+        bram_addrB12_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0); --12-15
         bram_addr_A_out: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
         bram_addr_B_out: in std_logic_vector(ADDR_WIDTH - 1 downto 0)
         );
@@ -43,6 +46,12 @@ architecture Behavioral of data_path is
     signal demux4_out_bram_in0, demux4_out_bram_in1, demux4_out_bram_in2, demux4_out_bram_in3: std_logic_vector(WIDTH-1 downto 0);
     signal demux4_out_bram_in4, demux4_out_bram_in5, demux4_out_bram_in6, demux4_out_bram_in7: std_logic_vector(WIDTH-1 downto 0);
     
+    --mux to bram_block
+    signal mux0_out_bramA_in0, mux0_out_bramB_in0: std_logic_vector(WIDTH-1 downto 0);
+    signal mux1_out_bramA_in1, mux1_out_bramB_in1: std_logic_vector(WIDTH-1 downto 0);
+    signal mux2_out_bramA_in2, mux2_out_bramB_in2: std_logic_vector(WIDTH-1 downto 0);
+    signal mux3_out_bramA_in3, mux3_out_bramB_in3: std_logic_vector(WIDTH-1 downto 0);
+   
     --bram_block to mux
     signal bram_block0A_out_mux_in, bram_block0B_out_mux_in, bram_block1A_out_mux_in, bram_block1B_out_mux_in: std_logic_vector(WIDTH-1 downto 0);
     signal bram_block2A_out_mux_in, bram_block2B_out_mux_in, bram_block3A_out_mux_in, bram_block3B_out_mux_in: std_logic_vector(WIDTH-1 downto 0);
@@ -140,6 +149,14 @@ signal data_out2_s0, data_out2_s1, data_out2_s2, data_out2_s3: std_logic_vector(
           x2: in std_logic_vector(WIDTH-1 downto 0);
           x3: in std_logic_vector(WIDTH-1 downto 0);
           sel: in std_logic_vector(2 downto 0);
+          y: out std_logic_vector(WIDTH-1 downto 0));
+    end component;
+    
+    component mux2_1 is
+    generic(WIDTH:natural:=32);
+    Port (x0: in std_logic_vector(WIDTH-1 downto 0);
+          x1: in std_logic_vector(WIDTH-1 downto 0);
+          sel: in std_logic;
           y: out std_logic_vector(WIDTH-1 downto 0));
     end component;
     
@@ -284,6 +301,20 @@ demux_in_4: demux1_8
              y6 => demux4_out_bram_in6,
              y7 => demux4_out_bram_in7);
              
+mux0A_in_2: mux2_1
+    generic map(WIDTH => WIDTH)
+    port map(x0 => demux1_out_bram_in0,
+             x1 => bram_block12A_out_mux_in,
+             sel => realloc_last_rows,
+             y => mux0_out_bramA_in0);
+             
+mux0B_in_2: mux2_1
+    generic map(WIDTH => WIDTH)
+    port map(x0 => demux2_out_bram_in0,
+             x1 => bram_block12B_out_mux_in,
+             sel => realloc_last_rows,
+             y => mux0_out_bramB_in0);
+             
  --bram_block    
 bram_block0_in: Dual_Port_BRAM
     generic map(
@@ -298,12 +329,26 @@ bram_block0_in: Dual_Port_BRAM
          we_a => we_in(3 downto 0),
          we_b => we_in(3 downto 0),
          data_output_a => bram_block0A_out_mux_in, 
-         data_input_a => demux1_out_bram_in0,
+         data_input_a => mux0_out_bramA_in0,
          addr_a => bram_addrA_l_in,
          data_output_b => bram_block0B_out_mux_in,
-         data_input_b => demux2_out_bram_in0, 
+         data_input_b => mux0_out_bramB_in0, 
          addr_b => bram_addrB_l_in
          );
+         
+mux1A_in_2: mux2_1
+    generic map(WIDTH => WIDTH)
+    port map(x0 => demux3_out_bram_in0,
+             x1 => bram_block13A_out_mux_in,
+             sel => realloc_last_rows,
+             y => mux1_out_bramA_in1);
+             
+mux1B_in_2: mux2_1
+    generic map(WIDTH => WIDTH)
+    port map(x0 => demux4_out_bram_in0,
+             x1 => bram_block13B_out_mux_in,
+             sel => realloc_last_rows,
+             y => mux1_out_bramB_in1);
         
 bram_block1_in: Dual_Port_BRAM
     generic map(
@@ -318,12 +363,26 @@ bram_block1_in: Dual_Port_BRAM
          we_a => we_in(3 downto 0),
          we_b => we_in(3 downto 0),
          data_output_a => bram_block1A_out_mux_in, 
-         data_input_a => demux3_out_bram_in0,
+         data_input_a => mux1_out_bramA_in1,
          addr_a => bram_addrA_l_in,
          data_output_b => bram_block1B_out_mux_in,
-         data_input_b => demux4_out_bram_in0, 
+         data_input_b => mux1_out_bramB_in1, 
          addr_b => bram_addrB_l_in
          );
+         
+mux2A_in_2: mux2_1
+    generic map(WIDTH => WIDTH)
+    port map(x0 => demux1_out_bram_in1,
+             x1 => bram_block14A_out_mux_in,
+             sel => realloc_last_rows,
+             y => mux2_out_bramA_in2);
+             
+mux2B_in_2: mux2_1
+    generic map(WIDTH => WIDTH)
+    port map(x0 => demux2_out_bram_in1,
+             x1 => bram_block14B_out_mux_in,
+             sel => realloc_last_rows,
+             y => mux2_out_bramB_in2);
          
  bram_block2_in: Dual_Port_BRAM
     generic map(
@@ -338,12 +397,26 @@ bram_block1_in: Dual_Port_BRAM
          we_a => we_in(7 downto 4),
          we_b => we_in(7 downto 4),
          data_output_a => bram_block2A_out_mux_in, 
-         data_input_a => demux1_out_bram_in1,
-         addr_a => bram_addrA_h_in,
+         data_input_a => mux2_out_bramA_in2,
+         addr_a => bram_addrA_l_in,
          data_output_b => bram_block2B_out_mux_in,
-         data_input_b => demux2_out_bram_in1, 
-         addr_b => bram_addrB_h_in
+         data_input_b => mux2_out_bramB_in2, 
+         addr_b => bram_addrB_l_in
          );
+         
+mux3A_in_2: mux2_1
+    generic map(WIDTH => WIDTH)
+    port map(x0 => demux3_out_bram_in1,
+             x1 => bram_block15A_out_mux_in,
+             sel => realloc_last_rows,
+             y => mux3_out_bramA_in3);
+             
+mux3B_in_2: mux2_1
+    generic map(WIDTH => WIDTH)
+    port map(x0 => demux4_out_bram_in1,
+             x1 => bram_block15B_out_mux_in,
+             sel => realloc_last_rows,
+             y => mux3_out_bramB_in3);
 
  bram_block3_in: Dual_Port_BRAM
     generic map(
@@ -358,11 +431,11 @@ bram_block1_in: Dual_Port_BRAM
          we_a => we_in(7 downto 4),
          we_b => we_in(7 downto 4),
          data_output_a => bram_block3A_out_mux_in, 
-         data_input_a => demux3_out_bram_in1,
-         addr_a => bram_addrA_h_in,
+         data_input_a => mux3_out_bramA_in3,
+         addr_a => bram_addrA_l_in,
          data_output_b => bram_block3B_out_mux_in,
-         data_input_b => demux4_out_bram_in1, 
-         addr_b => bram_addrB_h_in
+         data_input_b => mux3_out_bramB_in3, 
+         addr_b => bram_addrB_l_in
          );
          
    bram_block4_in: Dual_Port_BRAM
@@ -539,10 +612,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(27 downto 24),
          data_output_a => bram_block12A_out_mux_in, 
          data_input_a => demux1_out_bram_in6,
-         addr_a => bram_addrA_h_in,
+         addr_a => bram_addrA12_in,
          data_output_b => bram_block12B_out_mux_in,
          data_input_b => demux2_out_bram_in6, 
-         addr_b => bram_addrB_h_in
+         addr_b => bram_addrB12_in
          );
          
     bram_block13_in: Dual_Port_BRAM
@@ -559,10 +632,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(27 downto 24),
          data_output_a => bram_block13A_out_mux_in, 
          data_input_a => demux3_out_bram_in6,
-         addr_a => bram_addrA_h_in,
+         addr_a => bram_addrA12_in,
          data_output_b => bram_block13B_out_mux_in,
          data_input_b => demux4_out_bram_in6, 
-         addr_b => bram_addrB_h_in
+         addr_b => bram_addrB12_in
          );
          
     bram_block14_in: Dual_Port_BRAM
@@ -579,10 +652,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(31 downto 28),
          data_output_a => bram_block14A_out_mux_in, 
          data_input_a => demux1_out_bram_in7,
-         addr_a => bram_addrA_h_in,
+         addr_a => bram_addrA12_in,
          data_output_b => bram_block14B_out_mux_in,
          data_input_b => demux2_out_bram_in7, 
-         addr_b => bram_addrB_h_in
+         addr_b => bram_addrB12_in
          );
          
     bram_block15_in: Dual_Port_BRAM
@@ -599,10 +672,10 @@ bram_block1_in: Dual_Port_BRAM
          we_b => we_in(31 downto 28),
          data_output_a => bram_block15A_out_mux_in, 
          data_input_a => demux3_out_bram_in7,
-         addr_a => bram_addrA_h_in,
+         addr_a => bram_addrA12_in,
          data_output_b => bram_block15B_out_mux_in,
          data_input_b => demux4_out_bram_in7, 
-         addr_b => bram_addrB_h_in
+         addr_b => bram_addrB12_in
          );
   
   --mux before core       

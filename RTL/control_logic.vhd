@@ -15,12 +15,15 @@ entity control_logic is
     en_pipe: in std_logic;
     cycle_num: in std_logic_vector(5 downto 0); 
     sel_bram_out_fsm: in std_logic_vector(2 downto 0); 
-    sel_filter_fsm: in std_logic_vector(2 downto 0);
+    sel_filter_fsm: out std_logic_vector(2 downto 0);
     we_out_fsm: in std_logic_vector(15 downto 0);
     pipe_finished: out std_logic;
+    realloc_last_rows: in std_logic;
     --out sig
     bram_output_xy_addr:out std_logic_vector(9 downto 0);
     row_position: out std_logic_vector(8 downto 0);
+    row_position0: out std_logic_vector(8 downto 0);
+    row_position12: out std_logic_vector(8 downto 0);
     sel_bram_out: out std_logic_vector(2 downto 0);
     sel_filter: out std_logic_vector(2 downto 0);
     we_out: out std_logic_vector(15 downto 0));
@@ -45,6 +48,8 @@ signal we_out_reg, we_out_next: std_logic_vector(15 downto 0);
 
 signal cycle_num_reg, cycle_num_next: std_logic_vector(5 downto 0); 
 signal row_position_reg, row_position_next: std_logic_vector(8 downto 0);
+signal row_position0_reg, row_position0_next: std_logic_vector(8 downto 0);
+signal row_position12_reg, row_position12_next: std_logic_vector(8 downto 0);
 signal cnt_init_reg, cnt_init_next: std_logic_vector(5 downto 0);
 
 signal pipe_finished_s: std_logic := '0';
@@ -64,6 +69,8 @@ if(rising_edge(clk)) then
         we_out_reg <= X"000F";
         
         row_position_reg <= (others => '0');
+        row_position0_reg <= (others => '0');
+        row_position12_reg <= (others => '0');
         cycle_num_reg <= (others => '0');
         cnt_init_reg <= "000001";
 
@@ -78,6 +85,9 @@ if(rising_edge(clk)) then
         we_out_reg <= we_out_next;
         
         row_position_reg <= row_position_next;
+        row_position0_reg <= row_position0_next;
+        row_position12_reg <= row_position12_next;
+        
         cycle_num_reg <= cycle_num_next;
         cnt_init_reg <= cnt_init_next;
     end if;
@@ -86,7 +96,7 @@ end process;
 
 
 process(state_control_logic_r, width_2, sel_filter_reg, sel_bram_out_reg,
-        row_position_reg, cycle_num_reg, cnt_init_reg, width_2_reg, sel_filter_fsm, 
+        row_position_reg, row_position0_reg, row_position12_reg, cycle_num_reg, cnt_init_reg, width_2_reg, 
         cycle_num, sel_bram_out_fsm, en_pipe, reinit, br2dr, reinit_pipe)
 begin
 
@@ -112,6 +122,8 @@ end if;
 
 cycle_num_next <= cycle_num;
 row_position_next <= row_position_reg;
+row_position0_next <= row_position0_reg;
+row_position12_next <= row_position12_reg;
 cnt_init_next <= cnt_init_reg;
 
 case state_control_logic_r is
@@ -123,6 +135,12 @@ case state_control_logic_r is
         
         if(en_pipe = '1') then
             row_position_next <= (others => '0');
+            
+            if(realloc_last_rows = '1') then
+                row_position0_next <= "111111110";
+                row_position12_next <= (others => '0');
+            end if;
+            
             state_control_logic_n <= loop_row;
         end if;
     
@@ -149,6 +167,8 @@ case state_control_logic_r is
             state_control_logic_n <= init_loop_row;
         else
             row_position_next <= std_logic_vector(unsigned(row_position_reg) + 1);
+            row_position0_next <= std_logic_vector(unsigned(row_position0_reg) + 2);
+            row_position12_next <= std_logic_vector(unsigned(row_position12_reg) + 2);
             bram_output_xy_addr_s <= std_logic_vector((resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg) - 1), 10) + resize(unsigned(row_position_reg),10)));
         end if;
 
@@ -158,8 +178,16 @@ end process;
 pipe_finished <= pipe_finished_s;
 bram_output_xy_addr <= bram_output_xy_addr_s;
 row_position <= row_position_reg;
+
+row_position0 <= row_position_reg when realloc_last_rows = '0' else
+                 row_position0_reg;
+
+row_position12 <= row_position_reg when realloc_last_rows = '0' else
+                 row_position12_reg;
+
 sel_bram_out <= sel_bram_out_reg;
 sel_filter <= sel_filter_reg;
+sel_filter_fsm <= sel_filter_reg;
 we_out <= we_out_reg;
 
 

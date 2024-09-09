@@ -53,6 +53,7 @@ signal sel_bram_in_s: std_logic_vector(3 downto 0);
 signal sel_filter_s: std_logic_vector(2 downto 0);
 signal sel_bram_out_s: std_logic_vector(2 downto 0);
 signal sel_dram_s: std_logic_vector(4 downto 0);
+signal realloc_last_rows_s: std_logic;
 
 signal we_in_s: std_logic_vector(31 downto 0);
 signal we_out_s: std_logic_vector(15 downto 0);
@@ -61,6 +62,9 @@ signal bram_addrA_l_in_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 signal bram_addrB_l_in_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 signal bram_addrA_h_in_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 signal bram_addrB_h_in_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
+signal bram_addrA12_in_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
+signal bram_addrB12_in_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
+
 
 signal bram_addr_A_out_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 signal bram_addr_B_out_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
@@ -101,10 +105,13 @@ component data_path is
         sel_bram_out: in std_logic_vector(2 downto 0);
         sel_filter: in std_logic_vector(2 downto 0);
         sel_dram: in std_logic_vector(4 downto 0);
+        realloc_last_rows: in std_logic;
         bram_addrA_l_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
         bram_addrB_l_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
         bram_addrA_h_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
         bram_addrB_h_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
+        bram_addrA12_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
+        bram_addrB12_in: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
         bram_addr_A_out: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
         bram_addr_B_out: in std_logic_vector(ADDR_WIDTH - 1 downto 0)
         );
@@ -135,16 +142,19 @@ component control_path_v2 is
     
     --dram_to_bram
     sel_bram_in: out std_logic_vector(3 downto 0);
-    bram_addr_A1: out std_logic_vector(9 downto 0); --bram block 0-1
-    bram_addr_B1: out std_logic_vector(9 downto 0); --bram block 0-1
-    bram_addr_A2: out std_logic_vector(9 downto 0); --bram block 2-15
-    bram_addr_B2: out std_logic_vector(9 downto 0); --bram block 2-15
+    bram_addr_A1: out std_logic_vector(9 downto 0); --bram block 0-3
+    bram_addr_B1: out std_logic_vector(9 downto 0); --bram block 0-3
+    bram_addr_A2: out std_logic_vector(9 downto 0); --bram block 4-11
+    bram_addr_B2: out std_logic_vector(9 downto 0); --bram block 4-11
+    bram_addr_A12: out std_logic_vector(9 downto 0); --bram block 12-15
+    bram_addr_B12: out std_logic_vector(9 downto 0); --bram block 12-15
     dram_addr0: out std_logic_vector(31 downto 0);
     dram_addr1: out std_logic_vector(31 downto 0);
     we_in: out std_logic_vector(31 downto 0);
     we_out: out std_logic_vector(15 downto 0); 
     burst_len_read: out std_logic_vector(7 downto 0);
     burst_len_write: out std_logic_vector(7 downto 0);
+    realloc_last_rows: out std_logic;
     
     --control logic
     sel_filter: out std_logic_vector(2 downto 0);
@@ -180,10 +190,13 @@ data_path_l: data_path
       sel_bram_out => sel_bram_out_s,
       sel_filter => sel_filter_s,
       sel_dram => sel_dram_s,
+      realloc_last_rows => realloc_last_rows_s,
       bram_addrA_l_in => bram_addrA_l_in_s,
       bram_addrB_l_in => bram_addrB_l_in_s,
       bram_addrA_h_in => bram_addrA_h_in_s,
       bram_addrB_h_in => bram_addrB_h_in_s,
+      bram_addrA12_in => bram_addrA12_in_s,
+      bram_addrB12_in => bram_addrB12_in_s,
       bram_addr_A_out => bram_addr_A_out_s,
       bram_addr_B_out => bram_addr_B_out_s);
 
@@ -216,12 +229,15 @@ Port map(
   bram_addr_B1 => bram_addrB_l_in_s,
   bram_addr_A2 => bram_addrA_h_in_s,
   bram_addr_B2 => bram_addrB_h_in_s,
+  bram_addr_A12 => bram_addrA12_in_s,
+  bram_addr_B12 => bram_addrB12_in_s,
   dram_addr0 => dram_addr0_s,
   dram_addr1 => dram_addr1_s,
   we_in => we_in_s,
   we_out => we_out_s,
   burst_len_read => burst_len_read_s,
   burst_len_write => burst_len_write_s,
+  realloc_last_rows => realloc_last_rows_s,
   
   --control logic
   sel_filter => sel_filter_s,

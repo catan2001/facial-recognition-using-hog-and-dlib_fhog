@@ -27,16 +27,19 @@ entity control_path_v2 is
     
     --dram_to_bram
     sel_bram_in: out std_logic_vector(3 downto 0);
-    bram_addr_A1: out std_logic_vector(9 downto 0); --bram block 0-1
-    bram_addr_B1: out std_logic_vector(9 downto 0); --bram block 0-1
-    bram_addr_A2: out std_logic_vector(9 downto 0); --bram block 2-15
-    bram_addr_B2: out std_logic_vector(9 downto 0); --bram block 2-15
+    bram_addr_A1: out std_logic_vector(9 downto 0); --bram block 0-3
+    bram_addr_B1: out std_logic_vector(9 downto 0); --bram block 0-3
+    bram_addr_A2: out std_logic_vector(9 downto 0); --bram block 4-11
+    bram_addr_B2: out std_logic_vector(9 downto 0); --bram block 4-11
+    bram_addr_A12: out std_logic_vector(9 downto 0); --bram block 12-15
+    bram_addr_B12: out std_logic_vector(9 downto 0); --bram block 12-15
     dram_addr0: out std_logic_vector(31 downto 0);
     dram_addr1: out std_logic_vector(31 downto 0);
     we_in: out std_logic_vector(31 downto 0);
     we_out: out std_logic_vector(15 downto 0); 
     burst_len_read: out std_logic_vector(7 downto 0);
     burst_len_write: out std_logic_vector(7 downto 0); --bram to dram
+    realloc_last_rows: out std_logic;
     
     --control logic
     sel_filter: out std_logic_vector(2 downto 0);
@@ -92,12 +95,15 @@ component control_logic is
     en_pipe: in std_logic;
     cycle_num: in std_logic_vector(5 downto 0); 
     sel_bram_out_fsm: in std_logic_vector(2 downto 0); --pazi
-    sel_filter_fsm: in std_logic_vector(2 downto 0);
+    sel_filter_fsm: out std_logic_vector(2 downto 0);
     we_out_fsm: in std_logic_vector(15 downto 0);
     pipe_finished: out std_logic;
+    realloc_last_rows: in std_logic;
     --out sig
     bram_output_xy_addr:out std_logic_vector(9 downto 0);
     row_position: out std_logic_vector(8 downto 0);
+    row_position0: out std_logic_vector(8 downto 0);
+    row_position12: out std_logic_vector(8 downto 0);
     sel_bram_out: out std_logic_vector(2 downto 0);
     sel_filter: out std_logic_vector(2 downto 0);
     we_out: out std_logic_vector(15 downto 0));
@@ -123,6 +129,7 @@ component dram_to_bram is
     dram_row_ptr0: in std_logic_vector(10 downto 0);
     dram_row_ptr1: in std_logic_vector(10 downto 0); 
     dram_to_bram_finished: out std_logic; 
+    realloc_last_rows: in std_logic;
     
     --out signals
     we_in: out std_logic_vector(31 downto 0);
@@ -153,11 +160,13 @@ component FSM is
   --dram2bram
   dram_row_ptr0: out std_logic_vector(10 downto 0);
   dram_row_ptr1: out std_logic_vector(10 downto 0); 
+  realloc_last_rows: out std_logic;
   
   --ctrl log
   cycle_num: out std_logic_vector(5 downto 0); 
+  cycle_num0: out std_logic_vector(5 downto 0); 
   sel_bram_out_fsm: out std_logic_vector(2 downto 0); 
-  sel_filter_fsm: out std_logic_vector(2 downto 0);
+  sel_filter: in std_logic_vector(2 downto 0);
   
   ready: out std_logic;
   sel_bram_addr: out std_logic;
@@ -241,11 +250,15 @@ signal dram_row_ptr1_s: std_logic_vector(10 downto 0);
 signal dram_to_bram_finished_s: std_logic; 
 signal i_s: std_logic_vector(5 downto 0);
 signal k_s: std_logic_vector(9 downto 0);
+signal realloc_last_rows_s: std_logic;
 
 --control logic
 signal bram_output_xy_addr_s: std_logic_vector(9 downto 0);
-signal cycle_num_s: std_logic_vector(5 downto 0); 
+signal cycle_num_s: std_logic_vector(5 downto 0);
+signal cycle_num0_s: std_logic_vector(5 downto 0); 
 signal row_position_s: std_logic_vector(8 downto 0);
+signal row_position0_s: std_logic_vector(8 downto 0);
+signal row_position12_s: std_logic_vector(8 downto 0);
 signal sel_bram_out_fsm_s: std_logic_vector(2 downto 0); 
 signal sel_filter_fsm_s: std_logic_vector(2 downto 0);
 signal sel_filter_s: std_logic_vector(2 downto 0);
@@ -308,6 +321,7 @@ port map(
     dram_row_ptr0 => dram_row_ptr0_s,
     dram_row_ptr1 => dram_row_ptr1_s, 
     dram_to_bram_finished => dram_to_bram_finished_s,
+    realloc_last_rows => realloc_last_rows_s,
     
     --out signals
     we_in => we_in,
@@ -334,9 +348,12 @@ port map(
     sel_filter_fsm => sel_filter_fsm_s,
     we_out_fsm => we_out_fsm_s,
     pipe_finished => pipe_finished_s,
+    realloc_last_rows => realloc_last_rows_s,
     --out sig
     bram_output_xy_addr => bram_output_xy_addr_s,
     row_position => row_position_s,
+    row_position0 => row_position0_s,
+    row_position12 => row_position12_s,
     sel_bram_out => sel_bram_out_s,
     sel_filter => sel_filter_s,
     we_out => we_out_pipe_s);
@@ -385,11 +402,13 @@ Port map(
   --dram2bram
   dram_row_ptr0 => dram_row_ptr0_s,
   dram_row_ptr1 => dram_row_ptr1_s,
+  realloc_last_rows => realloc_last_rows_s,
   
   --ctrl log
   cycle_num => cycle_num_s,
+  cycle_num0 => cycle_num0_s,
   sel_bram_out_fsm => sel_bram_out_fsm_s,
-  sel_filter_fsm => sel_filter_fsm_s,
+  sel_filter => sel_filter_fsm_s,
   
   ready => ready,
   sel_bram_addr => sel_bram_addr_s,
@@ -410,9 +429,9 @@ Port map(
     clk => clk,
     width_2 => width_2,
     a => i_s,
-    b => cycle_num_s, 
+    b => cycle_num0_s, 
     c => k_s,
-    d => row_position_s,
+    d => row_position0_s,
     const1 => const1_s,
     const2 => const2_s,
     sel_addr => sel_bram_addr_s,
@@ -424,9 +443,9 @@ Port map(
     clk => clk,
     width_2 => width_2,
     a => i_s,
-    b => cycle_num_s, 
+    b => cycle_num0_s, 
     c => k_s,
-    d => row_position_s,
+    d => row_position0_s,
     const1 => const1_s,
     const2 => const2_s,
     sel_addr => sel_bram_addr_s,
@@ -455,6 +474,29 @@ Port map(
     const1 => const1_s,
     sel_addr => sel_bram_addr_s,
     res => bram_addr_B2); 
+    
+DSP_addr_A12_l: DSP_addr_AX
+Port map( 
+    clk => clk,
+    width_2 => width_2,
+    a => i_s,
+    b => cycle_num_s, 
+    c => k_s,
+    d => row_position12_s,
+    sel_addr => sel_bram_addr_s,
+    res => bram_addr_A12);
+    
+DSP_addr_B12_l: DSP_addr_BX
+Port map(    
+    clk => clk,
+    width_2 => width_2,
+    a => i_s,
+    b => cycle_num_s, 
+    c => k_s,
+    d => row_position12_s,
+    const1 => const1_s,
+    sel_addr => sel_bram_addr_s,
+    res => bram_addr_B12); 
     
 --mux control_logic and bram_to_dram
 process(sel_bram_addr_s, bram_output_xy_addr_reg4, bram_addr_bram_to_dram_A_s)
@@ -532,5 +574,6 @@ end process;
 sel_bram_out <= sel_bram_out_reg4;
 sel_filter <= sel_filter_s;
 we_out <= we_out_reg4;
+realloc_last_rows <= realloc_last_rows_s;
 
 end Behavioral;
