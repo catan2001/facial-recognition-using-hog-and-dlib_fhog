@@ -9,6 +9,7 @@ package test_hog_pkg;
 		// importing agents:
 		import hog_axil_gp_agent_pkg::*;
 		import hog_axis_hp0_agent_pkg::*;
+		import hog_axis_hp1_agent_pkg::*;
 
 		import hog_seq_pkg::*;
 

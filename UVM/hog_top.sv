@@ -26,6 +26,7 @@ module hog_top;
 
 	axil_gp_if axil_vif(clk, rst);
 	axis_hp0_if axis_hp0_vif(clk, rst);
+	axis_hp1_if axis_hp1_vif(clk, rst);
 
 	// DUT HERE:
 	axis_gp2ip_v1_0 DUT(					
@@ -87,9 +88,29 @@ module hog_top;
 		.m00_axis_tready	           (axis_hp0_vif.m00_axis_tready)
 	);
 
+	axi_stream_v1_0 DUT3(					
+		.s00_axis_aclk	              (clk),
+		.s00_axis_aresetn	          (rst),
+		.s00_axis_tready	          (axis_hp1_vif.s00_axis_tready),
+		.s00_axis_tdata	              (axis_hp1_vif.s00_axis_tdata),
+		.s00_axis_tstrb	              (axis_hp1_vif.s00_axis_tstrb),
+		.s00_axis_tlast               (axis_hp1_vif.s00_axis_tlast),
+		.s00_axis_tvalid	          (axis_hp1_vif.s00_axis_tvalid),
+
+		// Ports of Axi Master Bus Interface M00_AXIS
+		.m00_axis_aclk	               (clk),
+		.m00_axis_aresetn	           (rst),
+		.m00_axis_tvalid	           (axis_hp1_vif.m00_axis_tvalid),
+		.m00_axis_tdata	               (axis_hp1_vif.m00_axis_tdata),
+		.m00_axis_tstrb	               (axis_hp1_vif.m00_axis_tstrb),
+		.m00_axis_tlast	               (axis_hp1_vif.m00_axis_tlast),
+		.m00_axis_tready	           (axis_hp1_vif.m00_axis_tready)
+	);
+
 	initial begin
-		uvm_config_db#(virtual axis_hp0_if)::set(null, "*", "axis_hp0_if", axis_hp0_vif);
 		uvm_config_db#(virtual axil_gp_if)::set(null, "*", "axil_gp_if", axil_vif);
+		uvm_config_db#(virtual axis_hp0_if)::set(null, "*", "axis_hp0_if", axis_hp0_vif);
+		uvm_config_db#(virtual axis_hp1_if)::set(null, "*", "axis_hp1_if", axis_hp1_vif);
 
 		$display("Starting test...");
 		run_test("test_hog_simple");
