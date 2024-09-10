@@ -171,8 +171,8 @@ case state_r is
           if(cycle_num_reg = std_logic_vector(unsigned(cycle_num_limit_reg)-1) and x_reg = std_logic_vector(resize(unsigned(reinit_const), 10) + shift_left(resize(((unsigned(cycle_num_limit_reg) - 1)*unsigned(cnt_init_reg)), 10), 4))) then  
        
  
-            dram_row_ptr0_s <= std_logic_vector(resize(unsigned(std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_reg))),11));
-            dram_row_ptr1_s <= std_logic_vector(resize(unsigned(std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_reg) + 1)),11));
+--            dram_row_ptr0_s <= std_logic_vector(resize(unsigned(std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_reg))),11));
+--            dram_row_ptr1_s <= std_logic_vector(resize(unsigned(std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_reg) + 1)),11));
             cnt_init_next <= std_logic_vector(unsigned(cnt_init_reg) + 1);
             x_next <= std_logic_vector(unsigned(x_reg) + 4);
             cycle_num_next <= (others => '0');

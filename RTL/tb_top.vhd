@@ -180,7 +180,7 @@ port map(
         start_s <= '0', '1' after 45ns, '0' after 75ns;
         en_axi_s <= '1';
         
-        for c in 0 to 3 loop
+        for c in 0 to 2 loop
             --report "a: " & integer'image(a) & " b: " & integer'image(b) & " c: " & integer'image(c) & " d: " & integer'image(d) & " e: " & integer'image(e);
         
             data_in_s(0) <= x"0000000000000000"; 
@@ -198,7 +198,7 @@ port map(
                     cycle_num_out_s <= "001000";
                     rows_num_s <= "0010000000";
                     effective_row_limit_s <= "0100110100";
-            wait until falling_edge(clk_s);
+            wait until rising_edge(clk_s);
         end loop;
         
             for a in 0 to 63 loop
@@ -221,12 +221,12 @@ port map(
                     cycle_num_out_s <= "001000";
                     rows_num_s <= "0010000000";
                     effective_row_limit_s <= "0100110100";
-                wait until falling_edge(clk_s);
+                wait until rising_edge(clk_s);
                 end loop;
             end loop;  
             
             --wait for 196970 ns;
-            wait for 196975 ns;
+            wait for 196900 ns;
             
             for d in 64 to 125 loop
                 for e in 0 to 61 loop

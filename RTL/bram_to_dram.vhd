@@ -84,8 +84,8 @@ if(rising_edge(clk)) then
         height_reg <= height_next;
         bram_height_reg <= bram_height_next;
         cycle_num_out_reg <= cycle_num_out_next;
-        dram_x_addr_reg <= dram_x_addr_next;
-        dram_y_addr_reg <= dram_y_addr_next;
+--        dram_x_addr_reg <= dram_x_addr_next;
+--        dram_y_addr_reg <= dram_y_addr_next;
 
         sel_dram_reg <= sel_dram_next;
         
@@ -120,8 +120,8 @@ width_4_next <= width_4_reg;
 height_next <= height_reg;
 bram_height_next <= bram_height_reg;
 cycle_num_out_next <= cycle_num_out_reg;
-dram_x_addr_next <= dram_x_addr_reg;
-dram_y_addr_next <= dram_y_addr_reg;
+--dram_x_addr_next <= dram_x_addr_reg;
+--dram_y_addr_next <= dram_y_addr_reg;
 
 case state_bram_to_dram_r is
 
@@ -133,8 +133,8 @@ case state_bram_to_dram_r is
         height_next <= height;
         bram_height_next <= bram_height;
         cycle_num_out_next <= cycle_num_out;
-        dram_x_addr_next <= dram_x_addr;
-        dram_y_addr_next <= dram_y_addr;
+--        dram_x_addr_next <= dram_x_addr;
+--        dram_y_addr_next <= dram_y_addr;
         bram_to_dram_finished_s <= '0';
         
         if(reinit = '1') then
@@ -145,8 +145,8 @@ case state_bram_to_dram_r is
             y_next <= (others => '0');
             z_next <= (others => '0');
             sel_dram_next <= (others => '0');
-            dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
-            dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
+--            dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
+--            dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
             state_bram_to_dram_n <= loop_bram_to_dram1;
         end if;
 
@@ -172,12 +172,12 @@ case state_bram_to_dram_r is
                     else
                         z_next <= (others => '0');
                         sel_dram_next <= (others => '0');
-                        dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
-                        dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
+--                        dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
+--                        dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
                     end if;
                 else
-                    dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
-                    dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
+--                    dram_out_addr_x_s <= std_logic_vector(unsigned(dram_x_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
+--                    dram_out_addr_y_s <= std_logic_vector(unsigned(dram_y_addr_reg)+resize(unsigned(row_cnt_reg)*(unsigned(width_4_reg)-1),32));
                     sel_dram_next <= std_logic_vector(unsigned(sel_dram_reg)+1);
                     z_next <= (others => '0');
                 end if;
@@ -196,7 +196,7 @@ bram_addr_bram_to_dram_A <= bram_addr_bram_to_dram_A_s;
 bram_addr_bram_to_dram_B <= bram_addr_bram_to_dram_B_s;
 dram_out_addr_x <= dram_out_addr_x_s;
 dram_out_addr_y <= dram_out_addr_y_s;
-burst_len_write_s <= std_logic_vector(unsigned(width_4_reg) - 2);
+--burst_len_write_s <= std_logic_vector(unsigned(width_4_reg) - 2);
 burst_len_write <= burst_len_write_s;
 
 end Behavioral;
