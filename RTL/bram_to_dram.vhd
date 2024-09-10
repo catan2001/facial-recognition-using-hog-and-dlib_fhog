@@ -137,6 +137,10 @@ case state_bram_to_dram_r is
         dram_y_addr_next <= dram_y_addr;
         bram_to_dram_finished_s <= '0';
         
+        if(reinit = '1') then
+            row_cnt_next <= std_logic_vector(unsigned(row_cnt_reg)-4);
+        end if;
+        
         if(en_bram_to_dram = '1') then
             y_next <= (others => '0');
             z_next <= (others => '0');
@@ -154,6 +158,12 @@ case state_bram_to_dram_r is
                 state_bram_to_dram_n <= init_loop_bram_to_dram;
             else
                 row_cnt_next <= std_logic_vector(unsigned(row_cnt_reg)+1);
+                
+--                if(sel_dram_reg = std_logic_vector(to_unsigned(12, 5)) and y_reg = std_logic_vector(unsigned(cycle_num_out_reg)-1)) then
+--                    bram_to_dram_finished_s <= '1';
+--                    state_bram_to_dram_n <= init_loop_bram_to_dram;
+--                end if;
+                
                 if(sel_dram_reg = std_logic_vector(unsigned(bram_height_reg)-1)) then
                     y_next <= std_logic_vector(unsigned(y_reg)+1);
                     if(y_reg = std_logic_vector(unsigned(cycle_num_out_reg)-1)) then

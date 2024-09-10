@@ -298,6 +298,10 @@ signal we_out_reg1, we_out_next1: std_logic_vector(15 downto 0);
 signal we_out_reg2, we_out_next2: std_logic_vector(15 downto 0);
 signal we_out_reg3, we_out_next3: std_logic_vector(15 downto 0);
 signal we_out_reg4, we_out_next4: std_logic_vector(15 downto 0);
+signal we_out_reg5, we_out_next5: std_logic_vector(15 downto 0);
+signal we_out_reg6, we_out_next6: std_logic_vector(15 downto 0);
+
+signal en_bram_to_dram_reg, en_bram_to_dram_next: std_logic; 
 
 begin
 
@@ -501,11 +505,14 @@ Port map(
 --mux control_logic and bram_to_dram
 process(sel_bram_addr_s, bram_output_xy_addr_reg4, bram_addr_bram_to_dram_A_s)
 begin
-if(sel_bram_addr_s = '0') then
-    bram_output_addr_A <= bram_addr_bram_to_dram_A_s;
-else
-    bram_output_addr_A <= bram_output_xy_addr_reg4;
-end if;
+
+
+    if(sel_bram_addr_s = '0') then
+        bram_output_addr_A <= bram_addr_bram_to_dram_A_s;
+    else
+        bram_output_addr_A <= bram_output_xy_addr_reg4;
+    end if;
+
 end process;
 
 process(clk)
@@ -526,6 +533,10 @@ if(falling_edge(clk)) then
         we_out_reg2 <= (others => '0');
         we_out_reg3 <= (others => '0');
         we_out_reg4 <= (others => '0');
+        we_out_reg5 <= (others => '0');
+        we_out_reg6 <= (others => '0');
+        
+        en_bram_to_dram_reg <= '0';
       
     else
         bram_output_xy_addr_reg1 <= bram_output_xy_addr_next1;
@@ -543,6 +554,10 @@ if(falling_edge(clk)) then
         we_out_reg2 <= we_out_next2;
         we_out_reg3 <= we_out_next3;
         we_out_reg4 <= we_out_next4;
+        we_out_reg5 <= we_out_next5;
+        we_out_reg6 <= we_out_next6;
+        
+        en_bram_to_dram_reg <= en_bram_to_dram_next;
         
     end if;
 end if;
@@ -568,12 +583,19 @@ we_out_next1 <= we_out_pipe_s;
 we_out_next2 <= we_out_reg1;
 we_out_next3 <= we_out_reg2;
 we_out_next4 <= we_out_reg3;
+we_out_next5 <= we_out_reg4;
+we_out_next6 <= we_out_reg5;
+
+en_bram_to_dram_next <= en_bram_to_dram_s;
+
 
 end process;
 
 sel_bram_out <= sel_bram_out_reg4;
 sel_filter <= sel_filter_s;
-we_out <= we_out_reg4;
+--we_out <= we_out_reg4;
+--we_out <= (others => '0') when en_bram_to_dram_reg = '1' else we_out_reg6;
+we_out <= (others => '0') when en_bram_to_dram_reg = '1' else we_out_reg4;
 realloc_last_rows <= realloc_last_rows_s;
 
 end Behavioral;
