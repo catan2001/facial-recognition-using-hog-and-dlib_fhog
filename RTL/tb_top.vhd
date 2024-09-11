@@ -21,8 +21,7 @@ component top is
   Port ( 
     clk: in std_logic;
     reset: in std_logic;
-    start: in std_logic;
-    en_axi: in std_logic; 
+    start: in std_logic; 
 
     --reg bank
     width: in std_logic_vector(9 downto 0);
@@ -47,7 +46,6 @@ end component;
 signal clk_s: std_logic;
 signal reset_s: std_logic;
 signal start_s: std_logic;
-signal en_axi_s: std_logic;
 
 signal width_s: std_logic_vector(9 downto 0);
 signal width_4_s: std_logic_vector(7 downto 0);
@@ -111,7 +109,6 @@ port map(
     clk => clk_s,
     reset => reset_s,
     start => start_s,
-    en_axi => en_axi_s,
 
     --reg bank
     width => width_s,
@@ -140,7 +137,6 @@ port map(
     begin
         reset_s <= '0', '1' after 10ns, '0' after 30ns;
         start_s <= '0', '1' after 45ns, '0' after 75ns;
-        en_axi_s <= '1';
         
         for c in 0 to 3 loop
 

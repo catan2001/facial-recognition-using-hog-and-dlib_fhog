@@ -7,7 +7,6 @@ entity control_path_v2 is
     clk: in std_logic;
     reset: in std_logic;
     start: in std_logic;
-    en_axi: in std_logic; 
 
     --reg bank
     width: in std_logic_vector(9 downto 0);
@@ -80,9 +79,7 @@ component control_logic is
     reinit_pipe: in std_logic;
     en_pipe: in std_logic;
     cycle_num: in std_logic_vector(5 downto 0); 
-    sel_bram_out_fsm: in std_logic_vector(2 downto 0); --pazi
     sel_filter_fsm: out std_logic_vector(2 downto 0);
-    we_out_fsm: in std_logic_vector(15 downto 0);
     pipe_finished: out std_logic;
     realloc_last_rows: in std_logic;
     --out sig
@@ -99,7 +96,6 @@ component dram_to_bram is
   Port (     
     clk: in std_logic;
     reset: in std_logic;
-    en_axi: in std_logic;
     
     --reg bank
     width_4: in std_logic_vector(7 downto 0);
@@ -141,7 +137,6 @@ component FSM is
   --ctrl log
   cycle_num: out std_logic_vector(5 downto 0); 
   cycle_num0: out std_logic_vector(5 downto 0); 
-  sel_bram_out_fsm: out std_logic_vector(2 downto 0); 
   sel_filter: in std_logic_vector(2 downto 0);
   
   ready: out std_logic;
@@ -228,7 +223,6 @@ signal cycle_num0_s: std_logic_vector(5 downto 0);
 signal row_position_s: std_logic_vector(8 downto 0);
 signal row_position0_s: std_logic_vector(8 downto 0);
 signal row_position12_s: std_logic_vector(8 downto 0);
-signal sel_bram_out_fsm_s: std_logic_vector(2 downto 0); 
 signal sel_filter_fsm_s: std_logic_vector(2 downto 0);
 signal sel_filter_s: std_logic_vector(2 downto 0);
 signal sel_bram_out_s: std_logic_vector(2 downto 0); 
@@ -275,7 +269,6 @@ dram_to_bram_l: dram_to_bram
 port map(    
     clk => clk,
     reset => reset,
-    en_axi => en_axi,
     
     --reg bank
     width_4 => width_4,
@@ -308,9 +301,7 @@ port map(
     en_pipe => en_pipe_s,
     reinit_pipe => reinit_pipe_s,
     cycle_num => cycle_num_s,
-    sel_bram_out_fsm => sel_bram_out_fsm_s,
     sel_filter_fsm => sel_filter_fsm_s,
-    we_out_fsm => we_out_fsm_s,
     pipe_finished => pipe_finished_s,
     realloc_last_rows => realloc_last_rows_s,
     --out sig
@@ -364,7 +355,6 @@ Port map(
   --ctrl log
   cycle_num => cycle_num_s,
   cycle_num0 => cycle_num0_s,
-  sel_bram_out_fsm => sel_bram_out_fsm_s,
   sel_filter => sel_filter_fsm_s,
   
   ready => ready,

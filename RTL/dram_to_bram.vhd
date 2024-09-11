@@ -6,7 +6,6 @@ entity dram_to_bram is
   Port (     
     clk: in std_logic;
     reset: in std_logic;
-    en_axi: in std_logic;
     
     --reg bank
     width_4: in std_logic_vector(7 downto 0);

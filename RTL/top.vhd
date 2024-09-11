@@ -10,7 +10,6 @@ entity top is
     clk: in std_logic;
     reset: in std_logic;
     start: in std_logic;
-    en_axi: in std_logic; 
 
     --reg bank
     width: in std_logic_vector(9 downto 0);
@@ -56,9 +55,6 @@ signal bram_addrB12_in_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 signal bram_addr_A_out_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 signal bram_addr_B_out_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 
-signal burst_len_read_s: std_logic_vector(7 downto 0);
-signal burst_len_write_s: std_logic_vector(7 downto 0);
-
 signal data_out1_s, data_out2_s: std_logic_vector(63 downto 0);
 
 --SIGNALS FOR VERIFICATION:----------------------------------------------------------------------------
@@ -100,8 +96,7 @@ component control_path_v2 is
   Port ( 
     clk: in std_logic;
     reset: in std_logic;
-    start: in std_logic;
-    en_axi: in std_logic; 
+    start: in std_logic; 
 
     --reg bank
     width: in std_logic_vector(9 downto 0);
@@ -173,7 +168,6 @@ Port map(
   clk => clk,
   reset => reset,
   start => start,
-  en_axi => en_axi, 
 
   --reg bank
   width => width,
