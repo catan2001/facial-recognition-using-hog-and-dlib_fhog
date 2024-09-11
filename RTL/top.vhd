@@ -18,22 +18,10 @@ entity top is
     width_2: in std_logic_vector(8 downto 0);
     height: in std_logic_vector(10 downto 0);
     bram_height: in std_logic_vector(4 downto 0);
-    dram_in_addr: in std_logic_vector(31 downto 0);
-    dram_x_addr: in std_logic_vector(31 downto 0); --width*height
-    dram_y_addr: in std_logic_vector(31 downto 0); --width*height+(width-2)*(height-2)
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
     rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
     effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
-    
-    burst_len_read: out std_logic_vector(7 downto 0);
-    burst_len_write: out std_logic_vector(7 downto 0);
-    
-    dram_addr0: out std_logic_vector(31 downto 0);
-    dram_addr1: out std_logic_vector(31 downto 0);
-    
-    dram_out_addr_x: out std_logic_vector(31 downto 0);
-    dram_out_addr_y: out std_logic_vector(31 downto 0);
 
     ready: out std_logic; 
     
@@ -65,7 +53,6 @@ signal bram_addrB_h_in_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 signal bram_addrA12_in_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 signal bram_addrB12_in_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 
-
 signal bram_addr_A_out_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 signal bram_addr_B_out_s: std_logic_vector(ADDR_WIDTH - 1 downto 0);
 
@@ -74,16 +61,8 @@ signal burst_len_write_s: std_logic_vector(7 downto 0);
 
 signal data_out1_s, data_out2_s: std_logic_vector(63 downto 0);
 
-signal dram_addr0_s: std_logic_vector(31 downto 0);
-signal dram_addr1_s: std_logic_vector(31 downto 0);
-signal dram_out_addr_x_s: std_logic_vector(31 downto 0);
-signal dram_out_addr_y_s: std_logic_vector(31 downto 0);
-
 --SIGNALS FOR VERIFICATION:----------------------------------------------------------------------------
 signal data_out11_s, data_out12_s, data_out13_s, data_out14_s, data_out21_s, data_out22_s, data_out23_s, data_out24_s: std_logic_vector(15 downto 0); 
-
-
-
 ---------------------------------------------------------------------------------------------------------------------
 
 
@@ -130,14 +109,10 @@ component control_path_v2 is
     width_2: in std_logic_vector(8 downto 0);
     height: in std_logic_vector(10 downto 0);
     bram_height: in std_logic_vector(4 downto 0);
-    dram_in_addr: in std_logic_vector(31 downto 0);
-    dram_x_addr: in std_logic_vector(31 downto 0);
-    dram_y_addr: in std_logic_vector(31 downto 0);
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
     rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
     effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
-
     ready: out std_logic; 
     
     --dram_to_bram
@@ -148,12 +123,8 @@ component control_path_v2 is
     bram_addr_B2: out std_logic_vector(9 downto 0); --bram block 4-11
     bram_addr_A12: out std_logic_vector(9 downto 0); --bram block 12-15
     bram_addr_B12: out std_logic_vector(9 downto 0); --bram block 12-15
-    dram_addr0: out std_logic_vector(31 downto 0);
-    dram_addr1: out std_logic_vector(31 downto 0);
     we_in: out std_logic_vector(31 downto 0);
     we_out: out std_logic_vector(15 downto 0); 
-    burst_len_read: out std_logic_vector(7 downto 0);
-    burst_len_write: out std_logic_vector(7 downto 0);
     realloc_last_rows: out std_logic;
     
     --control logic
@@ -163,10 +134,7 @@ component control_path_v2 is
     bram_output_addr_B: out std_logic_vector(9 downto 0);
     
     --bram_to_dram
-    sel_dram: out std_logic_vector(4 downto 0);
-    dram_out_addr_x: out std_logic_vector(31 downto 0);
-    dram_out_addr_y: out std_logic_vector(31 downto 0)
-    );
+    sel_dram: out std_logic_vector(4 downto 0));
 end component;
 
 begin
@@ -213,14 +181,10 @@ Port map(
   width_2 => width_2,
   height => height,
   bram_height => bram_height,
-  dram_in_addr => dram_in_addr,
-  dram_x_addr => dram_x_addr,
-  dram_y_addr => dram_y_addr,
   cycle_num_limit => cycle_num_limit,
   cycle_num_out => cycle_num_out,
   rows_num => rows_num,
   effective_row_limit => effective_row_limit,
-
   ready => ready_s,
   
   --dram_to_bram
@@ -231,12 +195,8 @@ Port map(
   bram_addr_B2 => bram_addrB_h_in_s,
   bram_addr_A12 => bram_addrA12_in_s,
   bram_addr_B12 => bram_addrB12_in_s,
-  dram_addr0 => dram_addr0_s,
-  dram_addr1 => dram_addr1_s,
   we_in => we_in_s,
   we_out => we_out_s,
-  burst_len_read => burst_len_read_s,
-  burst_len_write => burst_len_write_s,
   realloc_last_rows => realloc_last_rows_s,
   
   --control logic
@@ -246,15 +206,9 @@ Port map(
   bram_output_addr_B => bram_addr_B_out_s,
   
   --bram_to_dram
-  sel_dram => sel_dram_s,
-  dram_out_addr_x => dram_out_addr_x_s,
-  dram_out_addr_y => dram_out_addr_y_s
-  );
+  sel_dram => sel_dram_s);
   
 ready <= ready_s;
-
-burst_len_read <= burst_len_read_s;
-burst_len_write <= burst_len_write_s;
 
 data_out1 <= data_out1_s;
 data_out2 <= data_out2_s;
@@ -269,11 +223,5 @@ data_out21_s <= data_out2_s(63 downto 48);
 data_out22_s <= data_out2_s(47 downto 32);
 data_out23_s <= data_out2_s(31 downto 16);
 data_out24_s <= data_out2_s(15 downto 0);
--------------------------------------------------------------------------------------------------
-
-dram_addr0 <= dram_addr0_s;
-dram_addr1 <= dram_addr1_s;
-dram_out_addr_x <= dram_out_addr_x_s;
-dram_out_addr_y <= dram_out_addr_y_s;
-
+--------------------------------------------------------------------------------------------------
 end Behavioral;

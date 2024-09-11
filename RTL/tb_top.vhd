@@ -30,23 +30,10 @@ component top is
     width_2: in std_logic_vector(8 downto 0);
     height: in std_logic_vector(10 downto 0);
     bram_height: in std_logic_vector(4 downto 0);
-    dram_in_addr: in std_logic_vector(31 downto 0);
-    dram_x_addr: in std_logic_vector(31 downto 0);
-    dram_y_addr: in std_logic_vector(31 downto 0);
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
     rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
     effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
-    
-    burst_len_read: out std_logic_vector(7 downto 0);
-    burst_len_write: out std_logic_vector(7 downto 0);
-    
-    dram_addr0: out std_logic_vector(31 downto 0);
-    dram_addr1: out std_logic_vector(31 downto 0);
-    
-    dram_out_addr_x: out std_logic_vector(31 downto 0);
-    dram_out_addr_y: out std_logic_vector(31 downto 0);
-
     ready: out std_logic; 
     
     --data signals
@@ -67,22 +54,10 @@ signal width_4_s: std_logic_vector(7 downto 0);
 signal width_2_s: std_logic_vector(8 downto 0);
 signal height_s: std_logic_vector(10 downto 0);
 signal bram_height_s: std_logic_vector(4 downto 0);
-signal dram_in_addr_s: std_logic_vector(31 downto 0);
-signal dram_x_addr_s: std_logic_vector(31 downto 0); --height*width
-signal dram_y_addr_s: std_logic_vector(31 downto 0); --height*width+(height-2)*(width-2)
 signal cycle_num_limit_s: std_logic_vector(5 downto 0); --2*bram_width/width
 signal cycle_num_out_s: std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
 signal rows_num_s: std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
 signal effective_row_limit_s: std_logic_vector(9 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
-
-signal burst_len_read_s: std_logic_vector(7 downto 0);
-signal burst_len_write_s: std_logic_vector(7 downto 0);
-    
-signal dram_addr0_s: std_logic_vector(31 downto 0);
-signal dram_addr1_s: std_logic_vector(31 downto 0);
-    
-signal dram_out_addr_x_s: std_logic_vector(31 downto 0);
-signal dram_out_addr_y_s: std_logic_vector(31 downto 0);
 
 type data_t is array(0 to 1) of std_logic_vector(2*DATA_WIDTH-1 downto 0);
 signal data_in_s, data_out_s: data_t;
@@ -144,23 +119,10 @@ port map(
     width_2 => width_2_s,
     height => height_s,
     bram_height => bram_height_s,
-    dram_in_addr => dram_in_addr_s,
-    dram_x_addr => dram_x_addr_s,
-    dram_y_addr => dram_y_addr_s,
     cycle_num_limit => cycle_num_limit_s,
     cycle_num_out => cycle_num_out_s,
     rows_num => rows_num_s,
     effective_row_limit => effective_row_limit_s,
-    
-    burst_len_read => burst_len_read_s,
-    burst_len_write => burst_len_write_s,
-    
-    dram_addr0 => dram_addr0_s,
-    dram_addr1 => dram_addr1_s,
-    
-    dram_out_addr_x => dram_out_addr_x_s,
-    dram_out_addr_y => dram_out_addr_y_s,
-
     ready => ready_s,
     
     --data signals
@@ -181,8 +143,7 @@ port map(
         en_axi_s <= '1';
         
         for c in 0 to 3 loop
-            --report "a: " & integer'image(a) & " b: " & integer'image(b) & " c: " & integer'image(c) & " d: " & integer'image(d) & " e: " & integer'image(e);
-        
+
             data_in_s(0) <= x"0000000000000000"; 
             data_in_s(1) <= x"0000000000000000";
                                
@@ -191,9 +152,6 @@ port map(
                     width_2_s <= "001111100";
                     height_s <= "00100101110";
                     bram_height_s <= "10000"; 
-                    dram_in_addr_s <= x"00000000";
-                    dram_x_addr_s <= x"00012490";
-                    dram_y_addr_s <= x"000244D8";
                     cycle_num_limit_s <= "001000";
                     cycle_num_out_s <= "001000";
                     rows_num_s <= "0010000000";
@@ -203,9 +161,7 @@ port map(
         
             for a in 0 to 63 loop
                 for b in 0 to 61 loop
-                    report "a: " & integer'image(a) & " b: " & integer'image(b) & " d: " & integer'image(d) & " e: " & integer'image(e);
-                    
-                    
+                    report "a: " & integer'image(a) & " b: " & integer'image(b) & " d: " & integer'image(d) & " e: " & integer'image(e); 
                     data_in_s(0) <= dram1(2*a)(4*b)&dram1(2*a)(4*b+1)&dram1(2*a)(4*b+2)&dram1(2*a)(4*b+3); 
                     data_in_s(1) <= dram1(2*a+1)(4*b)&dram1(2*a+1)(4*b+1)&dram1(2*a+1)(4*b+2)&dram1(2*a+1)(4*b+3);
                     
@@ -214,9 +170,6 @@ port map(
                     width_2_s <= "001111100";
                     height_s <= "00100101110";
                     bram_height_s <= "10000"; 
-                    dram_in_addr_s <= x"00000000";
-                    dram_x_addr_s <= x"00012490";
-                    dram_y_addr_s <= x"000244D8";
                     cycle_num_limit_s <= "001000";
                     cycle_num_out_s <= "001000";
                     rows_num_s <= "0010000000";
@@ -225,7 +178,6 @@ port map(
                 end loop;
             end loop;  
             
-            --wait for 196970 ns;
             wait for 200100 ns;
             
             for d in 64 to 125 loop

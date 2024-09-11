@@ -15,14 +15,10 @@ entity control_path_v2 is
     width_2: in std_logic_vector(8 downto 0);
     height: in std_logic_vector(10 downto 0);
     bram_height: in std_logic_vector(4 downto 0);
-    dram_in_addr: in std_logic_vector(31 downto 0);
-    dram_x_addr: in std_logic_vector(31 downto 0);
-    dram_y_addr: in std_logic_vector(31 downto 0);
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
     rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
     effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
-
     ready: out std_logic; 
     
     --dram_to_bram
@@ -33,12 +29,9 @@ entity control_path_v2 is
     bram_addr_B2: out std_logic_vector(9 downto 0); --bram block 4-11
     bram_addr_A12: out std_logic_vector(9 downto 0); --bram block 12-15
     bram_addr_B12: out std_logic_vector(9 downto 0); --bram block 12-15
-    dram_addr0: out std_logic_vector(31 downto 0);
-    dram_addr1: out std_logic_vector(31 downto 0);
+    
     we_in: out std_logic_vector(31 downto 0);
     we_out: out std_logic_vector(15 downto 0); 
-    burst_len_read: out std_logic_vector(7 downto 0);
-    burst_len_write: out std_logic_vector(7 downto 0); --bram to dram
     realloc_last_rows: out std_logic;
     
     --control logic
@@ -48,9 +41,7 @@ entity control_path_v2 is
     bram_output_addr_B: out std_logic_vector(9 downto 0);
     
     --bram_to_dram
-    sel_dram: out std_logic_vector(4 downto 0);
-    dram_out_addr_x: out std_logic_vector(31 downto 0);
-    dram_out_addr_y: out std_logic_vector(31 downto 0));
+    sel_dram: out std_logic_vector(4 downto 0));
 end control_path_v2;
 
 architecture Behavioral of control_path_v2 is
@@ -66,9 +57,6 @@ component bram_to_dram is
     height: in std_logic_vector(10 downto 0);
     bram_height: in std_logic_vector(4 downto 0);
     cycle_num_out: in std_logic_vector(5 downto 0); --2*(bram_width/(width-1))
-    dram_x_addr: in std_logic_vector(31 downto 0);
-    dram_y_addr: in std_logic_vector(31 downto 0);
-    burst_len_write: out std_logic_vector(7 downto 0);
     --sig for FSM
     en_bram_to_dram: in std_logic;
     bram_to_dram_finished: out std_logic;
@@ -77,9 +65,7 @@ component bram_to_dram is
     --bram_to_dram
     bram_addr_bram_to_dram_A: out std_logic_vector(9 downto 0);
     bram_addr_bram_to_dram_B: out std_logic_vector(9 downto 0);
-    sel_dram: out std_logic_vector(4 downto 0);
-    dram_out_addr_x: out std_logic_vector(31 downto 0);
-    dram_out_addr_y: out std_logic_vector(31 downto 0));
+    sel_dram: out std_logic_vector(4 downto 0));
 end component;
 
 component control_logic is
@@ -119,7 +105,6 @@ component dram_to_bram is
     width_4: in std_logic_vector(7 downto 0);
     width_2: in std_logic_vector(8 downto 0);
     height: in std_logic_vector(10 downto 0);
-    dram_in_addr: in std_logic_vector(31 downto 0);
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
     bram_height: in std_logic_vector(4 downto 0);
     
@@ -133,10 +118,7 @@ component dram_to_bram is
     we_in: out std_logic_vector(31 downto 0);
     sel_bram_in: out std_logic_vector(3 downto 0);
     i: out std_logic_vector(5 downto 0);
-    k: out std_logic_vector(9 downto 0);
-    dram_addr0: out std_logic_vector(31 downto 0);
-    dram_addr1: out std_logic_vector(31 downto 0);
-    burst_len_read: out std_logic_vector(7 downto 0));
+    k: out std_logic_vector(9 downto 0));
 end component;
 
 component FSM is
@@ -148,16 +130,12 @@ component FSM is
   pipe_finished: in std_logic;
   bram_to_dram_finished: in std_logic;
   
-  
   cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
   rows_num: in std_logic_vector(9 downto 0); --2*(bram_width/width)*bram_height
   effective_row_limit: in std_logic_vector(9 downto 0); --(height/PTS_PER_COL)*PTS_PER_COL+accumulated_loss 
-  
   start: in std_logic;
   
   --dram2bram
-  dram_row_ptr0: out std_logic_vector(10 downto 0);
-  dram_row_ptr1: out std_logic_vector(10 downto 0); 
   realloc_last_rows: out std_logic;
   
   --ctrl log
@@ -176,13 +154,11 @@ component FSM is
   en_dram_to_bram: out std_logic;
   en_pipe: out std_logic;
   en_bram_to_dram:out std_logic;
-  
   row_cnt: out std_logic_vector(10 downto 0));
 end component;
 
 component DSP_addr_A0
   Port ( 
-    clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
     a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
@@ -198,7 +174,6 @@ end component;
 
 component DSP_addr_B0
   Port ( 
-    clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
     a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
@@ -240,9 +215,7 @@ component DSP_addr_BX
 end component;
 
 --dram to bram
-signal en_dram_to_bram_s: std_logic;
-signal dram_row_ptr0_s: std_logic_vector(10 downto 0);
-signal dram_row_ptr1_s: std_logic_vector(10 downto 0); 
+signal en_dram_to_bram_s: std_logic; 
 signal dram_to_bram_finished_s: std_logic; 
 signal i_s: std_logic_vector(5 downto 0);
 signal k_s: std_logic_vector(9 downto 0);
@@ -283,7 +256,6 @@ signal const2_s: std_logic_vector(1 downto 0):="00";
 signal bram_output_xy_addr_reg1, bram_output_xy_addr_next1: std_logic_vector(9 downto 0);
 signal bram_output_xy_addr_reg2, bram_output_xy_addr_next2: std_logic_vector(9 downto 0);
 signal bram_output_xy_addr_reg3, bram_output_xy_addr_next3: std_logic_vector(9 downto 0);
-signal bram_output_xy_addr_reg4, bram_output_xy_addr_next4: std_logic_vector(9 downto 0);
 
 signal sel_bram_out_reg1, sel_bram_out_next1: std_logic_vector(2 downto 0);
 signal sel_bram_out_reg2, sel_bram_out_next2: std_logic_vector(2 downto 0);
@@ -294,8 +266,6 @@ signal we_out_reg1, we_out_next1: std_logic_vector(15 downto 0);
 signal we_out_reg2, we_out_next2: std_logic_vector(15 downto 0);
 signal we_out_reg3, we_out_next3: std_logic_vector(15 downto 0);
 signal we_out_reg4, we_out_next4: std_logic_vector(15 downto 0);
-signal we_out_reg5, we_out_next5: std_logic_vector(15 downto 0);
-signal we_out_reg6, we_out_next6: std_logic_vector(15 downto 0);
 
 signal en_bram_to_dram_reg, en_bram_to_dram_next: std_logic; 
 
@@ -311,7 +281,6 @@ port map(
     width_4 => width_4,
     width_2 => width_2,
     height => height,
-    dram_in_addr => dram_in_addr,
     cycle_num_limit => cycle_num_limit,
     bram_height => bram_height,
     
@@ -325,10 +294,7 @@ port map(
     we_in => we_in,
     sel_bram_in => sel_bram_in,
     i => i_s,
-    k => k_s,
-    dram_addr0 => dram_addr0,
-    dram_addr1 => dram_addr1,
-    burst_len_read => burst_len_read);
+    k => k_s);
     
 control_logic_l: control_logic
 port map(    
@@ -367,9 +333,6 @@ port map(
     height => height,
     bram_height => bram_height,
     cycle_num_out => cycle_num_out,
-    dram_x_addr => dram_x_addr, 
-    dram_y_addr => dram_y_addr,
-    burst_len_write => burst_len_write,
     --sig for FSM
     en_bram_to_dram => en_bram_to_dram_s,
     bram_to_dram_finished => bram_to_dram_finished_s,
@@ -378,9 +341,7 @@ port map(
     --bram_to_dram
     bram_addr_bram_to_dram_A => bram_addr_bram_to_dram_A_s,
     bram_addr_bram_to_dram_B => bram_output_addr_B,
-    sel_dram => sel_dram,
-    dram_out_addr_x => dram_out_addr_x,
-    dram_out_addr_y => dram_out_addr_y);
+    sel_dram => sel_dram);
 
 FSM_l: FSM
 Port map( 
@@ -398,8 +359,6 @@ Port map(
   start => start,
   
   --dram2bram
-  dram_row_ptr0 => dram_row_ptr0_s,
-  dram_row_ptr1 => dram_row_ptr1_s,
   realloc_last_rows => realloc_last_rows_s,
   
   --ctrl log
@@ -424,7 +383,6 @@ Port map(
   
 DSP_addr_A0_l: DSP_addr_A0
 Port map( 
-    clk => clk,
     width_2 => width_2,
     a => i_s,
     b => cycle_num0_s, 
@@ -438,7 +396,6 @@ Port map(
     
 DSP_addr_B0_l: DSP_addr_B0
 Port map(
-    clk => clk,
     width_2 => width_2,
     a => i_s,
     b => cycle_num0_s, 
@@ -493,16 +450,13 @@ Port map(
     res => bram_addr_B12); 
     
 --mux control_logic and bram_to_dram
-process(sel_bram_addr_s, bram_output_xy_addr_reg4, bram_addr_bram_to_dram_A_s)
+process(sel_bram_addr_s, bram_output_xy_addr_reg3, bram_addr_bram_to_dram_A_s)
 begin
-
-
     if(sel_bram_addr_s = '0') then
         bram_output_addr_A <= bram_addr_bram_to_dram_A_s;
     else
         bram_output_addr_A <= bram_output_xy_addr_reg3;
     end if;
-
 end process;
 
 process(clk)
@@ -517,14 +471,11 @@ if(falling_edge(clk)) then
         bram_output_xy_addr_reg1 <= (others => '0');
         bram_output_xy_addr_reg2 <= (others => '0');
         bram_output_xy_addr_reg3 <= (others => '0');
-        bram_output_xy_addr_reg4 <= (others => '0');
         
         we_out_reg1 <= (others => '0');
         we_out_reg2 <= (others => '0');
         we_out_reg3 <= (others => '0');
         we_out_reg4 <= (others => '0');
-        we_out_reg5 <= (others => '0');
-        we_out_reg6 <= (others => '0');
         
         en_bram_to_dram_reg <= '0';
       
@@ -532,9 +483,7 @@ if(falling_edge(clk)) then
         bram_output_xy_addr_reg1 <= bram_output_xy_addr_next1;
         bram_output_xy_addr_reg2 <= bram_output_xy_addr_next2;
         bram_output_xy_addr_reg3 <= bram_output_xy_addr_next3;
-        bram_output_xy_addr_reg4 <= bram_output_xy_addr_next4;
      
-        
         sel_bram_out_reg1 <= sel_bram_out_next1;
         sel_bram_out_reg2 <= sel_bram_out_next2;
         sel_bram_out_reg3 <= sel_bram_out_next3;
@@ -544,8 +493,6 @@ if(falling_edge(clk)) then
         we_out_reg2 <= we_out_next2;
         we_out_reg3 <= we_out_next3;
         we_out_reg4 <= we_out_next4;
-        we_out_reg5 <= we_out_next5;
-        we_out_reg6 <= we_out_next6;
         
         en_bram_to_dram_reg <= en_bram_to_dram_next;
         
@@ -553,9 +500,9 @@ if(falling_edge(clk)) then
 end if;
 end process;
 
-process(sel_bram_out_reg1, sel_bram_out_reg2, sel_bram_out_reg3, sel_bram_out_reg4, sel_bram_out_s, bram_output_xy_addr_reg1, 
-        bram_output_xy_addr_reg2, bram_output_xy_addr_reg3, bram_output_xy_addr_reg4, bram_output_xy_addr_s, we_out_pipe_s,
-        we_out_reg1, we_out_reg2, we_out_reg3)
+process(sel_bram_out_reg1, sel_bram_out_reg2, sel_bram_out_reg3, sel_bram_out_reg4, 
+        sel_bram_out_s, bram_output_xy_addr_reg1, bram_output_xy_addr_reg2, 
+        bram_output_xy_addr_s, we_out_pipe_s, we_out_reg1, we_out_reg2, we_out_reg3)
 begin
 
 sel_bram_out_next1 <= sel_bram_out_s;
@@ -563,28 +510,21 @@ sel_bram_out_next2 <= sel_bram_out_reg1;
 sel_bram_out_next3 <= sel_bram_out_reg2;
 sel_bram_out_next4 <= sel_bram_out_reg3;
 
-
 bram_output_xy_addr_next1 <= bram_output_xy_addr_s;
 bram_output_xy_addr_next2 <= bram_output_xy_addr_reg1;
 bram_output_xy_addr_next3 <= bram_output_xy_addr_reg2;
-bram_output_xy_addr_next4 <= bram_output_xy_addr_reg3;
 
 we_out_next1 <= we_out_pipe_s;
 we_out_next2 <= we_out_reg1;
 we_out_next3 <= we_out_reg2;
 we_out_next4 <= we_out_reg3;
-we_out_next5 <= we_out_reg4;
-we_out_next6 <= we_out_reg5;
 
 en_bram_to_dram_next <= en_bram_to_dram_s;
-
-
 end process;
 
 sel_bram_out <= sel_bram_out_reg4;
 sel_filter <= sel_filter_s;
---we_out <= we_out_reg4;
---we_out <= (others => '0') when en_bram_to_dram_reg = '1' else we_out_reg6;
+
 we_out <= (others => '0') when en_bram_to_dram_reg = '1' else we_out_reg4;
 realloc_last_rows <= realloc_last_rows_s;
 

@@ -75,7 +75,6 @@ if(rising_edge(clk)) then
         cnt_init_reg <= "000001";
         
         bram_output_xy_addr_reg <= (others => '0');
-        
         pipe_finished_reg <= '0';
 
     else
@@ -96,16 +95,16 @@ if(rising_edge(clk)) then
         cnt_init_reg <= cnt_init_next;
         
         bram_output_xy_addr_reg <= bram_output_xy_addr_next;
-        
         pipe_finished_reg <= pipe_finished_next;
     end if;
 end if;
 end process;
 
 
-process(state_control_logic_r, width_2, sel_filter_reg, sel_bram_out_reg,
-        row_position_reg, row_position0_reg, row_position12_reg, cycle_num_reg, cnt_init_reg, width_2_reg, 
-        cycle_num, sel_bram_out_fsm, en_pipe, reinit, br2dr, reinit_pipe, pipe_finished_reg, bram_output_xy_addr_reg)
+process(state_control_logic_r, width_2, sel_filter_reg, sel_bram_out_reg, row_position_reg, 
+        row_position0_reg, row_position12_reg, cycle_num_reg, cnt_init_reg, width_2_reg, 
+        cycle_num, sel_bram_out_fsm, en_pipe, reinit, br2dr, reinit_pipe, pipe_finished_reg, 
+        bram_output_xy_addr_reg)
 begin
 
 state_control_logic_n <= state_control_logic_r;
@@ -201,6 +200,5 @@ sel_bram_out <= sel_bram_out_reg;
 sel_filter <= sel_filter_reg;
 sel_filter_fsm <= sel_filter_reg;
 we_out <= we_out_reg;
-
 
 end Behavioral;
