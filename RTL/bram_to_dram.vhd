@@ -34,7 +34,7 @@ architecture Behavioral of bram_to_dram is
 
 --states bram_to_dram
 type state_bram_to_dram_t is
-    (init_loop_bram_to_dram, loop_bram_to_dram1);
+    (init_loop_bram_to_dram, loop_bram_to_dram1, end_bram_to_dram);
 signal state_bram_to_dram_r, state_bram_to_dram_n: state_bram_to_dram_t;
 
 --reg bank
@@ -168,7 +168,7 @@ case state_bram_to_dram_r is
         if(z_reg = std_logic_vector(resize(unsigned(width_4_reg),9))) then
             if(row_cnt_reg = std_logic_vector(unsigned(height_reg)-3)) then
                 bram_to_dram_finished_next <= '1';
-                state_bram_to_dram_n <= init_loop_bram_to_dram;
+                state_bram_to_dram_n <= end_bram_to_dram;
             else
                 row_cnt_next <= std_logic_vector(unsigned(row_cnt_reg)+1);
                 
@@ -181,7 +181,7 @@ case state_bram_to_dram_r is
                     y_next <= std_logic_vector(unsigned(y_reg)+1);
                     if(y_reg = std_logic_vector(unsigned(cycle_num_out_reg)-1)) then
                         bram_to_dram_finished_next <= '1';
-                        state_bram_to_dram_n <= init_loop_bram_to_dram;
+                        state_bram_to_dram_n <= end_bram_to_dram;
                     else
                         z_next <= (others => '0');
                         sel_dram_next <= (others => '0');
@@ -200,6 +200,10 @@ case state_bram_to_dram_r is
             bram_addr_bram_to_dram_B_next <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+shift_left(unsigned(z_reg),1)+1,10));
             z_next <= std_logic_vector(unsigned(z_reg)+1);   
         end if;
+        
+    when end_bram_to_dram =>
+        state_bram_to_dram_n <= init_loop_bram_to_dram;
+    
 end case;
 end process;
 

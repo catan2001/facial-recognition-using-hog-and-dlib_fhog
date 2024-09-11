@@ -34,7 +34,7 @@ architecture Behavioral of control_logic is
 
 --states control_logic
 type state_control_logic_t is
-    (init_loop_row, loop_row);
+    (init_loop_row, loop_row, end_loop);
 signal state_control_logic_r, state_control_logic_n: state_control_logic_t;
 
 --reg bank
@@ -174,7 +174,7 @@ case state_control_logic_r is
             end if;
             
             pipe_finished_next <= '1';
-            state_control_logic_n <= init_loop_row;
+            state_control_logic_n <= end_loop;
         else
             row_position_next <= std_logic_vector(unsigned(row_position_reg) + 1);
             row_position0_next <= std_logic_vector(unsigned(row_position0_reg) + 2);
@@ -182,6 +182,8 @@ case state_control_logic_r is
             bram_output_xy_addr_next <= std_logic_vector((resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg) - 1), 10) + resize(unsigned(row_position_reg),10)));
         end if;
 
+    when end_loop =>
+        state_control_logic_n <= init_loop_row;
 end case;
 end process;
 

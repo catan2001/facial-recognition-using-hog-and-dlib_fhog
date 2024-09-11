@@ -226,7 +226,7 @@ port map(
             end loop;  
             
             --wait for 196970 ns;
-            wait for 195550 ns;
+            wait for 200100 ns;
             
             for d in 64 to 125 loop
                 for e in 0 to 61 loop
@@ -238,7 +238,7 @@ port map(
                 end loop;
             end loop; 
             
-            wait for 406500 ns;
+            wait for 411000 ns;
             
             for d in 126 to 150 loop
                 for e in 0 to 61 loop

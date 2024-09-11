@@ -125,9 +125,7 @@ component dram_to_bram is
     
     --sig for FSM
     reinit: in std_logic;
-    en_dram_to_bram: in std_logic;
-    dram_row_ptr0: in std_logic_vector(10 downto 0);
-    dram_row_ptr1: in std_logic_vector(10 downto 0); 
+    en_dram_to_bram: in std_logic; 
     dram_to_bram_finished: out std_logic; 
     realloc_last_rows: in std_logic;
     
@@ -320,8 +318,6 @@ port map(
     --sig for FSM
     reinit => reinit_s,
     en_dram_to_bram => en_dram_to_bram_s,
-    dram_row_ptr0 => dram_row_ptr0_s,
-    dram_row_ptr1 => dram_row_ptr1_s, 
     dram_to_bram_finished => dram_to_bram_finished_s,
     realloc_last_rows => realloc_last_rows_s,
     
@@ -504,7 +500,7 @@ begin
     if(sel_bram_addr_s = '0') then
         bram_output_addr_A <= bram_addr_bram_to_dram_A_s;
     else
-        bram_output_addr_A <= bram_output_xy_addr_reg4;
+        bram_output_addr_A <= bram_output_xy_addr_reg3;
     end if;
 
 end process;

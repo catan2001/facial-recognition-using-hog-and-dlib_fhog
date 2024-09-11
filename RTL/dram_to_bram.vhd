@@ -19,8 +19,8 @@ entity dram_to_bram is
     --sig for FSM
     reinit: in std_logic;
     en_dram_to_bram: in std_logic;
-    dram_row_ptr0: in std_logic_vector(10 downto 0);
-    dram_row_ptr1: in std_logic_vector(10 downto 0); 
+    --dram_row_ptr0: in std_logic_vector(10 downto 0);
+    ---dram_row_ptr1: in std_logic_vector(10 downto 0); 
     dram_to_bram_finished: out std_logic; 
     realloc_last_rows: in std_logic;
     
@@ -38,7 +38,7 @@ architecture Behavioral of dram_to_bram is
 
 --states dram to bram
 type state_dram_to_bram_t is 
-    (loop_dram_to_bram0, loop_dram_to_bram1);
+    (loop_dram_to_bram0, loop_dram_to_bram1, end_dram_to_bram);
 signal state_dram_to_bram_r, state_dram_to_bram_n : state_dram_to_bram_t;
 
 signal width_2_reg, width_2_next: std_logic_vector(8 downto 0);
@@ -115,7 +115,7 @@ end process;
 process(state_dram_to_bram_r,  width_2_reg, width_4_reg, height_reg, bram_height_reg,
     cycle_num_limit_reg, dram_in_addr_reg, sel_bram_in_reg,
     we_in_reg, i_reg, j_reg, j_limit_reg, k_reg, dram_row_ptr0_reg, dram_row_ptr1_reg, width_2,
-    width_4, height, bram_height, cycle_num_limit, dram_in_addr, dram_row_ptr0, dram_row_ptr1,
+    width_4, height, bram_height, cycle_num_limit, dram_in_addr,
     en_dram_to_bram, i_next, dram_row_ptr1_next, reinit, realloc_last_rows, dram_to_bram_finished_reg) 
 begin
 
@@ -206,7 +206,7 @@ case state_dram_to_bram_r is
             if(dram_row_ptr1_reg = std_logic_vector(unsigned(height_reg)-1)) then 
                 we_in_next <= (others => '0');
                 dram_to_bram_finished_next <= '1';
-                state_dram_to_bram_n <= loop_dram_to_bram0;
+                state_dram_to_bram_n <= end_dram_to_bram;
             else
 --                dram_row_ptr0_next <= std_logic_vector(unsigned(dram_row_ptr0_reg) + 2);
                 dram_row_ptr1_next <= std_logic_vector(unsigned(dram_row_ptr1_reg) + 2);
@@ -225,7 +225,7 @@ case state_dram_to_bram_r is
                     if(i_next = cycle_num_limit_reg) then 
                         we_in_next <= (others => '0');
                         dram_to_bram_finished_next <= '1';
-                        state_dram_to_bram_n <= loop_dram_to_bram0;
+                        state_dram_to_bram_n <= end_dram_to_bram;
                     else
                         j_next <= (others => '0');
 --                        dram_addr0_s <= std_logic_vector(unsigned(dram_in_addr_reg) + resize(unsigned(dram_row_ptr0_next)*unsigned(width_4_reg),32));
@@ -241,9 +241,9 @@ case state_dram_to_bram_r is
             k_next <= std_logic_vector(unsigned(k_reg) + 2);  
         end if;
         
---        when end_dram_to_bram =>
---            dram_to_bram_finished_s <= '1';
---            state_dram_to_bram_n <= loop_dram_to_bram0;
+        when end_dram_to_bram =>
+            --dram_to_bram_finished_s <= '1';
+            state_dram_to_bram_n <= loop_dram_to_bram0;
             
 
 end case;
