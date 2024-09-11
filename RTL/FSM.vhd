@@ -66,17 +66,17 @@ signal we_out_reg, we_out_next: std_logic_vector(15 downto 0);
 signal ready_reg, ready_next: std_logic;
 signal start_reg, start_next: std_logic;
 
-signal reinit_s: std_logic := '0';
-signal pipe_br2dr_s: std_logic:='0';
-signal reinit_pipe_s: std_logic:='0';
-signal en_dram_to_bram_s: std_logic := '0';
-signal en_pipe_s: std_logic := '0';
-signal en_bram_to_dram_s: std_logic := '0';
+signal reinit_reg, reinit_next: std_logic;
+signal pipe_br2dr_reg, pipe_br2dr_next: std_logic;
+signal reinit_pipe_reg, reinit_pipe_next: std_logic;
+signal en_dram_to_bram_reg, en_dram_to_bram_next: std_logic;
+signal en_pipe_reg, en_pipe_next: std_logic;
+signal en_bram_to_dram_reg, en_bram_to_dram_next: std_logic;
 
-signal row_cnt_s: std_logic_vector(10 downto 0);
-signal realloc_last_rows_s: std_logic := '0';
+signal row_cnt_reg, row_cnt_next: std_logic_vector(10 downto 0);
+signal realloc_last_rows_reg, realloc_last_rows_next: std_logic;
 
-signal reinit_const: std_logic_vector(4 downto 0) := "01100";
+signal reinit_const_reg, reinit_const_next: std_logic_vector(4 downto 0);
 
 begin
 
@@ -97,7 +97,19 @@ if(rising_edge(clk)) then
         x_reg <= (others => '0');
         cycle_num_reg <= (others => '0');
         cnt_init_reg <= "000001";
+        
+        en_dram_to_bram_reg <= '0';
+        en_bram_to_dram_reg <= '0';
+        en_pipe_reg <= '0';
+        
+        reinit_reg <= '0';
+        pipe_br2dr_reg <= '0';
+        reinit_pipe_reg <= '0';
+        
+        realloc_last_rows_reg <= '0';
+        row_cnt_reg <= (others => '0');
 
+        reinit_const_reg <= "01100";
     else
         state_r <= state_n;
         
@@ -114,7 +126,19 @@ if(rising_edge(clk)) then
         x_reg <= x_next;
         cycle_num_reg <= cycle_num_next;
         cnt_init_reg <= cnt_init_next; 
+        
+        en_dram_to_bram_reg <= en_dram_to_bram_next;
+        en_bram_to_dram_reg <= en_bram_to_dram_next;
+        en_pipe_reg <= en_pipe_next;
+        
+        reinit_reg <= reinit_next;
+        pipe_br2dr_reg <= pipe_br2dr_next;
+        reinit_pipe_reg <= reinit_pipe_next;
+        
+        realloc_last_rows_reg <= realloc_last_rows_next;
+        row_cnt_reg <= row_cnt_next;
 
+        reinit_const_reg <= reinit_const_next;
     end if;
 end if;
 end process;
@@ -122,7 +146,8 @@ end process;
 process(state_r, rows_num_reg, cycle_num_limit_reg, effective_row_limit_reg,
         sel_bram_addr_reg, x_reg, cycle_num_reg, cnt_init_reg, we_out_reg, rows_num, cycle_num_limit, effective_row_limit,
         start, dram_to_bram_finished, bram_to_dram_finished, pipe_finished, x_next,
-        ready_reg, sel_filter, reinit_const)
+        ready_reg, sel_filter, en_bram_to_dram_reg, en_dram_to_bram_reg, reinit_reg, pipe_br2dr_reg, reinit_pipe_reg,
+        reinit_reg, realloc_last_rows_reg, row_cnt_reg, reinit_const_reg)
         --start_reg, start_next 
 begin
 
@@ -141,6 +166,18 @@ cycle_num_next <= cycle_num_reg;
 cnt_init_next <= cnt_init_reg; 
 we_out_next <= we_out_reg;
 
+en_bram_to_dram_next <= en_bram_to_dram_reg;
+en_dram_to_bram_next <= en_dram_to_bram_reg;
+en_pipe_next <= en_pipe_reg;
+
+reinit_next <= reinit_reg;
+pipe_br2dr_next <= pipe_br2dr_reg;
+reinit_pipe_next <= reinit_pipe_reg;
+
+realloc_last_rows_next <= realloc_last_rows_reg;
+row_cnt_next <= row_cnt_reg;
+reinit_const_next <= reinit_const_reg;
+
 case state_r is
     when idle =>
         rows_num_next <= rows_num;
@@ -158,17 +195,17 @@ case state_r is
         sel_bram_addr_next <= '0';
         dram_row_ptr0_s <= (others => '0');
         dram_row_ptr1_s <= "00000000001";
-        en_dram_to_bram_s <= '1';
+        en_dram_to_bram_next <= '1';
         
         if(dram_to_bram_finished = '1') then
             x_next <= (others => '0');
-            en_dram_to_bram_s <= '0';
+            en_dram_to_bram_next <= '0';
             state_n <= ctrl_loop;
         end if;
       
     when ctrl_loop =>
     
-          if(cycle_num_reg = std_logic_vector(unsigned(cycle_num_limit_reg)-1) and x_reg = std_logic_vector(resize(unsigned(reinit_const), 10) + shift_left(resize(((unsigned(cycle_num_limit_reg) - 1)*unsigned(cnt_init_reg)), 10), 4))) then  
+          if(cycle_num_reg = std_logic_vector(unsigned(cycle_num_limit_reg)-1) and x_reg = std_logic_vector(resize(unsigned(reinit_const_reg), 10) + shift_left(resize(((unsigned(cycle_num_limit_reg) - 1)*unsigned(cnt_init_reg)), 10), 4))) then  
        
  
 --            dram_row_ptr0_s <= std_logic_vector(resize(unsigned(std_logic_vector((unsigned(rows_num_reg) - 4) * unsigned(cnt_init_reg))),11));
@@ -177,11 +214,11 @@ case state_r is
             x_next <= std_logic_vector(unsigned(x_reg) + 4);
             cycle_num_next <= (others => '0');
             we_out_next <= (others => '0');
-            row_cnt_s <= std_logic_vector(resize(((unsigned(rows_num) - 1)*(unsigned(cnt_init_reg)-1)), 11));
+            row_cnt_next <= std_logic_vector(resize(((unsigned(rows_num) - 1)*(unsigned(cnt_init_reg)-1)), 11));
             
-            reinit_s <= '1';
-            en_dram_to_bram_s <= '1';
-            en_bram_to_dram_s <= '1';
+            reinit_next <= '1';
+            en_dram_to_bram_next <= '1';
+            en_bram_to_dram_next <= '1';
             
             sel_bram_addr_next <= '0';
             state_n <= reint;
@@ -190,10 +227,10 @@ case state_r is
         
             if(cycle_num_reg = std_logic_vector(unsigned(cycle_num_limit_reg)-1)) then
               if(sel_filter = "001") then
-                realloc_last_rows_s <= '1';
+                realloc_last_rows_next <= '1';
                 
               elsif(sel_filter = "010") then
-                realloc_last_rows_s <= '0';
+                realloc_last_rows_next <= '0';
               
               end if;
             end if;
@@ -207,51 +244,51 @@ case state_r is
         
      when reint =>
      
-        reinit_s <= '0';
+        reinit_next <= '0';
         we_out_next <= X"0000";
         --sel_bram_addr_next <= '0';
         
         if(cnt_init_reg = "000010") then
-            reinit_const <= "11100"; 
+            reinit_const_next <= "11100"; 
         end if;
         
             if(dram_to_bram_finished = '1') then
-                en_dram_to_bram_s <= '0';
+                en_dram_to_bram_next <= '0';
             end if;
             
             if(bram_to_dram_finished = '1') then
-                    en_bram_to_dram_s <= '0';
+                    en_bram_to_dram_next <= '0';
                     
                     sel_bram_addr_next <= '1'; 
-                    reinit_pipe_s <= '1';
+                    reinit_pipe_next <= '1';
                     state_n <= pipe;
             end if;
         
      when pipe =>
      
         if(pipe_finished = '1') then
-            reinit_pipe_s <= '0';
-            en_pipe_s <= '0';
+            reinit_pipe_next <= '0';
+            en_pipe_next <= '0';
             x_next <= std_logic_vector(unsigned(x_reg)+4);
             --cycle_num_next <= std_logic_vector(resize((resize(unsigned(x_next(9 downto 4)), 12) - (unsigned(cnt_init_reg)-1)*(unsigned(cycle_num_limit_reg)-1)), 6));
             
             if(x_reg = std_logic_vector(unsigned(effective_row_limit_reg) - 4)) then
                 we_out_next <= X"0000";
-                pipe_br2dr_s <= '1';
+                pipe_br2dr_next <= '1';
                 state_n <= br2dr;
             else
                 state_n <= ctrl_loop;
             end if;     
         else
-            en_pipe_s <= '1';
+            en_pipe_next <= '1';
         end if;
         
      when br2dr => 
         sel_bram_addr_next <= '0';
-        en_bram_to_dram_s <= '1';
+        en_bram_to_dram_next <= '1';
         if(bram_to_dram_finished = '1') then
-            pipe_br2dr_s <= '0';
-            en_bram_to_dram_s <= '0';
+            pipe_br2dr_next <= '0';
+            en_bram_to_dram_next <= '0';
             state_n <= idle;
         end if;
         
@@ -264,19 +301,19 @@ we_out <= we_out_reg;
 cycle_num <= cycle_num_reg;
 dram_row_ptr0 <= dram_row_ptr0_s;
 dram_row_ptr1 <= dram_row_ptr1_s;
-en_dram_to_bram <= en_dram_to_bram_s;
-en_pipe <= en_pipe_s;
-en_bram_to_dram <= en_bram_to_dram_s;
-reinit <= reinit_s;
-pipe_br2dr <= pipe_br2dr_s;
-reinit_pipe <= reinit_pipe_s;
-realloc_last_rows <= realloc_last_rows_s;
+en_dram_to_bram <= en_dram_to_bram_reg;
+en_pipe <= en_pipe_reg;
+en_bram_to_dram <= en_bram_to_dram_reg;
+reinit <= reinit_reg;
+pipe_br2dr <= pipe_br2dr_reg;
+reinit_pipe <= reinit_pipe_reg;
+realloc_last_rows <= realloc_last_rows_reg;
 
 
-cycle_num0 <= cycle_num_reg when realloc_last_rows_s = '0' else
+cycle_num0 <= cycle_num_reg when realloc_last_rows_reg = '0' else
               (others => '0');
 
 --bram2dram
-row_cnt <= row_cnt_s;
+row_cnt <= row_cnt_reg;
 
 end Behavioral;

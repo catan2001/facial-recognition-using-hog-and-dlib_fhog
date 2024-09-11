@@ -216,7 +216,6 @@ end component;
 
 component DSP_addr_AX
   Port ( 
-    clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
     a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
@@ -230,7 +229,6 @@ end component;
 
 component DSP_addr_BX
   Port (     
-    clk: in std_logic;
     width_2: in std_logic_vector(8 downto 0);
     a: in std_logic_vector(5 downto 0); --i
     b: in std_logic_vector(5 downto 0); --cycle_num 
@@ -458,7 +456,6 @@ Port map(
     
 DSP_addr_AX_l: DSP_addr_AX
 Port map( 
-    clk => clk,
     width_2 => width_2,
     a => i_s,
     b => cycle_num_s, 
@@ -469,7 +466,6 @@ Port map(
     
 DSP_addr_BX_l: DSP_addr_BX
 Port map(    
-    clk => clk,
     width_2 => width_2,
     a => i_s,
     b => cycle_num_s, 
@@ -481,7 +477,6 @@ Port map(
     
 DSP_addr_A12_l: DSP_addr_AX
 Port map( 
-    clk => clk,
     width_2 => width_2,
     a => i_s,
     b => cycle_num_s, 
@@ -492,7 +487,6 @@ Port map(
     
 DSP_addr_B12_l: DSP_addr_BX
 Port map(    
-    clk => clk,
     width_2 => width_2,
     a => i_s,
     b => cycle_num_s, 

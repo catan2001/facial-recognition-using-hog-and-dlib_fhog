@@ -40,7 +40,7 @@ signal state_control_logic_r, state_control_logic_n: state_control_logic_t;
 --reg bank
 signal width_2_reg, width_2_next: std_logic_vector(8 downto 0);
 
-signal bram_output_xy_addr_s: std_logic_vector(9 downto 0);
+signal bram_output_xy_addr_reg, bram_output_xy_addr_next: std_logic_vector(9 downto 0);
 
 signal sel_filter_reg, sel_filter_next: std_logic_vector(2 downto 0);
 signal sel_bram_out_reg, sel_bram_out_next: std_logic_vector(2 downto 0);
@@ -52,7 +52,7 @@ signal row_position0_reg, row_position0_next: std_logic_vector(8 downto 0);
 signal row_position12_reg, row_position12_next: std_logic_vector(8 downto 0);
 signal cnt_init_reg, cnt_init_next: std_logic_vector(5 downto 0);
 
-signal pipe_finished_s: std_logic := '0';
+signal pipe_finished_reg, pipe_finished_next: std_logic;
 
 begin
 
@@ -73,6 +73,10 @@ if(rising_edge(clk)) then
         row_position12_reg <= (others => '0');
         cycle_num_reg <= (others => '0');
         cnt_init_reg <= "000001";
+        
+        bram_output_xy_addr_reg <= (others => '0');
+        
+        pipe_finished_reg <= '0';
 
     else
 
@@ -90,6 +94,10 @@ if(rising_edge(clk)) then
         
         cycle_num_reg <= cycle_num_next;
         cnt_init_reg <= cnt_init_next;
+        
+        bram_output_xy_addr_reg <= bram_output_xy_addr_next;
+        
+        pipe_finished_reg <= pipe_finished_next;
     end if;
 end if;
 end process;
@@ -97,7 +105,7 @@ end process;
 
 process(state_control_logic_r, width_2, sel_filter_reg, sel_bram_out_reg,
         row_position_reg, row_position0_reg, row_position12_reg, cycle_num_reg, cnt_init_reg, width_2_reg, 
-        cycle_num, sel_bram_out_fsm, en_pipe, reinit, br2dr, reinit_pipe)
+        cycle_num, sel_bram_out_fsm, en_pipe, reinit, br2dr, reinit_pipe, pipe_finished_reg, bram_output_xy_addr_reg)
 begin
 
 state_control_logic_n <= state_control_logic_r;
@@ -125,13 +133,15 @@ row_position_next <= row_position_reg;
 row_position0_next <= row_position0_reg;
 row_position12_next <= row_position12_reg;
 cnt_init_next <= cnt_init_reg;
+bram_output_xy_addr_next <= bram_output_xy_addr_reg;
+pipe_finished_next <= pipe_finished_reg;
 
 case state_control_logic_r is
 
     when init_loop_row =>
     
         width_2_next <= width_2;
-        pipe_finished_s <= '0';
+        pipe_finished_next <= '0';
         
         if(en_pipe = '1') then
             row_position_next <= (others => '0');
@@ -163,20 +173,20 @@ case state_control_logic_r is
             
             end if;
             
-            pipe_finished_s <= '1';
+            pipe_finished_next <= '1';
             state_control_logic_n <= init_loop_row;
         else
             row_position_next <= std_logic_vector(unsigned(row_position_reg) + 1);
             row_position0_next <= std_logic_vector(unsigned(row_position0_reg) + 2);
             row_position12_next <= std_logic_vector(unsigned(row_position12_reg) + 2);
-            bram_output_xy_addr_s <= std_logic_vector((resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg) - 1), 10) + resize(unsigned(row_position_reg),10)));
+            bram_output_xy_addr_next <= std_logic_vector((resize(unsigned(cycle_num_reg)*(unsigned(width_2_reg) - 1), 10) + resize(unsigned(row_position_reg),10)));
         end if;
 
 end case;
 end process;
 
-pipe_finished <= pipe_finished_s;
-bram_output_xy_addr <= bram_output_xy_addr_s;
+pipe_finished <= pipe_finished_reg;
+bram_output_xy_addr <= bram_output_xy_addr_reg;
 row_position <= row_position_reg;
 
 row_position0 <= row_position_reg when realloc_last_rows = '0' else

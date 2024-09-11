@@ -102,7 +102,7 @@ impure function dram_init return dram_type is
     variable data : std_logic_vector(15 downto 0);
     variable dram_rows : rows_type;
     variable dram : dram_type;
-    file text_file : text open read_mode is "/home/koshek/Desktop/emotion_recognition_git/facial-recognition-using-hog-and-dlib_fhog/input_files/input246_300/gray_normalised.txt";
+    file text_file : text open read_mode is "C:/Users/Andjela/Desktop/psds/gray_normalised_velika.txt";
 begin
     for row in 0 to IMG_HEIGHT - 1 loop
         readline(text_file, row_text);
@@ -180,7 +180,7 @@ port map(
         start_s <= '0', '1' after 45ns, '0' after 75ns;
         en_axi_s <= '1';
         
-        for c in 0 to 2 loop
+        for c in 0 to 3 loop
             --report "a: " & integer'image(a) & " b: " & integer'image(b) & " c: " & integer'image(c) & " d: " & integer'image(d) & " e: " & integer'image(e);
         
             data_in_s(0) <= x"0000000000000000"; 
@@ -226,7 +226,7 @@ port map(
             end loop;  
             
             --wait for 196970 ns;
-            wait for 196900 ns;
+            wait for 195550 ns;
             
             for d in 64 to 125 loop
                 for e in 0 to 61 loop
@@ -238,7 +238,7 @@ port map(
                 end loop;
             end loop; 
             
-            wait for 407850 ns;
+            wait for 406500 ns;
             
             for d in 126 to 150 loop
                 for e in 0 to 61 loop
