@@ -515,7 +515,7 @@ end process;
 sel_bram_out <= sel_bram_out_reg4;
 sel_filter <= sel_filter_s;
 
-we_out <= (others => '0') when en_bram_to_dram_reg = '1' else we_out_reg4;
+we_out <= (others => '0') when en_bram_to_dram_reg = '1' else we_out_reg3;
 realloc_last_rows <= realloc_last_rows_s;
 
 end Behavioral;

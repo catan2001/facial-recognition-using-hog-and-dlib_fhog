@@ -243,9 +243,9 @@ case state_r is
             end if;
         
      when pipe =>
+        reinit_pipe_next <= '0';
      
         if(pipe_finished = '1') then
-            reinit_pipe_next <= '0';
             en_pipe_next <= '0';
             x_next <= std_logic_vector(unsigned(x_reg)+4);
             
