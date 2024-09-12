@@ -21,7 +21,19 @@ component top is
   Port ( 
     clk: in std_logic;
     reset: in std_logic;
-    start: in std_logic; 
+    start: in std_logic;
+    
+    --axi stream signals bram to dram
+    axi_ready_out: in std_logic;
+    axi_valid_out: out std_logic;
+    axi_strb_out: out std_logic_vector(3 downto 0);
+    axi_last_out: out std_logic;
+    
+    --axi stream signals dram to bram
+    axi_last_in: in std_logic;
+    axi_valid_in: in std_logic;
+    axi_strb_in: in std_logic_vector(3 downto 0);
+    axi_ready_in: out std_logic; 
 
     --reg bank
     width: in std_logic_vector(9 downto 0);
@@ -47,6 +59,18 @@ signal clk_s: std_logic;
 signal reset_s: std_logic;
 signal start_s: std_logic;
 
+--axi stream signals bram to dram
+signal axi_ready_out_s: std_logic;
+signal axi_valid_out_s: std_logic;
+signal axi_strb_out_s: std_logic_vector(3 downto 0);
+signal axi_last_out_s: std_logic;
+
+--axi stream signals dram to bram
+signal axi_last_in_s: std_logic;
+signal axi_valid_in_s: std_logic;
+signal axi_strb_in_s: std_logic_vector(3 downto 0);
+signal axi_ready_in_s: std_logic; 
+
 signal width_s: std_logic_vector(9 downto 0);
 signal width_4_s: std_logic_vector(7 downto 0);
 signal width_2_s: std_logic_vector(8 downto 0);
@@ -62,8 +86,8 @@ signal data_in_s, data_out_s: data_t;
 
 signal ready_s: std_logic; 
 
-constant IMG_WIDTH : natural := 252;
-constant IMG_HEIGHT : natural := 188;
+constant IMG_WIDTH : natural := 248;
+constant IMG_HEIGHT : natural := 302;
 
 type rows_type is array(0 to IMG_WIDTH - 1) of std_logic_vector(15 downto 0);
 type dram_type is array(0 to IMG_HEIGHT - 1) of rows_type;
@@ -75,7 +99,7 @@ impure function dram_init return dram_type is
     variable data : std_logic_vector(15 downto 0);
     variable dram_rows : rows_type;
     variable dram : dram_type;
-    file text_file : text open read_mode is "/home/koshek/Desktop/emotion_recognition_git/facial-recognition-using-hog-and-dlib_fhog/input_files/input250_186/gray_normalised.txt";
+    file text_file : text open read_mode is "C:/Users/Andjela/Desktop/psds/gray_normalised_velika.txt";
 begin
     for row in 0 to IMG_HEIGHT - 1 loop
         readline(text_file, row_text);
@@ -109,6 +133,18 @@ port map(
     clk => clk_s,
     reset => reset_s,
     start => start_s,
+    
+    --axi stream signals bram to dram
+    axi_ready_out => axi_ready_out_s,
+    axi_valid_out => axi_valid_out_s,
+    axi_strb_out => axi_strb_out_s,
+    axi_last_out => axi_last_out_s,
+    
+    --axi stream signals dram to bram
+    axi_last_in => axi_last_in_s,
+    axi_valid_in => axi_valid_in_s,
+    axi_strb_in => axi_strb_in_s,
+    axi_ready_in => axi_ready_in_s, 
 
     --reg bank
     width => width_s,
@@ -128,80 +164,6 @@ port map(
         data_out1 => data_out_s(0),
         data_out2 => data_out_s(1));
         
---246x300:-------------------------------------------------------------------------------------
---    stim_gen1: process
---        variable a : integer := 0;
---        variable b: integer := 0;
---        variable c: integer := 0;
---        variable d: integer := 0;
---        variable e: integer := 0;
---    begin
---        reset_s <= '0', '1' after 10ns, '0' after 30ns;
---        start_s <= '0', '1' after 45ns, '0' after 75ns;
-        
---        for c in 0 to 3 loop
-
---            data_in_s(0) <= x"0000000000000000"; 
---            data_in_s(1) <= x"0000000000000000";
-                               
---                    width_s <= "0011111000";
---                    width_4_s <= "00111110";
---                    width_2_s <= "001111100";
---                    height_s <= "00100101110";
---                    bram_height_s <= "10000"; 
---                    cycle_num_limit_s <= "001000";
---                    cycle_num_out_s <= "001000";
---                    rows_num_s <= "0010000000";
---                    effective_row_limit_s <= "0100110100";
---            wait until rising_edge(clk_s);
---        end loop;
-        
---            for a in 0 to 63 loop
---                for b in 0 to 61 loop
---                    report "a: " & integer'image(a) & " b: " & integer'image(b) & " d: " & integer'image(d) & " e: " & integer'image(e); 
---                    data_in_s(0) <= dram1(2*a)(4*b)&dram1(2*a)(4*b+1)&dram1(2*a)(4*b+2)&dram1(2*a)(4*b+3); 
---                    data_in_s(1) <= dram1(2*a+1)(4*b)&dram1(2*a+1)(4*b+1)&dram1(2*a+1)(4*b+2)&dram1(2*a+1)(4*b+3);
-                    
---                    width_s <= "0011111000";
---                    width_4_s <= "00111110";
---                    width_2_s <= "001111100";
---                    height_s <= "00100101110";
---                    bram_height_s <= "10000"; 
---                    cycle_num_limit_s <= "001000";
---                    cycle_num_out_s <= "001000";
---                    rows_num_s <= "0010000000";
---                    effective_row_limit_s <= "0100110100";
---                wait until rising_edge(clk_s);
---                end loop;
---            end loop;  
-            
---            wait for 200100 ns;
-            
---            for d in 64 to 125 loop
---                for e in 0 to 61 loop
---                    report " d: " & integer'image(d) & " e: " & integer'image(e);
-                    
---                    data_in_s(0) <= dram2(2*d)(4*e)&dram2(2*d)(4*e+1)&dram2(2*d)(4*e+2)&dram2(2*d)(4*e+3); 
---                    data_in_s(1) <= dram2(2*d+1)(4*e)&dram2(2*d+1)(4*e+1)&dram2(2*d+1)(4*e+2)&dram2(2*d+1)(4*e+3);
---                wait until rising_edge(clk_s);
---                end loop;
---            end loop; 
-            
---            wait for 411000 ns;
-            
---            for d in 126 to 150 loop
---                for e in 0 to 61 loop
---                    data_in_s(0) <= dram3(2*d)(4*e)&dram3(2*d)(4*e+1)&dram3(2*d)(4*e+2)&dram3(2*d)(4*e+3); 
---                    data_in_s(1) <= dram3(2*d+1)(4*e)&dram3(2*d+1)(4*e+1)&dram3(2*d+1)(4*e+2)&dram3(2*d+1)(4*e+3);
---                wait until rising_edge(clk_s);
---                end loop;
---            end loop;   
- 
---    wait;
---    end process;
--------------------------------------------------------------------------------------------------------------------------------
-
---250x186:---------------------------------------------------------------------------------------------------------------------
     stim_gen1: process
         variable a : integer := 0;
         variable b: integer := 0;
@@ -211,47 +173,52 @@ port map(
     begin
         reset_s <= '0', '1' after 10ns, '0' after 30ns;
         start_s <= '0', '1' after 45ns, '0' after 75ns;
-        
-        for c in 0 to 3 loop
+        axi_strb_in_s <= "1111";
+        --axi_ready_out_s <= '1';
+        axi_ready_out_s <= '0', '1' after 398725 ns, '0' after 789325 ns, '1' after 989325 ns, '0' after 1379925 ns, '1' after 1463775 ns, '0' after 1627650 ns;
+        axi_last_in_s <= '0', '1' after 198575 ns, '0' after 198625 ns, '1' after 590875 ns, '0' after 590925 ns, '1' after 1066775 ns, '0' after 1066825 ns;
+        --axi_valid_in_s <= '1';
+        axi_valid_in_s <= '0', '1' after 225 ns, '0' after 198625 ns, '1' after 398725 ns, '0' after 590925 ns, '1' after 989325 ns, '0' after 1066825 ns;
+        for c in 0 to 4 loop
 
             data_in_s(0) <= x"0000000000000000"; 
             data_in_s(1) <= x"0000000000000000";
                                
-                    width_s <= "0011111100";
-                    width_4_s <= "00111111";
-                    width_2_s <= "001111110";
-                    height_s <= "00010111100";
+                    width_s <= "0011111000";
+                    width_4_s <= "00111110";
+                    width_2_s <= "001111100";
+                    height_s <= "00100101110";
                     bram_height_s <= "10000"; 
                     cycle_num_limit_s <= "001000";
                     cycle_num_out_s <= "001000";
                     rows_num_s <= "0010000000";
-                    effective_row_limit_s <= "0011000000";
+                    effective_row_limit_s <= "0100110100";
             wait until rising_edge(clk_s);
         end loop;
         
             for a in 0 to 63 loop
-                for b in 0 to 62 loop
+                for b in 0 to 61 loop
                     report "a: " & integer'image(a) & " b: " & integer'image(b) & " d: " & integer'image(d) & " e: " & integer'image(e); 
                     data_in_s(0) <= dram1(2*a)(4*b)&dram1(2*a)(4*b+1)&dram1(2*a)(4*b+2)&dram1(2*a)(4*b+3); 
                     data_in_s(1) <= dram1(2*a+1)(4*b)&dram1(2*a+1)(4*b+1)&dram1(2*a+1)(4*b+2)&dram1(2*a+1)(4*b+3);
                     
-                    width_s <= "0011111100";
-                    width_4_s <= "00111111";
-                    width_2_s <= "001111110";
-                    height_s <= "00010111100";
+                    width_s <= "0011111000";
+                    width_4_s <= "00111110";
+                    width_2_s <= "001111100";
+                    height_s <= "00100101110";
                     bram_height_s <= "10000"; 
                     cycle_num_limit_s <= "001000";
                     cycle_num_out_s <= "001000";
                     rows_num_s <= "0010000000";
-                    effective_row_limit_s <= "0011000000";
+                    effective_row_limit_s <= "0100110100";
                 wait until rising_edge(clk_s);
                 end loop;
             end loop;  
             
-            wait for 203200 ns;
+            wait for 200100 ns;
             
-            for d in 64 to 93 loop
-                for e in 0 to 62 loop
+            for d in 64 to 125 loop
+                for e in 0 to 61 loop
                     report " d: " & integer'image(d) & " e: " & integer'image(e);
                     
                     data_in_s(0) <= dram2(2*d)(4*e)&dram2(2*d)(4*e+1)&dram2(2*d)(4*e+2)&dram2(2*d)(4*e+3); 
@@ -259,6 +226,17 @@ port map(
                 wait until rising_edge(clk_s);
                 end loop;
             end loop; 
+            
+            wait for 398400 ns;
+            
+            for d in 126 to 150 loop
+                for e in 0 to 61 loop
+                    data_in_s(0) <= dram3(2*d)(4*e)&dram3(2*d)(4*e+1)&dram3(2*d)(4*e+2)&dram3(2*d)(4*e+3); 
+                    data_in_s(1) <= dram3(2*d+1)(4*e)&dram3(2*d+1)(4*e+1)&dram3(2*d+1)(4*e+2)&dram3(2*d+1)(4*e+3);
+                wait until rising_edge(clk_s);
+                end loop;
+            end loop;   
+ 
     wait;
     end process;
 

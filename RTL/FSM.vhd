@@ -82,7 +82,7 @@ if(rising_edge(clk)) then
     if reset = '1' then
         state_r <= idle;
         ready_reg <= '0';
-        --start_reg <= '0';
+        start_reg <= '0';
         
         sel_bram_addr_reg <= '0';
         we_out_reg <= X"000F";
@@ -110,7 +110,7 @@ if(rising_edge(clk)) then
         cycle_num_limit_reg <= cycle_num_limit_next;
         effective_row_limit_reg <= effective_row_limit_next;
         ready_reg <= ready_next;
-        --start_reg <= start_next;
+        start_reg <= start_next;
 
         sel_bram_addr_reg <= sel_bram_addr_next;
         we_out_reg <= we_out_next;
@@ -138,7 +138,7 @@ process(state_r, rows_num_reg, cycle_num_limit_reg, effective_row_limit_reg, sel
         x_reg, cycle_num_reg, cnt_init_reg, we_out_reg, rows_num, cycle_num_limit, effective_row_limit,
         start, dram_to_bram_finished, bram_to_dram_finished, pipe_finished, x_next, ready_reg, 
         sel_filter, en_bram_to_dram_reg, en_dram_to_bram_reg, reinit_reg, pipe_br2dr_reg, 
-        reinit_pipe_reg, reinit_reg, realloc_last_rows_reg, row_cnt_reg, reinit_const_reg)
+        reinit_pipe_reg, reinit_reg, realloc_last_rows_reg, row_cnt_reg, reinit_const_reg, start_reg)
 begin
 
 state_n  <= state_r;    
@@ -147,7 +147,7 @@ rows_num_next <= rows_num_reg;
 cycle_num_limit_next <= cycle_num_limit_reg;
 effective_row_limit_next <= effective_row_limit_reg;
 ready_next <= ready_reg;
---start_next <= start_reg;
+start_next <= start_reg;
 
 sel_bram_addr_next <= sel_bram_addr_reg;
 x_next <= x_reg;
@@ -172,11 +172,11 @@ case state_r is
         rows_num_next <= rows_num;
         cycle_num_limit_next <= cycle_num_limit;
         effective_row_limit_next <= effective_row_limit;
-        --start_next <= start;
+        start_next <= start;
         
         ready_next <= '1';
         x_next <= (others => '0');
-        if(start = '1') then
+        if(start_reg = '1') then
             state_n <= dr2br;
         end if;
         
@@ -244,8 +244,8 @@ case state_r is
         
      when pipe =>
         reinit_pipe_next <= '0';
-     
         if(pipe_finished = '1') then
+            --reinit_pipe_next <= '0';
             en_pipe_next <= '0';
             x_next <= std_logic_vector(unsigned(x_reg)+4);
             

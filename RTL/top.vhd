@@ -10,6 +10,18 @@ entity top is
     clk: in std_logic;
     reset: in std_logic;
     start: in std_logic;
+    
+    --axi stream signals bram to dram
+    axi_ready_out: in std_logic;
+    axi_valid_out: out std_logic;
+    axi_strb_out: out std_logic_vector(3 downto 0);
+    axi_last_out: out std_logic;
+    
+    --axi stream signals dram to bram
+    axi_last_in: in std_logic;
+    axi_valid_in: in std_logic;
+    axi_strb_in: in std_logic_vector(3 downto 0);
+    axi_ready_in: out std_logic;
 
     --reg bank
     width: in std_logic_vector(9 downto 0);
@@ -97,6 +109,16 @@ component control_path_v2 is
     clk: in std_logic;
     reset: in std_logic;
     start: in std_logic; 
+    
+    --axi stream signals bram to dram
+    axi_ready_out: in std_logic;
+    axi_valid_out: out std_logic;
+    axi_last_out: out std_logic;
+    
+    --axi stream signals dram to bram
+    axi_last_in: in std_logic;
+    axi_valid_in: in std_logic;
+    axi_ready_in: out std_logic;
 
     --reg bank
     width: in std_logic_vector(9 downto 0);
@@ -165,47 +187,59 @@ data_path_l: data_path
 
 control_path_l: control_path_v2
 Port map( 
-  clk => clk,
-  reset => reset,
-  start => start,
-
-  --reg bank
-  width => width,
-  width_4 => width_4,
-  width_2 => width_2,
-  height => height,
-  bram_height => bram_height,
-  cycle_num_limit => cycle_num_limit,
-  cycle_num_out => cycle_num_out,
-  rows_num => rows_num,
-  effective_row_limit => effective_row_limit,
-  ready => ready_s,
-  
-  --dram_to_bram
-  sel_bram_in => sel_bram_in_s,
-  bram_addr_A1 => bram_addrA_l_in_s,
-  bram_addr_B1 => bram_addrB_l_in_s,
-  bram_addr_A2 => bram_addrA_h_in_s,
-  bram_addr_B2 => bram_addrB_h_in_s,
-  bram_addr_A12 => bram_addrA12_in_s,
-  bram_addr_B12 => bram_addrB12_in_s,
-  we_in => we_in_s,
-  we_out => we_out_s,
-  realloc_last_rows => realloc_last_rows_s,
-  
-  --control logic
-  sel_filter => sel_filter_s,
-  sel_bram_out => sel_bram_out_s,
-  bram_output_addr_A => bram_addr_A_out_s,
-  bram_output_addr_B => bram_addr_B_out_s,
-  
-  --bram_to_dram
-  sel_dram => sel_dram_s);
+    clk => clk,
+    reset => reset,
+    start => start,
+    
+    --axi stream signals bram to dram
+    axi_ready_out => axi_ready_out,
+    axi_valid_out => axi_valid_out,
+    axi_last_out => axi_last_out,
+    
+    --axi stream signals dram to bram
+    axi_last_in => axi_last_in,
+    axi_valid_in => axi_valid_in,
+    axi_ready_in => axi_ready_in,
+    
+    --reg bank
+    width => width,
+    width_4 => width_4,
+    width_2 => width_2,
+    height => height,
+    bram_height => bram_height,
+    cycle_num_limit => cycle_num_limit,
+    cycle_num_out => cycle_num_out,
+    rows_num => rows_num,
+    effective_row_limit => effective_row_limit,
+    ready => ready_s,
+    
+    --dram_to_bram
+    sel_bram_in => sel_bram_in_s,
+    bram_addr_A1 => bram_addrA_l_in_s,
+    bram_addr_B1 => bram_addrB_l_in_s,
+    bram_addr_A2 => bram_addrA_h_in_s,
+    bram_addr_B2 => bram_addrB_h_in_s,
+    bram_addr_A12 => bram_addrA12_in_s,
+    bram_addr_B12 => bram_addrB12_in_s,
+    we_in => we_in_s,
+    we_out => we_out_s,
+    realloc_last_rows => realloc_last_rows_s,
+    
+    --control logic
+    sel_filter => sel_filter_s,
+    sel_bram_out => sel_bram_out_s,
+    bram_output_addr_A => bram_addr_A_out_s,
+    bram_output_addr_B => bram_addr_B_out_s,
+    
+    --bram_to_dram
+    sel_dram => sel_dram_s);
   
 ready <= ready_s;
 
 data_out1 <= data_out1_s;
 data_out2 <= data_out2_s;
+
+axi_strb_out <= "1111";
 
 --SIGNALS FOR VERIFICATION:--------------------------------------------------------------------
 data_out11_s <= data_out1_s(63 downto 48);

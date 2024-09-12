@@ -7,6 +7,16 @@ entity control_path_v2 is
     clk: in std_logic;
     reset: in std_logic;
     start: in std_logic;
+    
+    --axi stream signals bram to dram
+    axi_ready_out: in std_logic;
+    axi_valid_out: out std_logic;
+    axi_last_out: out std_logic;
+    
+    --axi stream signals dram to bram
+    axi_last_in: in std_logic;
+    axi_valid_in: in std_logic;
+    axi_ready_in: out std_logic;
 
     --reg bank
     width: in std_logic_vector(9 downto 0);
@@ -49,6 +59,10 @@ component bram_to_dram is
   Port ( 
     clk: in std_logic;
     reset: in std_logic;
+    --axi stream signals
+    axi_ready_out: in std_logic;
+    axi_valid_out: out std_logic;
+    axi_last_out: out std_logic;
     --reg bank
     width: in std_logic_vector(9 downto 0);
     width_4: in std_logic_vector(7 downto 0);
@@ -96,6 +110,11 @@ component dram_to_bram is
   Port (     
     clk: in std_logic;
     reset: in std_logic;
+    
+    --axi stream signals
+    axi_last_in: in std_logic;
+    axi_valid_in: in std_logic;
+    axi_ready_in: out std_logic;
     
     --reg bank
     width_4: in std_logic_vector(7 downto 0);
@@ -270,6 +289,11 @@ port map(
     clk => clk,
     reset => reset,
     
+    --axi stream signals
+    axi_last_in => axi_last_in,
+    axi_valid_in => axi_valid_in,
+    axi_ready_in => axi_ready_in,
+    
     --reg bank
     width_4 => width_4,
     width_2 => width_2,
@@ -317,6 +341,10 @@ bram_to_dram_l: bram_to_dram
 port map(
     clk => clk,
     reset => reset,
+    --axi stream signals
+    axi_ready_out => axi_ready_out,
+    axi_valid_out => axi_valid_out,
+    axi_last_out => axi_last_out,
     --reg bank
     width => width,
     width_4 => width_4,

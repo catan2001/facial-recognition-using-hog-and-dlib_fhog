@@ -7,6 +7,11 @@ entity dram_to_bram is
     clk: in std_logic;
     reset: in std_logic;
     
+    --axi stream signals
+    axi_last_in: in std_logic;
+    axi_valid_in: in std_logic;
+    axi_ready_in: out std_logic;
+    
     --reg bank
     width_4: in std_logic_vector(7 downto 0);
     width_2: in std_logic_vector(8 downto 0);
@@ -40,6 +45,8 @@ signal height_reg, height_next: std_logic_vector(10 downto 0);
 signal bram_height_reg, bram_height_next: std_logic_vector(4 downto 0);
 signal cycle_num_limit_reg, cycle_num_limit_next: std_logic_vector(5 downto 0);
 
+signal axi_ready_in_next, axi_ready_in_reg: std_logic;
+
 signal i_reg, i_next: std_logic_vector(5 downto 0);
 signal j_reg, j_next: std_logic_vector(4 downto 0);
 signal j_limit_reg, j_limit_next: std_logic_vector(4 downto 0);
@@ -60,6 +67,8 @@ if(rising_edge(clk)) then
     if reset = '1' then
     
         state_dram_to_bram_r <= loop_dram_to_bram0;
+        
+        axi_ready_in_reg <= '0';
 
         sel_bram_in_reg <= (others => '0');
         we_in_reg <= (others => '0');
@@ -74,6 +83,8 @@ if(rising_edge(clk)) then
         
     else
         state_dram_to_bram_r <= state_dram_to_bram_n;
+        
+        axi_ready_in_reg <= axi_ready_in_next;
 
         width_2_reg <= width_2_next;
         width_4_reg <= width_4_next;
@@ -99,10 +110,13 @@ end process;
 process(state_dram_to_bram_r,  width_2_reg, width_4_reg, height_reg, bram_height_reg,
         cycle_num_limit_reg, sel_bram_in_reg, we_in_reg, i_reg, j_reg, j_limit_reg, 
         k_reg, dram_row_ptr1_reg, width_2, width_4, height, bram_height, cycle_num_limit,
-        en_dram_to_bram, i_next, reinit, realloc_last_rows, dram_to_bram_finished_reg) 
+        en_dram_to_bram, i_next, reinit, realloc_last_rows, dram_to_bram_finished_reg,
+        axi_ready_in_reg, axi_valid_in, axi_last_in) 
 begin
 
 state_dram_to_bram_n <= state_dram_to_bram_r;
+
+axi_ready_in_next <= axi_ready_in_reg;
 
 --reg bank
 width_2_next <= width_2_reg;
@@ -155,45 +169,49 @@ case state_dram_to_bram_r is
                         
             j_next <= (others => '0');
             k_next <= (others => '0');
-            
+            axi_ready_in_next <= '1';
             state_dram_to_bram_n <= loop_dram_to_bram1;
         end if;
 
     when loop_dram_to_bram1 =>
-        
-        if(k_reg = std_logic_vector(resize((unsigned(width_2_reg)-2),10))) then 
-            k_next <= (others => '0'); 
-           
-            if(dram_row_ptr1_reg = std_logic_vector(unsigned(height_reg)-1)) then 
-                we_in_next <= (others => '0');
-                dram_to_bram_finished_next <= '1';
-                state_dram_to_bram_n <= end_dram_to_bram;
-            else
-                dram_row_ptr1_next <= std_logic_vector(unsigned(dram_row_ptr1_reg) + 2);
-                if(sel_bram_in_reg = "0111") then
-                    sel_bram_in_next <= (others => '0');
-                    we_in_next <= X"0000000F";
+        if(axi_valid_in = '1') then
+            if(k_reg = std_logic_vector(resize((unsigned(width_2_reg)-2),10))) then 
+                k_next <= (others => '0'); 
+               
+                --if(dram_row_ptr1_reg = std_logic_vector(unsigned(height_reg)-1)) then --zamijeniti sa last
+                if(axi_last_in = '1') then
+                    we_in_next <= (others => '0');
+                    dram_to_bram_finished_next <= '1';
+                    axi_ready_in_next <= '0';
+                    state_dram_to_bram_n <= end_dram_to_bram;
                 else
-                    sel_bram_in_next <= std_logic_vector(unsigned(sel_bram_in_reg) + 1);
-                    we_in_next <= std_logic_vector(shift_left(unsigned(we_in_reg),4));
-                end if;
-      
-                if(j_reg = j_limit_reg) then
-                    j_limit_next <= std_logic_vector(unsigned(bram_height_reg)-2);
-                    i_next <= std_logic_vector(unsigned(i_reg) + 1);
-                    if(i_next = cycle_num_limit_reg) then 
-                        we_in_next <= (others => '0');
-                        dram_to_bram_finished_next <= '1';
-                        state_dram_to_bram_n <= end_dram_to_bram;
+                    --dram_row_ptr1_next <= std_logic_vector(unsigned(dram_row_ptr1_reg) + 2);
+                    if(sel_bram_in_reg = "0111") then
+                        sel_bram_in_next <= (others => '0');
+                        we_in_next <= X"0000000F";
                     else
-                        j_next <= (others => '0');
+                        sel_bram_in_next <= std_logic_vector(unsigned(sel_bram_in_reg) + 1);
+                        we_in_next <= std_logic_vector(shift_left(unsigned(we_in_reg),4));
                     end if;
-                else
-                    j_next <= std_logic_vector(unsigned(j_reg) + 2);
-                end if;
-            end if;    
-        else
-            k_next <= std_logic_vector(unsigned(k_reg) + 2);  
+          
+                    if(j_reg = j_limit_reg) then
+                        j_limit_next <= std_logic_vector(unsigned(bram_height_reg)-2);
+                        i_next <= std_logic_vector(unsigned(i_reg) + 1);
+                        if(i_next = cycle_num_limit_reg) then 
+                            we_in_next <= (others => '0');
+                            dram_to_bram_finished_next <= '1';
+                            axi_ready_in_next <= '0';
+                            state_dram_to_bram_n <= end_dram_to_bram;
+                        else
+                            j_next <= (others => '0');
+                        end if;
+                    else
+                        j_next <= std_logic_vector(unsigned(j_reg) + 2);
+                    end if;
+                end if;    
+            else
+                k_next <= std_logic_vector(unsigned(k_reg) + 2);  
+            end if;
         end if;
         
         when end_dram_to_bram =>
@@ -202,10 +220,11 @@ case state_dram_to_bram_r is
 end case;
 end process;
 
-we_in <= we_in_reg;
-sel_bram_in <= sel_bram_in_reg;
+axi_ready_in <= axi_ready_in_reg;
 i <= i_reg;
 k <= k_reg;
+we_in <= we_in_reg;
+sel_bram_in <= sel_bram_in_reg;
 dram_to_bram_finished <= dram_to_bram_finished_reg;
 
 end Behavioral;
