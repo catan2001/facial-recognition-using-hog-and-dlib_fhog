@@ -12,7 +12,7 @@ entity axi_stream_v1_0_M00_AXIS is
 		-- Width of S_AXIS address bus. The slave accepts the read and write addresses of width C_M_AXIS_TDATA_WIDTH.
 		C_M_AXIS_TDATA_WIDTH	: integer	:= 64;
 		-- Start count is the number of clock cycles the master will wait before initiating/issuing any transaction.
-		C_M_START_COUNT	: integer	:= 32
+		C_M_START_COUNT	: integer	:= 1 -- CHECK WHY IS THIS NECESSARY?
 	);
 	port (
 		-- Users to add ports here
@@ -136,12 +136,12 @@ begin
 	          when INIT_COUNTER =>                                                              
 	            -- This state is responsible to wait for user defined C_M_START_COUNT           
 	            -- number of clock cycles.                                                      
-	            if ( count = std_logic_vector(to_unsigned((C_M_START_COUNT - 1), WAIT_COUNT_BITS))) then
+	            --if ( count = std_logic_vector(to_unsigned((C_M_START_COUNT - 1), WAIT_COUNT_BITS))) then
 	              mst_exec_state  <= SEND_STREAM;                                               
-	            else                                                                            
-	              count <= std_logic_vector (unsigned(count) + 1);                              
-	              mst_exec_state  <= INIT_COUNTER;                                              
-	            end if;                                                                         
+	            --else                                                                            
+	            --  count <= std_logic_vector (unsigned(count) + 1);                              
+	            --  mst_exec_state  <= INIT_COUNTER;                                              
+	            --end if;                                                                         
 	                                                                                            
 	        when SEND_STREAM  =>                                                                
 	          -- The example design streaming master functionality starts                       
@@ -222,13 +222,13 @@ begin
 	                                                                                
 	-- Streaming output data is read from FIFO                                      
 	  process(M_AXIS_ACLK)                                                          
-	  variable  sig_one : integer := 1;                                             
+	  --variable  sig_one : integer := 0;                                             
 	  begin                                                                         
 	    if (rising_edge (M_AXIS_ACLK)) then                                         
 	      if(M_AXIS_ARESETN = '0') then                                             
-	    	stream_data_out <= std_logic_vector(to_unsigned(sig_one,C_M_AXIS_TDATA_WIDTH));  
+	    	stream_data_out <= (others => '0');
 	      elsif (tx_en = '1') then -- && M_AXIS_TSTRB(byte_index)                   
-	        stream_data_out <= std_logic_vector( to_unsigned(read_pointer,C_M_AXIS_TDATA_WIDTH) + to_unsigned(sig_one,C_M_AXIS_TDATA_WIDTH));
+	        stream_data_out <= std_logic_vector(to_unsigned(read_pointer, C_M_AXIS_TDATA_WIDTH));
 	      end if;                                                                   
 	     end if;                                                                    
 	   end process;                                                                 
