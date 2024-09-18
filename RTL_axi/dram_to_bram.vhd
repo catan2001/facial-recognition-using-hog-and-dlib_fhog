@@ -27,6 +27,7 @@ entity dram_to_bram is
     reinit: in std_logic;
     en_dram_to_bram: in std_logic;
     realloc_last_rows: in std_logic;
+    last_rows_written: in std_logic;
     dram_to_bram_finished: out std_logic; 
     
     --out signals
@@ -142,6 +143,8 @@ dram_to_bram_finished_next <= dram_to_bram_finished_reg;
 --reallocate last four rows to the first four BRAM BLOCKS for next pipe:
 if(realloc_last_rows = '1') then
     we_in_next <= X"000000FF";
+elsif(last_rows_written = '1') then
+     we_in_next <= X"00000000";
 else
     we_in_next <= we_in_reg;
 end if;
@@ -182,14 +185,14 @@ case state_dram_to_bram_r is
     when loop_dram_to_bram1 =>
         if(axi_hp0_valid_in = '1' and axi_hp1_valid_in = '1') then
         
-            if(k_reg = std_logic_vector((unsigned(width_2_reg)-4))) then
-                if(i_reg = std_logic_vector(unsigned(cycle_num_limit_reg) - 1)) then
-                    if(j_reg = j_limit_reg) then
-                        axi_hp0_ready_in_next <= '0';
-                        axi_hp1_ready_in_next <= '0';
-                    end if;
-                end if;
-            end if;
+            --if(k_reg = std_logic_vector((unsigned(width_2_reg)-4))) then
+            --    if(i_reg = std_logic_vector(unsigned(cycle_num_limit_reg) - 1)) then
+            --        if(j_reg = j_limit_reg) then
+            --            axi_hp0_ready_in_next <= '0';
+            --            axi_hp1_ready_in_next <= '0';
+            --        end if;
+            --    end if;
+            --end if;
         
             if(k_reg = std_logic_vector((unsigned(width_2_reg)-2))) then 
                 k_next <= (others => '0'); 
@@ -218,8 +221,8 @@ case state_dram_to_bram_r is
                         if(i_next = cycle_num_limit_reg) then 
                             we_in_next <= (others => '0');
                             dram_to_bram_finished_next <= '1';
-                            --axi_hp0_ready_in_next <= '0';
-                            --axi_hp1_ready_in_next <= '0';
+                            axi_hp0_ready_in_next <= '0';
+                            axi_hp1_ready_in_next <= '0';
                             
                             state_dram_to_bram_n <= end_dram_to_bram;
                         else

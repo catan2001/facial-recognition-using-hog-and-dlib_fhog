@@ -17,6 +17,7 @@ entity control_logic is
     sel_filter_fsm: out std_logic_vector(2 downto 0);
     pipe_finished: out std_logic;
     realloc_last_rows: in std_logic;
+    we_out_fsm: in std_logic_vector(15 downto 0);
     --out sig
     bram_output_xy_addr:out std_logic_vector(9 downto 0);
     row_position: out std_logic_vector(8 downto 0);
@@ -102,7 +103,7 @@ end process;
 process(state_control_logic_r, width_2, sel_filter_reg, sel_bram_out_reg, row_position_reg, 
         row_position0_reg, row_position12_reg, cycle_num_reg, cnt_init_reg, width_2_reg, 
         cycle_num, en_pipe, reinit, br2dr, reinit_pipe, pipe_finished_reg, we_out_reg,
-        bram_output_xy_addr_reg)
+        bram_output_xy_addr_reg, we_out_fsm)
 begin
 
 state_control_logic_n <= state_control_logic_r;
@@ -110,7 +111,7 @@ state_control_logic_n <= state_control_logic_r;
 width_2_next <= width_2_reg;
 
 if(br2dr = '1' or reinit = '1') then
-    we_out_next <= (others => '0');     
+    we_out_next <= we_out_fsm;     
 elsif(reinit_pipe = '1') then
     we_out_next <= X"000F";
 else
