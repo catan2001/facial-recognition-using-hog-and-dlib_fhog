@@ -5,12 +5,14 @@
 		import uvm_pkg::*;      // import the UVM library
 			`include "uvm_macros.svh" // Include the UVM macros
 
-			`include "hog_axil_seq_item.sv"
-			`include "hog_axil_sequencer.sv"
+		`include "golden_vector_cfg.sv"
 
-			`include "hog_axil_gp_driver.sv"
-			`include "hog_axil_gp_monitor.sv"
-			`include "hog_axil_gp_agent.sv"
+		`include "hog_axil_seq_item.sv"
+		`include "hog_axil_sequencer.sv"
+
+		`include "hog_axil_gp_driver.sv"
+		`include "hog_axil_gp_monitor.sv"
+		`include "hog_axil_gp_agent.sv"
 	endpackage 
 
 `endif

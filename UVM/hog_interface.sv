@@ -2,12 +2,12 @@
 	`define HOG_INTERFACE_SV
   		
 	parameter integer C_S_AXI_GP_DATA_WIDTH	= 32;
-	parameter integer C_S_AXI_GP_ADDR_WIDTH	= 5;
+	parameter integer C_S_AXI_GP_ADDR_WIDTH	= 4;
 	
 	parameter integer C_S00_AXIS_TDATA_WIDTH = 64;
 	parameter integer C_M00_AXIS_TDATA_WIDTH = 64;
 
-    interface axil_gp_if (input clk, logic rst);
+	interface axil_gp_if (input clk, logic rst);
 		// AXI4Lite GP Slave Port interface
 		
 		logic [C_S_AXI_GP_ADDR_WIDTH - 1 : 0]        s_axi_awaddr; // Write Address // Master
@@ -30,9 +30,9 @@
 		logic                                        s_axi_rvalid; // Read valid // Slave
 		logic                                        s_axi_rready; // Read Ready // Master
 
-    endinterface : axil_gp_if
+	endinterface : axil_gp_if
 
-    interface axis_hp0_if (input clk, logic rst);
+	interface axis_hp0_if (input clk, logic rst);
 
 		// Master 	= DUT
 		// Slave 	= DDR
@@ -52,9 +52,9 @@
 		logic                                         m00_axis_tlast; // Transaction Last // Master
 		logic                                         m00_axis_tready; // Transaction Valid // Slave
 		
-    endinterface : axis_hp0_if
-    
-    interface axis_hp1_if (input clk, logic rst);
+	endinterface : axis_hp0_if
+	
+	interface axis_hp1_if (input clk, logic rst);
    
 		// Master 	= DUT
 		// Slave 	= DDR
@@ -74,7 +74,7 @@
 		logic                                         m00_axis_tlast; // Transaction Last // Master
 		logic                                         m00_axis_tready; // Transaction Valid // Slave
 		
-    endinterface : axis_hp1_if
+	endinterface : axis_hp1_if
 
 `endif
 

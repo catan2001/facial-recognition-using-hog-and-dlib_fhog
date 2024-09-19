@@ -7,6 +7,8 @@
         hog_axis_hp0_agent axis_hp0_agent;
         hog_axis_hp1_agent axis_hp1_agent;
 
+        scoreboard scbd;
+
         virtual interface axil_gp_if axil_vif;
         virtual interface axis_hp0_if axis_hp0_vif;
         virtual interface axis_hp1_if axis_hp1_vif;
@@ -37,12 +39,14 @@
             axil_gp_agent = hog_axil_gp_agent::type_id::create("axil_gp_agent",this);
             axis_hp0_agent = hog_axis_hp0_agent::type_id::create("axis_hp0_agent",this);
             axis_hp1_agent = hog_axis_hp1_agent::type_id::create("axis_hp1_agent",this);
-            
-            //Dodavanje scoreboard-a
+            scbd = scoreboard::type_id::create("scbd",this);
         endfunction : build_phase   
         
         function void connect_phase(uvm_phase phase);
             super.connect_phase(phase);
+            axil_gp_agent.axil_mon.item_collected_port.connect(scbd.axil_import);
+            axis_hp0_agent.axis_hp0_mon.item_collected_port.connect(scbd.axis_hp0_import);
+            axis_hp1_agent.axis_hp1_mon.item_collected_port.connect(scbd.axis_hp1_import);
         endfunction
 
 	endclass : hog_environment

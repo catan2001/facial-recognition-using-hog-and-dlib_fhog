@@ -27,11 +27,9 @@
 					`uvm_info(get_type_name(), $sformatf("Driver sending...\n%s", req.sprint()), UVM_HIGH)
 
 					if(!req.read & req.write) begin // Write transaction
-					    $display("Driving write transaction:");
 						axi_lite_write(req.s_axi_awaddr, req.s_axi_wdata);
 					end else if(req.read & !req.write) begin
-						$display("Driving read transaction:");
-						axi_lite_read(req.s_axi_araddr, req.s_axi_rdata);					
+						axi_lite_read(req.s_axi_araddr, req.s_axi_rdata);		
 					end
 
 					seq_item_port.item_done(); // Complete transaction
@@ -42,7 +40,7 @@
 			end
 		endtask : main_phase
 
-		task automatic axi_lite_write(input bit [4 : 0] address, input bit [31 : 0] data); // prevent variables to be shared between calls.
+		task automatic axi_lite_write(input bit [3 : 0] address, input bit [31 : 0] data); // prevent variables to be shared between calls.
 			vif.s_axi_awaddr = address;
 			vif.s_axi_awprot = 3'b000;
 			vif.s_axi_awvalid = 1;
@@ -62,7 +60,6 @@
 			// clear the valid signals after response is recieved...
 			vif.s_axi_awvalid = 0;
     		vif.s_axi_wvalid = 0;
-    		vif.s_axi_wdata = 0;	      
 
 			wait(!vif.s_axi_bvalid);
 
@@ -71,7 +68,7 @@
 	
 		endtask;
 
-		task automatic axi_lite_read(input bit [4 : 0] address, input bit [31 : 0] data); // prevent variables to be shared between calls.
+		task automatic axi_lite_read(input bit [3 : 0] address, output bit [31 : 0] data); // prevent variables to be shared between calls.
 			vif.s_axi_araddr = address;
 			vif.s_axi_arprot = 3'b000;
 			vif.s_axi_arvalid = 1;
@@ -88,10 +85,10 @@
 			// clear the valid signals after response is recieved...
 			vif.s_axi_arvalid = 0;
     		vif.s_axi_araddr = 0;	      
-
-			wait(!vif.s_axi_rvalid);
 			// read data
 			data = vif.s_axi_rdata;
+
+			wait(!vif.s_axi_rvalid);
     		// Deassert read response ready	
     		vif.s_axi_rready = 0;
 	

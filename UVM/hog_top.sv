@@ -8,45 +8,42 @@ module hog_top;
 	logic clk;
 	logic rst;
 
-	// just for testing purpose
-	logic status = 1;
-	logic ctrl;
-	logic [9 : 0] width;
-	logic [7 : 0] width_4;
-	logic [8 : 0] width_2;
-	logic [10 : 0] height;
-	logic [5 : 0] cycle_num_in;
-	logic [5 : 0] cycle_num_out;
-	logic [9 : 0] rows_num;
-	logic [11 : 0] effective_row_limit;
-	logic [4 : 0] bram_height;
-	logic [31 : 0] dram_in_addr;
-	logic [31 : 0] dram_x_addr;
-	logic [31 : 0] dram_y_addr;
-
 	axil_gp_if axil_vif(clk, rst);
 	axis_hp0_if axis_hp0_vif(clk, rst);
 	axis_hp1_if axis_hp1_vif(clk, rst);
 
-	// DUT HERE:
-	axis_gp2ip_v1_0 DUT(					
-		.status_reg 				(status),
-		.ctrl_reg 					(ctrl),
-		.width_reg 					(width),
-		.width_4_reg 				(width_4),
-		.width_2_reg 				(width_2),
-		.height_reg 				(height),
-		.cycle_num_in_reg	 		(cycle_num_in),
-		.cycle_num_out_reg 			(cycle_num_out),
-		.rows_num_reg 				(rows_num),
-		.effective_row_limit_reg 	(effective_row_limit),
-		.bram_height 				(bram_height),
-		.dram_in_addr_reg 			(dram_in_addr),
-		.dram_x_addr_reg 			(dram_x_addr),
-		.dram_y_addr_reg 			(dram_y_addr),
+	top_axi HOG_DUT(
+		.clk 						(clk),
 
-		// Ports of Axi Slave Bus Interface S00_AXI
-		.s00_axi_aclk 				(clk),
+		// HP0 PORTS:
+		// Ports of Axi Stream Slave Bus Interface: ip to ddr
+		.m00_axis_tvalid			(axis_hp0_vif.m00_axis_tvalid),
+		.m00_axis_tdata	            (axis_hp0_vif.m00_axis_tdata),
+		.m00_axis_tstrb	            (axis_hp0_vif.m00_axis_tstrb),
+		.m00_axis_tlast	            (axis_hp0_vif.m00_axis_tlast),
+		.m00_axis_tready	        (axis_hp0_vif.m00_axis_tready),
+		// Ports of Axi Master Bus Interface: ddr to ip
+		.s00_axis_tready	        (axis_hp0_vif.s00_axis_tready),
+		.s00_axis_tdata	            (axis_hp0_vif.s00_axis_tdata),
+		.s00_axis_tstrb	            (axis_hp0_vif.s00_axis_tstrb),
+		.s00_axis_tlast             (axis_hp0_vif.s00_axis_tlast),
+		.s00_axis_tvalid	        (axis_hp0_vif.s00_axis_tvalid),
+		
+		// HP1 PORTS:
+		// Ports of Axi Stream Slave Bus Interface: ip to ddr
+		.m01_axis_tvalid	        (axis_hp1_vif.m00_axis_tvalid),
+		.m01_axis_tdata	            (axis_hp1_vif.m00_axis_tdata),
+		.m01_axis_tstrb	            (axis_hp1_vif.m00_axis_tstrb),
+		.m01_axis_tlast	            (axis_hp1_vif.m00_axis_tlast),
+		.m01_axis_tready	        (axis_hp1_vif.m00_axis_tready),
+		// Ports of Axi Master Bus Interface: ddr to ip
+		.s01_axis_tready	        (axis_hp1_vif.s00_axis_tready),
+		.s01_axis_tdata	            (axis_hp1_vif.s00_axis_tdata),
+		.s01_axis_tstrb	            (axis_hp1_vif.s00_axis_tstrb),
+		.s01_axis_tlast             (axis_hp1_vif.s00_axis_tlast),
+		.s01_axis_tvalid	        (axis_hp1_vif.s00_axis_tvalid),
+
+		// Ports of Axi Light Slave Bus Interface
 		.s00_axi_aresetn 			(rst),
 		.s00_axi_awaddr 			(axil_vif.s_axi_awaddr),
 		.s00_axi_awprot				(axil_vif.s_axi_awprot),
@@ -67,46 +64,9 @@ module hog_top;
 		.s00_axi_rresp				(axil_vif.s_axi_rresp),
 		.s00_axi_rvalid				(axil_vif.s_axi_rvalid),
 		.s00_axi_rready				(axil_vif.s_axi_rready)
+
 	);
 	
-	axi_stream_v1_0 DUT2(					
-		.s00_axis_aclk	              (clk),
-		.s00_axis_aresetn	          (rst),
-		.s00_axis_tready	          (axis_hp0_vif.s00_axis_tready),
-		.s00_axis_tdata	              (axis_hp0_vif.s00_axis_tdata),
-		.s00_axis_tstrb	              (axis_hp0_vif.s00_axis_tstrb),
-		.s00_axis_tlast               (axis_hp0_vif.s00_axis_tlast),
-		.s00_axis_tvalid	          (axis_hp0_vif.s00_axis_tvalid),
-
-		// Ports of Axi Master Bus Interface M00_AXIS
-		.m00_axis_aclk	               (clk),
-		.m00_axis_aresetn	           (rst),
-		.m00_axis_tvalid	           (axis_hp0_vif.m00_axis_tvalid),
-		.m00_axis_tdata	               (axis_hp0_vif.m00_axis_tdata),
-		.m00_axis_tstrb	               (axis_hp0_vif.m00_axis_tstrb),
-		.m00_axis_tlast	               (axis_hp0_vif.m00_axis_tlast),
-		.m00_axis_tready	           (axis_hp0_vif.m00_axis_tready)
-	);
-
-	axi_stream_v1_0 DUT3(					
-		.s00_axis_aclk	              (clk),
-		.s00_axis_aresetn	          (rst),
-		.s00_axis_tready	          (axis_hp1_vif.s00_axis_tready),
-		.s00_axis_tdata	              (axis_hp1_vif.s00_axis_tdata),
-		.s00_axis_tstrb	              (axis_hp1_vif.s00_axis_tstrb),
-		.s00_axis_tlast               (axis_hp1_vif.s00_axis_tlast),
-		.s00_axis_tvalid	          (axis_hp1_vif.s00_axis_tvalid),
-
-		// Ports of Axi Master Bus Interface M00_AXIS
-		.m00_axis_aclk	               (clk),
-		.m00_axis_aresetn	           (rst),
-		.m00_axis_tvalid	           (axis_hp1_vif.m00_axis_tvalid),
-		.m00_axis_tdata	               (axis_hp1_vif.m00_axis_tdata),
-		.m00_axis_tstrb	               (axis_hp1_vif.m00_axis_tstrb),
-		.m00_axis_tlast	               (axis_hp1_vif.m00_axis_tlast),
-		.m00_axis_tready	           (axis_hp1_vif.m00_axis_tready)
-	);
-
 	initial begin
 		uvm_config_db#(virtual axil_gp_if)::set(null, "*", "axil_gp_if", axil_vif);
 		uvm_config_db#(virtual axis_hp0_if)::set(null, "*", "axis_hp0_if", axis_hp0_vif);
@@ -120,7 +80,6 @@ module hog_top;
 		clk <= 0;
 		rst <= 0;
 		#50 rst <= 1;
-		#5000 rst <= 0;
 	end
 
 	always #50 clk = ~clk;

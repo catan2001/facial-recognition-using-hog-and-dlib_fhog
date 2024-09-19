@@ -5,6 +5,8 @@
 		import uvm_pkg::*;      // import the UVM library
 			`include "uvm_macros.svh" // Include the UVM macros
 
+		`include "golden_vector_cfg.sv"	
+
 		// importing sequence items:
 		import hog_axil_gp_agent_pkg::hog_axil_seq_item;
 		import hog_axis_hp0_agent_pkg::hog_axis_seq_item; // hp0 and hp1 share the same one

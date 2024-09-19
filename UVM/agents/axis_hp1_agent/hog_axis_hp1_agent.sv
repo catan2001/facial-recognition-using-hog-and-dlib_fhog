@@ -6,7 +6,7 @@
         // components:
 		hog_axis_hp1_driver 	axis_hp1_drv;
 		hog_axis_hp1_monitor    axis_hp1_mon;
-		hog_axis_hp1_sequencer 	    axis_hp1_seqr;
+		hog_axis_hp1_sequencer 	axis_hp1_seqr;
 
         `uvm_component_utils(hog_axis_hp1_agent)
 
