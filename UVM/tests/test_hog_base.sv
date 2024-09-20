@@ -5,8 +5,9 @@
 
 		hog_environment env;
 		golden_vector_cfg gv_cfg;
+		configuration cfg;
 
-		string inputImgPath = "input246_300.txt";
+		string inputImgPath = "input246_300.txt"; 
 		string inputDxPath = "dx_golden.txt";
 		string inputDyPath = "dy_golden.txt";
 
