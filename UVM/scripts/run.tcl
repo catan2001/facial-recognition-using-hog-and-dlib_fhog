@@ -20,7 +20,7 @@ set root_dir [pwd]
 
 # Creating new project:
 puts "Creating new project..."
-create_project hog_uvm -part xc7z010clg400-1 
+create_project hog_uvm -part xc7z010clg400-1 -force
 
 # Define the prefix for the board part (common part)
 set target_prefix "digilentinc.com:zybo-z7-10"
@@ -83,7 +83,7 @@ update_compile_order -fileset sources_1
 # Adding Simulation Files"
 puts "Adding UVM Simulation Files"
 
-set_property SOURCE_SET sources_1 [get_filesets sim_1]
+set_property SOURCE_SET  sources_1 [get_filesets sim_1]
 add_files -fileset sim_1 -norecurse $uvm_dir/agents/axil_gp_agent/hog_axil_gp_agent_pkg.sv
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
 add_files -fileset sim_1 -norecurse $uvm_dir/agents/axis_hp0_agent/hog_axis_hp0_agent_pkg.sv
@@ -98,23 +98,20 @@ add_files -fileset sim_1 -norecurse $uvm_dir/sequences/hog_seq_pkg.sv
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
 add_files -fileset sim_1 -norecurse $uvm_dir/tests/test_hog_pkg.sv
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
-add_files -fileset sim_1 -norecurse $uvm_dir/configuration.sv
-set_property SOURCE_SET sources_1 [get_filesets sim_1]
-add_files -fileset sim_1 -norecurse $uvm_dir/golden_vector_cfg.sv
-set_property SOURCE_SET sources_1 [get_filesets sim_1]
 add_files -fileset sim_1 -norecurse $uvm_dir/hog_interface.sv
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
 add_files -fileset sim_1 -norecurse $uvm_dir/hog_top.sv
+set_property SOURCE_SET sources_1 [get_filesets sim_1]
+add_files -fileset sim_1 -norecurse $uvm_dir/configuration.sv
 
+# Substitute the variable manually before passing to get_files
+set expanded_files [subst { $uvm_dir/sequence_items/hog_seq_items_pkg.sv $uvm_dir/sequencers/hog_sequencers_pkg.sv $uvm_dir/configuration.sv }]
+
+update_compile_order -fileset sources_1
+update_compile_order -fileset sim_1
+set_property file_type {Verilog Header} [get_files  $expanded_files]
 update_compile_order -fileset sim_1
 
 set_property -name {xsim.compile.xvlog.more_options} -value {-L uvm} -objects [get_filesets sim_1]
 set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm} -objects [get_filesets sim_1]
-set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TESTNAME=hog_uvm -testplusarg UVM_VERBOSITY=UVM_LOW} -objects [get_filesets sim_1]
-
-
-
-
-
-
-
+set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TESTNAME=test_hog_simple -testplusarg UVM_VERBOSITY=UVM_LOW} -objects [get_filesets sim_1]
