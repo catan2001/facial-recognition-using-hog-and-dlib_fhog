@@ -74,7 +74,7 @@
 							assert_hp0_eof  :  assert(tr_clone_hp0.m00_axis_tdata[63:48] == gv_cfg.dx_gv[this.hp0_i][this.hp0_j]
 											   && tr_clone_hp0.m00_axis_tdata[47:32] == gv_cfg.dx_gv[this.hp0_i][this.hp0_j+1])
 							else begin
-								`uvm_error(get_type_name(),$sformatf("missmatch in data for dx at [%0d][%0d].\n", this.hp0_i, this.hp0_j))
+								`uvm_error(get_type_name(),$sformatf("missmatch in data for dx at [%0d][%0d].\nData from DUT: [%0h], Data from Golden Vector: [%0h %0h]", this.hp0_i, this.hp0_j, tr_clone_hp0.m00_axis_tdata, gv_cfg.dx_gv[this.hp0_i][this.hp0_j], gv_cfg.dx_gv[this.hp0_i][this.hp0_j+1]))
 								ERR_HP0 = 1;
 							end
 						end
@@ -82,7 +82,7 @@
 							tmp_dx = {gv_cfg.dx_gv[this.hp0_i][this.hp0_j], gv_cfg.dx_gv[this.hp0_i][this.hp0_j+1], gv_cfg.dx_gv[this.hp0_i][this.hp0_j+2], gv_cfg.dx_gv[this.hp0_i][this.hp0_j+3]};
 							assert_hp0  :  assert(tr_clone_hp0.m00_axis_tdata == tmp_dx)
 							else begin
-								`uvm_error(get_type_name(),$sformatf("missmatch in data for dx at [%0d][%0d].\n", this.hp0_i, this.hp0_j))
+								`uvm_error(get_type_name(),$sformatf("missmatch in data for dx at [%0d][%0d].\nData from DUT: [%0h], Data from Golden Vector: [%0h]", this.hp0_i, this.hp0_j, tr_clone_hp0.m00_axis_tdata, tmp_dx))
 								ERR_HP0 = 1;
 							end 
 						end
@@ -106,7 +106,7 @@
 							assert_hp1_eof  :  assert(tr_clone_hp1.m00_axis_tdata[63:48] == gv_cfg.dy_gv[this.hp1_i][this.hp1_j]
 											   && tr_clone_hp1.m00_axis_tdata[47:32] == gv_cfg.dy_gv[this.hp1_i][this.hp1_j+1])
 							else begin
-								`uvm_error(get_type_name(),$sformatf("missmatch in data for dy at [%0d][%0d].\n", this.hp1_i, this.hp1_j))
+								`uvm_error(get_type_name(),$sformatf("missmatch in data for dy at [%0d][%0d].\nData from DUT: [%0h], Data from Golden Vector: [%0h %0h]", this.hp1_i, this.hp1_j, tr_clone_hp1.m00_axis_tdata, gv_cfg.dy_gv[this.hp1_i][this.hp1_j],gv_cfg.dy_gv[this.hp1_i][this.hp1_j+1]))
 								ERR_HP1 = 1;
 							end
 						end
@@ -114,7 +114,7 @@
 							tmp_dy = {gv_cfg.dy_gv[this.hp1_i][this.hp1_j], gv_cfg.dy_gv[this.hp1_i][this.hp1_j+1], gv_cfg.dy_gv[this.hp1_i][this.hp1_j+2], gv_cfg.dy_gv[this.hp1_i][this.hp1_j+3]};
 							assert_hp1  :  assert(tr_clone_hp1.m00_axis_tdata == tmp_dy)
 							else begin
-								`uvm_error(get_type_name(),$sformatf("missmatch in data for dy at [%0d][%0d].\n", this.hp1_i, this.hp1_j))
+								`uvm_error(get_type_name(),$sformatf("missmatch in data for dy at [%0d][%0d].\nData from DUT: [%0h], Data from Golden Vector: [%0h]", this.hp1_i, this.hp1_j, tr_clone_hp1.m00_axis_tdata, tmp_dy))
 								ERR_HP1 = 1;
 							end
 						end
@@ -130,19 +130,19 @@
 		endfunction : write_axis_hp1
 				
 		function void report_phase(uvm_phase phase);
-			`uvm_info(get_type_name(), $sformatf("Scoreboard examined: $0d transactions", num_of_tr), UVM_LOW);
+			`uvm_info(get_type_name(), $sformatf("Scoreboard examined: %0d transactions", num_of_tr), UVM_LOW);
 			if(!ERR_HP0) begin
 				`uvm_info(get_type_name(), "Data comparison in the scoreboard completed successfully for port HP0 [dx data].", UVM_LOW);
 			end
 			else begin
-				`uvm_info(get_type_name(), "Data comparison in the scoreboard completed failed for port HP0 [dx data].", UVM_LOW);
+				`uvm_info(get_type_name(), "Data comparison in the scoreboard failed for port HP0 [dx data].", UVM_LOW);
 			end
 
 			if(!ERR_HP1) begin
 				`uvm_info(get_type_name(), "Data comparison in the scoreboard completed successfully for port HP1 [dy data].", UVM_LOW);
 			end
 			else begin
-				`uvm_info(get_type_name(), "Data comparison in the scoreboard completed failed for port HP1 [dy data].", UVM_LOW);
+				`uvm_info(get_type_name(), "Data comparison in the scoreboard failed for port HP1 [dy data].", UVM_LOW);
 			end 
 		endfunction : report_phase
 

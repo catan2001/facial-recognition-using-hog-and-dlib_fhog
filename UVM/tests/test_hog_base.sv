@@ -7,9 +7,9 @@
 		golden_vector_cfg gv_cfg;
 		configuration cfg;
 
-		string inputImgPath = "input246_300.txt"; 
-		string inputDxPath = "dx_golden.txt";
-		string inputDyPath = "dy_golden.txt";
+		string inputImgPath = "input250_186.txt"; //"input246_300.txt"; 
+		string inputDxPath = "dx_golden250_186.txt"; ; //"input246_300.txt"; 
+		string inputDyPath = "dy_golden250_186.txt"; // "dy_golden240_178.txt"
 
 		`uvm_component_utils(test_hog_base)
 

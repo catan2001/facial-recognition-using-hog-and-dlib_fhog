@@ -30,7 +30,7 @@
 					hog_axis_it.read = 0;
 					hog_axis_it.write = 1;
 					hog_axis_it.s00_axis_tdata = {inputImage[i][j], inputImage[i][j+1], inputImage[i][j+2], inputImage[i][j+3]};
-					if(i == (height - 2) & j == (width - 4)) begin
+					if(i >= (height - 2) & j >= (width - 4)) begin
 						hog_axis_it.tlast = 1'b1;
 					end
 					else 
