@@ -15,7 +15,7 @@ set uvm_dir ../
 file mkdir $uvm_dir/VivadoUVM/RegressionCoverageLogs
 set reg_log_dir $uvm_dir/VivadoUVM/RegressionCoverageLogs
 
-for {set i 1} {$i <= 1} {incr i} {
+for {set i 1} {$i <= 12} {incr i} {
     set db_name "covdb_$i" ;
     set xsim_command "set_property -name \{xsim.simulate.xsim.more_options\} -value \{-testplusarg UVM_TESTNAME=test_hog_simple -testplusarg UVM_VERBOSITY=UVM_LOW -sv_seed random -runall -cov_db_name $db_name\} -objects \[get_filesets sim_1\]"
     set xsim_define_cmd "set_property verilog_define {IMG_NUM=$i} -objects \[get_filesets sim_1\]"
