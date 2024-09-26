@@ -1,3 +1,4 @@
+
 `ifndef TEST_HOG_BASE_SV
 	`define TEST_HOG_BASE_SV
 
@@ -7,10 +8,20 @@
 		golden_vector_cfg gv_cfg;
 		configuration cfg;
 
-		string inputImgPath = "input250_186.txt"; //"input246_300.txt"; 
-		string inputDxPath = "dx_golden250_186.txt"; ; //"input246_300.txt"; 
-		string inputDyPath = "dy_golden250_186.txt"; // "dy_golden240_178.txt"
+		localparam int NUMBER_OF_GOLDEN_VECTORS = 12;
 
+		`ifdef IMG_NUM
+			int imgNum = `IMG_NUM % NUMBER_OF_GOLDEN_VECTORS; // for safety reasons
+		`else
+			int imgNum = $urandom_range(1, NUMBER_OF_GOLDEN_VECTORS); // TBD 
+		`endif
+			
+
+		string imageNumberStr = $sformatf("%0d", imgNum);
+		string inputImgPath = {"../../../../../goldenVectors/input/input", imageNumberStr, ".txt"}; 		
+		string inputDxPath  = {"../../../../../goldenVectors/output/dx_golden", imageNumberStr, ".txt"};
+		string inputDyPath  = {"../../../../../goldenVectors/output/dy_golden", imageNumberStr, ".txt"}; 	
+		
 		`uvm_component_utils(test_hog_base)
 
 		function new(string name = "test_hog_base", uvm_component parent = null);

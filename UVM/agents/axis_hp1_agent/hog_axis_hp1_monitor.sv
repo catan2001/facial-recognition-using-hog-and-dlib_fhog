@@ -24,9 +24,9 @@
 			option.comment = "AXIS HP1 covergroup";
 			option.per_instance = 2;
 			write_data : coverpoint vif.s00_axis_tdata {
-				bins axis_tdata_low  = {[64'h0000000000000000 : 64'h0FFFFFFFFFFFFFFF]};  // Low range
-				bins axis_tdata_med  = {[64'h1000000000000000 : 64'hEFFFFFFFFFFFFFFF]};  // Medium range
-				bins axis_tdata_high = {[64'hF000000000000000 : 64'hFFFFFFFFFFFFFFFF]};  // High range
+				bins axis_tdata_low  = {[64'h0000000000000000 : 64'h00FFFFFFFFFFFFF]};  // Low range
+				bins axis_tdata_med  = {[64'h0100000000000000 : 64'h0EFFFFFFFFFFFFFF]};  // Medium range
+				bins axis_tdata_high = {[64'h1000000000000000 : 64'hFFFFFFFFFFFFFFFF]};  // High range
 			}  
 			read_data : coverpoint vif.m00_axis_tdata {
 				bins axis_tdata_low  = {[64'h0000000000000000 : 64'h0FFFFFFFFFFFFFFF]};  // Low range

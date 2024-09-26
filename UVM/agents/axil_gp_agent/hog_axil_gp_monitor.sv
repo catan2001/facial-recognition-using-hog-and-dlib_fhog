@@ -30,8 +30,8 @@
 				bins sahe3 = {4'b1000};
 			}
 			write_data : coverpoint vif.s_axi_wdata{
-				bins axil_wdata_low = {[32'h00000000 : 32'hEFFFFFFF]};
-				bins axil_wdata_high = {[32'hF0000000 : 32'hFFFFFFFF]};
+				bins axil_wdata_low = {[32'h00000000 : 32'h0EFFFFFF]};
+				bins axil_wdata_high = {[32'h0F000000 : 32'hFFFFFFFF]}; // pomjer
 			}    
 		endgroup
 
@@ -42,10 +42,15 @@
 			read_address: coverpoint vif.s_axi_araddr{
 				bins SAHE1 = {4'b0000};
 			}
-			data_read: coverpoint vif.s_axi_rdata{
+			data_read: coverpoint vif.s_axi_rdata[0]{
 				bins data_bin_high = {1};
 				bins data_bin_low = {0};
 			}
+
+			addr_data_cross: cross read_address, data_read {
+        		bins SAHE1_data_high = binsof(read_address.SAHE1) && binsof(data_read.data_bin_high);
+        		bins SAHE1_data_low  = binsof(read_address.SAHE1) && binsof(data_read.data_bin_low);
+    		}
    		endgroup
 
 		// Constructor for the monitor
