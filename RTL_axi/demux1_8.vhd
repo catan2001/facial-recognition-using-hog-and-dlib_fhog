@@ -24,20 +24,77 @@ begin
     case sel is 
     when "0000" =>
         y0 <= x;
+        y1 <= (others => '0');
+        y2 <= (others => '0');
+        y3 <= (others => '0');
+        y4 <= (others => '0');
+        y5 <= (others => '0');
+        y6 <= (others => '0');
+        y7 <= (others => '0');
+        
     when "0001" =>
         y1 <= x;
+        y0 <= (others => '0');
+        y2 <= (others => '0');
+        y3 <= (others => '0');
+        y4 <= (others => '0');
+        y5 <= (others => '0');
+        y6 <= (others => '0');
+        y7 <= (others => '0');
     when "0010" =>
         y2 <= x;
+        y1 <= (others => '0');
+        y0 <= (others => '0');
+        y3 <= (others => '0');
+        y4 <= (others => '0');
+        y5 <= (others => '0');
+        y6 <= (others => '0');
+        y7 <= (others => '0');
     when "0011" =>
         y3 <= x;
+        y1 <= (others => '0');
+        y2 <= (others => '0');
+        y0 <= (others => '0');
+        y4 <= (others => '0');
+        y5 <= (others => '0');
+        y6 <= (others => '0');
+        y7 <= (others => '0');
     when "0100" =>
         y4 <= x;
+        y1 <= (others => '0');
+        y2 <= (others => '0');
+        y3 <= (others => '0');
+        y0 <= (others => '0');
+        y5 <= (others => '0');
+        y6 <= (others => '0');
+        y7 <= (others => '0');
     when "0101" =>
         y5 <= x;
+        y1 <= (others => '0');
+        y2 <= (others => '0');
+        y3 <= (others => '0');
+        y4 <= (others => '0');
+        y0 <= (others => '0');
+        y6 <= (others => '0');
+        y7 <= (others => '0');
     when "0110" =>
         y6 <= x;
+        y1 <= (others => '0');
+        y2 <= (others => '0');
+        y3 <= (others => '0');
+        y4 <= (others => '0');
+        y5 <= (others => '0');
+        y0 <= (others => '0');
+        y7 <= (others => '0');
     when others =>
         y7 <= x;
+        y1 <= (others => '0');
+        y2 <= (others => '0');
+        y3 <= (others => '0');
+        y4 <= (others => '0');
+        y5 <= (others => '0');
+        y6 <= (others => '0');
+        y0 <= (others => '0');
     end case;
 end process;
 

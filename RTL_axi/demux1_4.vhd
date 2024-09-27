@@ -20,12 +20,24 @@ begin
     case sel is 
     when "000" =>
         y0 <= x;
+        y1 <= (others => '0');
+        y2 <= (others => '0');
+        y3 <= (others => '0');
     when "001" =>
         y1 <= x;
+        y0 <= (others => '0');
+        y2 <= (others => '0');
+        y3 <= (others => '0');
     when "010" =>
         y2 <= x;
+        y1 <= (others => '0');
+        y0 <= (others => '0');
+        y3 <= (others => '0');
     when others =>
         y3 <= x;
+        y1 <= (others => '0');
+        y2 <= (others => '0');
+        y0 <= (others => '0');
     end case;
 end process;
 

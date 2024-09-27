@@ -83,7 +83,6 @@ component bram_to_dram is
     axi_hp1_last_out: out std_logic;
     
     --reg bank
-    width: in std_logic_vector(9 downto 0);
     width_4: in std_logic_vector(7 downto 0);
     width_2: in std_logic_vector(8 downto 0);
     height: in std_logic_vector(10 downto 0);
@@ -115,7 +114,6 @@ component control_logic is
     sel_filter_fsm: out std_logic_vector(2 downto 0);
     pipe_finished: out std_logic;
     realloc_last_rows: in std_logic;
-    we_out_fsm: in std_logic_vector(15 downto 0);
     --out sig
     bram_output_xy_addr:out std_logic_vector(9 downto 0);
     row_position: out std_logic_vector(8 downto 0);
@@ -142,16 +140,13 @@ component dram_to_bram is
     axi_hp1_ready_in: out std_logic;
     
     --reg bank
-    width_4: in std_logic_vector(7 downto 0);
     width_2: in std_logic_vector(8 downto 0);
-    height: in std_logic_vector(10 downto 0);
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
     bram_height: in std_logic_vector(4 downto 0);
     
     --sig for FSM
     reinit: in std_logic;
     en_dram_to_bram: in std_logic; 
-    last_rows_written: in std_logic;
     dram_to_bram_finished: out std_logic; 
     realloc_last_rows: in std_logic;
     
@@ -178,7 +173,6 @@ component FSM is
   
   --dram2bram
   realloc_last_rows: out std_logic;
-  last_rows_written: out std_logic;
   
   --ctrl log
   cycle_num: out std_logic_vector(5 downto 0); 
@@ -261,7 +255,6 @@ signal dram_to_bram_finished_s: std_logic;
 signal i_s: std_logic_vector(5 downto 0);
 signal k_s: std_logic_vector(8 downto 0);
 signal realloc_last_rows_s: std_logic;
-signal last_rows_written_s: std_logic;
 
 --control logic
 signal bram_output_xy_addr_s: std_logic_vector(9 downto 0);
@@ -306,10 +299,9 @@ signal sel_bram_out_reg4, sel_bram_out_next4: std_logic_vector(2 downto 0);
 signal we_out_reg1, we_out_next1: std_logic_vector(15 downto 0);
 signal we_out_reg2, we_out_next2: std_logic_vector(15 downto 0);
 signal we_out_reg3, we_out_next3: std_logic_vector(15 downto 0);
-signal we_out_reg4, we_out_next4: std_logic_vector(15 downto 0);
 
 signal en_bram_to_dram_reg, en_bram_to_dram_next: std_logic; 
-signal en_dram_to_bram_reg, en_dram_to_bram_next: std_logic;
+
 begin
 
 dram_to_bram_l: dram_to_bram
@@ -328,9 +320,7 @@ port map(
     
     
     --reg bank
-    width_4 => width_4,
     width_2 => width_2,
-    height => height,
     cycle_num_limit => cycle_num_limit,
     bram_height => bram_height,
     
@@ -339,7 +329,6 @@ port map(
     en_dram_to_bram => en_dram_to_bram_s,
     dram_to_bram_finished => dram_to_bram_finished_s,
     realloc_last_rows => realloc_last_rows_s,
-    last_rows_written => last_rows_written_s,
     
     --out signals
     we_in => we_in,
@@ -362,7 +351,6 @@ port map(
     sel_filter_fsm => sel_filter_fsm_s,
     pipe_finished => pipe_finished_s,
     realloc_last_rows => realloc_last_rows_s,
-    we_out_fsm => we_out_fsm_s,
     --out sig
     bram_output_xy_addr => bram_output_xy_addr_s,
     row_position => row_position_s,
@@ -386,7 +374,6 @@ port map(
     axi_hp1_last_out => axi_hp1_last_out,
     
     --reg bank
-    width => width,
     width_4 => width_4,
     width_2 => width_2,
     height => height,
@@ -419,7 +406,6 @@ Port map(
   
   --dram2bram
   realloc_last_rows => realloc_last_rows_s,
-  last_rows_written => last_rows_written_s,
   
   --ctrl log
   cycle_num => cycle_num_s,
@@ -534,7 +520,6 @@ if(falling_edge(clk)) then
         we_out_reg1 <= (others => '0');
         we_out_reg2 <= (others => '0');
         we_out_reg3 <= (others => '0');
-        we_out_reg4 <= (others => '0');
         
         en_bram_to_dram_reg <= '0';
       
@@ -551,10 +536,8 @@ if(falling_edge(clk)) then
         we_out_reg1 <= we_out_next1;
         we_out_reg2 <= we_out_next2;
         we_out_reg3 <= we_out_next3;
-        we_out_reg4 <= we_out_next4;
         
         en_bram_to_dram_reg <= en_bram_to_dram_next;
-        en_dram_to_bram_reg <= en_dram_to_bram_next;
         
     end if;
 end if;
@@ -562,8 +545,7 @@ end process;
 
 process(sel_bram_out_reg1, sel_bram_out_reg2, sel_bram_out_reg3, sel_bram_out_reg4, 
         sel_bram_out_s, bram_output_xy_addr_reg1, bram_output_xy_addr_reg2, 
-        bram_output_xy_addr_s, we_out_pipe_s, we_out_reg1, we_out_reg2, we_out_reg3,
-        en_bram_to_dram_s, en_dram_to_bram_s)
+        bram_output_xy_addr_s, we_out_pipe_s, we_out_reg1, we_out_reg2, we_out_reg3, en_bram_to_dram_s)
 begin
 
 sel_bram_out_next1 <= sel_bram_out_s;
@@ -578,17 +560,14 @@ bram_output_xy_addr_next3 <= bram_output_xy_addr_reg2;
 we_out_next1 <= we_out_pipe_s;
 we_out_next2 <= we_out_reg1;
 we_out_next3 <= we_out_reg2;
-we_out_next4 <= we_out_reg3;
 
 en_bram_to_dram_next <= en_bram_to_dram_s;
-en_dram_to_bram_next <= en_dram_to_bram_s;
 end process;
 
 sel_bram_out <= sel_bram_out_reg4;
 sel_filter <= sel_filter_s;
 
-we_out <= (others => '0') when (en_dram_to_bram_s = '1' or pipe_br2dr_s = '1')
-            else we_out_reg3;
+we_out <= (others => '0') when en_bram_to_dram_reg = '1' else we_out_reg3;
 realloc_last_rows <= realloc_last_rows_s;
 
 end Behavioral;

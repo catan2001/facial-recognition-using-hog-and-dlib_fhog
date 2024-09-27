@@ -17,7 +17,6 @@ entity control_logic is
     sel_filter_fsm: out std_logic_vector(2 downto 0);
     pipe_finished: out std_logic;
     realloc_last_rows: in std_logic;
-    we_out_fsm: in std_logic_vector(15 downto 0);
     --out sig
     bram_output_xy_addr:out std_logic_vector(9 downto 0);
     row_position: out std_logic_vector(8 downto 0);
@@ -49,7 +48,6 @@ signal cycle_num_reg, cycle_num_next: std_logic_vector(5 downto 0);
 signal row_position_reg, row_position_next: std_logic_vector(8 downto 0);
 signal row_position0_reg, row_position0_next: std_logic_vector(8 downto 0);
 signal row_position12_reg, row_position12_next: std_logic_vector(8 downto 0);
-signal cnt_init_reg, cnt_init_next: std_logic_vector(5 downto 0);
 
 signal pipe_finished_reg, pipe_finished_next: std_logic;
 
@@ -71,7 +69,6 @@ if(rising_edge(clk)) then
         row_position0_reg <= (others => '0');
         row_position12_reg <= (others => '0');
         cycle_num_reg <= (others => '0');
-        cnt_init_reg <= "000001";
         
         bram_output_xy_addr_reg <= (others => '0');
         pipe_finished_reg <= '0';
@@ -91,7 +88,6 @@ if(rising_edge(clk)) then
         row_position12_reg <= row_position12_next;
         
         cycle_num_reg <= cycle_num_next;
-        cnt_init_reg <= cnt_init_next;
         
         bram_output_xy_addr_reg <= bram_output_xy_addr_next;
         pipe_finished_reg <= pipe_finished_next;
@@ -101,9 +97,9 @@ end process;
 
 
 process(state_control_logic_r, width_2, sel_filter_reg, sel_bram_out_reg, row_position_reg, 
-        row_position0_reg, row_position12_reg, cycle_num_reg, cnt_init_reg, width_2_reg, 
+        row_position0_reg, row_position12_reg, cycle_num_reg, width_2_reg, 
         cycle_num, en_pipe, reinit, br2dr, reinit_pipe, pipe_finished_reg, we_out_reg,
-        bram_output_xy_addr_reg, we_out_fsm)
+        bram_output_xy_addr_reg, realloc_last_rows)
 begin
 
 state_control_logic_n <= state_control_logic_r;
@@ -111,7 +107,7 @@ state_control_logic_n <= state_control_logic_r;
 width_2_next <= width_2_reg;
 
 if(br2dr = '1' or reinit = '1') then
-    we_out_next <= we_out_fsm;     
+    we_out_next <= (others => '0');     
 elsif(reinit_pipe = '1') then
     we_out_next <= X"000F";
 else
@@ -130,7 +126,6 @@ cycle_num_next <= cycle_num;
 row_position_next <= row_position_reg;
 row_position0_next <= row_position0_reg;
 row_position12_next <= row_position12_reg;
-cnt_init_next <= cnt_init_reg;
 bram_output_xy_addr_next <= bram_output_xy_addr_reg;
 pipe_finished_next <= pipe_finished_reg;
 

@@ -17,9 +17,7 @@ entity dram_to_bram is
     axi_hp1_ready_in: out std_logic;
     
     --reg bank
-    width_4: in std_logic_vector(7 downto 0);
     width_2: in std_logic_vector(8 downto 0);
-    height: in std_logic_vector(10 downto 0);
     bram_height: in std_logic_vector(4 downto 0);
     cycle_num_limit: in std_logic_vector(5 downto 0); --2*bram_width/width
     
@@ -27,7 +25,6 @@ entity dram_to_bram is
     reinit: in std_logic;
     en_dram_to_bram: in std_logic;
     realloc_last_rows: in std_logic;
-    last_rows_written: in std_logic;
     dram_to_bram_finished: out std_logic; 
     
     --out signals
@@ -45,8 +42,6 @@ type state_dram_to_bram_t is
 signal state_dram_to_bram_r, state_dram_to_bram_n : state_dram_to_bram_t;
 
 signal width_2_reg, width_2_next: std_logic_vector(8 downto 0);
-signal width_4_reg, width_4_next: std_logic_vector(7 downto 0);
-signal height_reg, height_next: std_logic_vector(10 downto 0);
 signal bram_height_reg, bram_height_next: std_logic_vector(4 downto 0);
 signal cycle_num_limit_reg, cycle_num_limit_next: std_logic_vector(5 downto 0);
 
@@ -93,8 +88,6 @@ if(rising_edge(clk)) then
         axi_hp1_ready_in_reg <= axi_hp1_ready_in_next;
 
         width_2_reg <= width_2_next;
-        width_4_reg <= width_4_next;
-        height_reg <= height_next;
         bram_height_reg <= bram_height_next;
         cycle_num_limit_reg <= cycle_num_limit_next;
 
@@ -112,9 +105,9 @@ if(rising_edge(clk)) then
 end if;
 end process;
 
-process(state_dram_to_bram_r,  width_2_reg, width_4_reg, height_reg, bram_height_reg,
+process(state_dram_to_bram_r,  width_2_reg, bram_height_reg,
         cycle_num_limit_reg, sel_bram_in_reg, we_in_reg, i_reg, j_reg, j_limit_reg, 
-        k_reg, width_2, width_4, height, bram_height, cycle_num_limit,
+        k_reg, width_2, bram_height, cycle_num_limit,
         en_dram_to_bram, i_next, reinit, realloc_last_rows, dram_to_bram_finished_reg,
         axi_hp0_ready_in_reg, axi_hp0_valid_in, axi_hp0_last_in, axi_hp1_ready_in_reg, axi_hp1_valid_in, axi_hp1_last_in) 
 begin
@@ -126,8 +119,6 @@ axi_hp1_ready_in_next <= axi_hp1_ready_in_reg;
 
 --reg bank
 width_2_next <= width_2_reg;
-width_4_next <= width_4_reg;
-height_next <= height_reg;
 bram_height_next <= bram_height_reg;
 cycle_num_limit_next <= cycle_num_limit_reg;
 
@@ -143,8 +134,6 @@ dram_to_bram_finished_next <= dram_to_bram_finished_reg;
 --reallocate last four rows to the first four BRAM BLOCKS for next pipe:
 if(realloc_last_rows = '1') then
     we_in_next <= X"000000FF";
-elsif(last_rows_written = '1') then
-     we_in_next <= X"00000000";
 else
     we_in_next <= we_in_reg;
 end if;
@@ -154,8 +143,6 @@ case state_dram_to_bram_r is
     when loop_dram_to_bram0 =>
     
         width_2_next <= width_2;
-        width_4_next <= width_4;
-        height_next <= height;
         bram_height_next <= bram_height;
         cycle_num_limit_next <= cycle_num_limit;
         dram_to_bram_finished_next <= '0';   
@@ -185,14 +172,14 @@ case state_dram_to_bram_r is
     when loop_dram_to_bram1 =>
         if(axi_hp0_valid_in = '1' and axi_hp1_valid_in = '1') then
         
-            --if(k_reg = std_logic_vector((unsigned(width_2_reg)-4))) then
-            --    if(i_reg = std_logic_vector(unsigned(cycle_num_limit_reg) - 1)) then
-            --        if(j_reg = j_limit_reg) then
-            --            axi_hp0_ready_in_next <= '0';
-            --            axi_hp1_ready_in_next <= '0';
-            --        end if;
-            --    end if;
-            --end if;
+--            if(k_reg = std_logic_vector((unsigned(width_2_reg)-4))) then
+--                if(i_reg = std_logic_vector(unsigned(cycle_num_limit_reg) - 1)) then
+--                    if(j_reg = j_limit_reg) then
+--                        axi_hp0_ready_in_next <= '0';
+--                        axi_hp1_ready_in_next <= '0';
+--                    end if;
+--                end if;
+--            end if;
         
             if(k_reg = std_logic_vector((unsigned(width_2_reg)-2))) then 
                 k_next <= (others => '0'); 

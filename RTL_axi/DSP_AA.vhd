@@ -43,15 +43,16 @@ begin
             
             add <= resize(signed(ain), WIDTH_INTERIM) + resize(signed(bin), WIDTH_INTERIM);
             
-            --mult <= add * const;
-            mult_reg <= mult;
+            mult <= add * const;
+            --mult_reg <= mult;
             --p <= mult + d2;
             
         end if; 
     end process;
-     mult <= add * const;
+    --mult <= add * const;
     --pout <= std_logic_vector(p(18 downto 3));
-    p <= mult_reg + d2;
+    --p <= mult_reg + d2;
+    p <= mult + d2;
     pout <= std_logic_vector(p(18 downto 3));
 
 end Behavioral;
