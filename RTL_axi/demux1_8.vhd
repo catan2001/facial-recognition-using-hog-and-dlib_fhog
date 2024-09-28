@@ -31,7 +31,6 @@ begin
         y5 <= (others => '0');
         y6 <= (others => '0');
         y7 <= (others => '0');
-        
     when "0001" =>
         y1 <= x;
         y0 <= (others => '0');

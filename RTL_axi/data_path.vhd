@@ -95,7 +95,6 @@ signal doax00_s, dobx00_s, doax01_s, dobx01_s: std_logic_vector(15 downto 0);
 signal data_out1_s0, data_out1_s1, data_out1_s2, data_out1_s3: std_logic_vector(15 downto 0);
 signal data_out2_s0, data_out2_s1, data_out2_s2, data_out2_s3: std_logic_vector(15 downto 0);
 ----------------------------------------------------------------------------------------------------
-    attribute dont_touch : string;
     
     component demux1_8 is
         generic (
@@ -114,7 +113,6 @@ signal data_out2_s0, data_out2_s1, data_out2_s2, data_out2_s3: std_logic_vector(
           y6: out std_logic_vector(WIDTH-1 downto 0);
           y7: out std_logic_vector(WIDTH-1 downto 0));   
     end component;
-    attribute dont_touch of demux1_8 : component is "yes";
     
     component Dual_Port_BRAM is
         generic(
@@ -143,7 +141,6 @@ signal data_out2_s0, data_out2_s1, data_out2_s2, data_out2_s3: std_logic_vector(
          addr_b : in std_logic_vector(ADDR_WIDTH - 1 downto 0)
          );
     end component;
-    attribute dont_touch of Dual_Port_BRAM : component is "yes";
     
     component mux4_1 is
     generic(WIDTH:natural:=32);
@@ -154,7 +151,6 @@ signal data_out2_s0, data_out2_s1, data_out2_s2, data_out2_s3: std_logic_vector(
           sel: in std_logic_vector(2 downto 0);
           y: out std_logic_vector(WIDTH-1 downto 0));
     end component;
-    attribute dont_touch of mux4_1 : component is "yes";
     
     component mux2_1 is
     generic(WIDTH:natural:=32);
@@ -163,12 +159,11 @@ signal data_out2_s0, data_out2_s1, data_out2_s2, data_out2_s3: std_logic_vector(
           sel: in std_logic;
           y: out std_logic_vector(WIDTH-1 downto 0));
     end component;
-    attribute dont_touch of mux2_1 : component is "yes";
     
     component core_top is
         generic (
         WIDTH: natural := 16
-    );
+);
     Port (
         ------------------- control signals ------------------
         clk: in std_logic;
@@ -218,7 +213,6 @@ signal data_out2_s0, data_out2_s1, data_out2_s2, data_out2_s3: std_logic_vector(
         res_y_7: out std_logic_vector(WIDTH - 1 downto 0)  -- red 4
         );
     end component;
-    attribute dont_touch of core_top : component is "yes";
     
     component demux1_4 is
     generic(WIDTH:natural:=32);
@@ -229,7 +223,6 @@ signal data_out2_s0, data_out2_s1, data_out2_s2, data_out2_s3: std_logic_vector(
           y2: out std_logic_vector(WIDTH-1 downto 0);
           y3: out std_logic_vector(WIDTH-1 downto 0));
     end component;
-    attribute dont_touch of demux1_4 : component is "yes";
     
     component mux16_1 is
         generic(WIDTH:natural:=32);
@@ -253,8 +246,6 @@ signal data_out2_s0, data_out2_s1, data_out2_s2, data_out2_s3: std_logic_vector(
           sel: in std_logic_vector(4 downto 0);
           y: out std_logic_vector(WIDTH-1 downto 0));
     end component;
-    attribute dont_touch of mux16_1 : component is "yes";
-    
 begin
 
 --demux before bram block
@@ -1694,7 +1685,6 @@ mux3B_in_2: mux2_1
      data_out2_s3 <= data_out2_s(63 downto 48);
      
 --SIGNALS FOR VERIFICATION:----------------------------------------------------------------------
-
 diax00_s <= demux_x_bram0(31 downto 16);
 diax01_s <= demux_x_bram0(15 downto 0);
 
