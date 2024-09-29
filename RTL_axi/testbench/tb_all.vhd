@@ -130,7 +130,7 @@ impure function dram_init return dram_type is
     variable data : std_logic_vector(15 downto 0);
     variable dram_rows : rows_type;
     variable dram : dram_type;
-    file text_file : text open read_mode is "/home/koshek/Desktop/emotion_recognition_git/facial-recognition-using-hog-and-dlib_fhog/input_files/input150_150/gray_normalised.txt";
+    file text_file : text open read_mode is "C:/Users/Andjela/Desktop/psds/gray_normalised.txt";
 begin
     for row in 0 to IMG_HEIGHT - 1 loop
         readline(text_file, row_text);
@@ -308,21 +308,22 @@ port map(
       
         wait for 1500 ns;
         s00_axi_valid <= '1';
-      
+  
           for a in 0 to 75 loop
             for b in 0 to 37 loop
                
+                data_in_s(0) <= dram1(2*a)(4*b)&dram1(2*a)(4*b+1)&dram1(2*a)(4*b+2)&dram1(2*a)(4*b+3);
+               
                 if(a = 75 and b = 37) then
                     --wait until rising_edge(clk_s);
+                    --wait for 50 ns;
                     s00_axi_last <= '1';
                     s00_axi_valid <= '0';
                     
                     wait until rising_edge(clk_s);
                     s00_axi_last <= '0';
                     
-                end if;
-                    
-                data_in_s(0) <= dram1(2*a)(4*b)&dram1(2*a)(4*b+1)&dram1(2*a)(4*b+2)&dram1(2*a)(4*b+3); 
+                end if; 
                 
                 if(s00_axi_ready = '0') then
                     wait until (s00_axi_ready = '1');
@@ -364,16 +365,17 @@ port map(
        for c in 0 to 75 loop
          for d in 0 to 37 loop
                 
+                data_in_s(1) <= dram1(2*c+1)(4*d)&dram1(2*c+1)(4*d+1)&dram1(2*c+1)(4*d+2)&dram1(2*c+1)(4*d+3);
+                
                 if(c = 75 and d = 37) then
-                    --wait until rising_edge(clk_s);
+                --wait until rising_edge(clk_s);
+                    --wait for 50 ns;
                     s01_axi_last <= '1';
                     s01_axi_valid <= '0';
                     
                     wait until rising_edge(clk_s);
                     s01_axi_last <= '0';
                 end if;
-                    
-                data_in_s(1) <= dram1(2*c+1)(4*d)&dram1(2*c+1)(4*d+1)&dram1(2*c+1)(4*d+2)&dram1(2*c+1)(4*d+3);
                 
                 if(s01_axi_ready = '0') then
                     wait until (s01_axi_ready = '1');
