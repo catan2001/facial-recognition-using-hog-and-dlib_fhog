@@ -117,8 +117,8 @@ signal gp_axi_rready: std_logic;
 type data_t is array(0 to 1) of std_logic_vector(2*DATA_WIDTH-1 downto 0);
 signal data_in_s, data_out_s: data_t;
 
-constant IMG_WIDTH : natural := 248;
-constant IMG_HEIGHT : natural := 302;
+constant IMG_WIDTH : natural := 152;
+constant IMG_HEIGHT : natural := 152;
 
 type rows_type is array(0 to IMG_WIDTH - 1) of std_logic_vector(15 downto 0);
 type dram_type is array(0 to IMG_HEIGHT - 1) of rows_type;
@@ -130,7 +130,7 @@ impure function dram_init return dram_type is
     variable data : std_logic_vector(15 downto 0);
     variable dram_rows : rows_type;
     variable dram : dram_type;
-    file text_file : text open read_mode is "/home/koshek/Desktop/emotion_recognition_git/facial-recognition-using-hog-and-dlib_fhog/input_files/input246_300/gray_normalised.txt";
+    file text_file : text open read_mode is "/home/koshek/Desktop/emotion_recognition_git/facial-recognition-using-hog-and-dlib_fhog/input_files/input150_150/gray_normalised.txt";
 begin
     for row in 0 to IMG_HEIGHT - 1 loop
         readline(text_file, row_text);
@@ -234,8 +234,9 @@ port map(
         --say that we are ready for slave responses at all times?
         gp_axi_bready <= '1';
         
-        --data and address set: rst = '1' reset the system
-        gp_axi_wdata <= "00000000000000001100000010000000";
+        --data and address set: rst = '1' reset the system SAHE3
+        --gp_axi_wdata <= "00000000000000001100000010000000";
+        gp_axi_wdata <= "00000000000000001100000011010111";
         gp_axi_awaddr <= "1000";
         
         --address and data lines are valid:
@@ -247,8 +248,11 @@ port map(
         --indicator that the data was written into given address
         wait until (gp_axi_bvalid = '1');
        
-         --data and address set: rst = '0' reset the system
-        gp_axi_wdata <= "00000000000000000100000010000000";
+        --data and address set: rst = '0' reset the system SAHE3
+        --246x300
+        --gp_axi_wdata <= "00000000000000000100000010000000";
+        --150x150
+        gp_axi_wdata <= "00000000000000000100000011010111";
         gp_axi_awaddr <= "1000";
        
         --wait for slave to be ready to accept data on given address:
@@ -256,8 +260,10 @@ port map(
         --indicator that the data was written into given address
         wait until (gp_axi_bvalid = '1');
        
-        
-        gp_axi_wdata <= "00100000100000010011010000111110";
+        --SAHE2
+        --246x300
+        --gp_axi_wdata <= "00100000100000010011010000111110";
+        gp_axi_wdata <= "00110100110100001001100000100110";
         gp_axi_awaddr <= "0100";
         
         --wait for slave to be ready to accept data on given address:
@@ -265,8 +271,9 @@ port map(
         --indicator that the data was written into given address
         wait until (gp_axi_bvalid = '1');
         
-        --set start bit to '1'
-        gp_axi_wdata <= "00111110000100101110001111100010";
+        --set start bit to '1' SAHE1
+        --gp_axi_wdata <= "00111110000100101110001111100010";
+        gp_axi_wdata <= "00100110000010011000001001100010";
         gp_axi_awaddr <= "0000";
         
         --wait for slave to be ready to accept data on given address:
@@ -275,7 +282,8 @@ port map(
         wait until (gp_axi_bvalid = '1');
         
         --set start bit to '1'
-        gp_axi_wdata <= "00111110000100101110001111100000";
+        --gp_axi_wdata <= "00111110000100101110001111100000";
+        gp_axi_wdata <= "00100110000010011000001001100000";
         gp_axi_awaddr <= "0000";
         
         --wait for slave to be ready to accept data on given address:
@@ -283,40 +291,105 @@ port map(
         --indicator that the data was written into given address
         wait until (gp_axi_bvalid = '1');
         
-        --AXI STREAM SETUP:------------------------------------------------------------
+    wait;
+    end process; 
+    
+    stim_gen2: process
+        variable a : integer := 0;
+        variable b: integer := 0;
+    begin
+        --AXI STREAM HP0 SETUP:------------------------------------------------------------
         
         s00_axi_strb <= "11111111";
-        s01_axi_strb <= "11111111";
-        s00_axi_valid <= '1';
-        s01_axi_valid <= '1';
+        s00_axi_valid <= '0';
+        s00_axi_last <= '0';
         --imitating ddr being ready to receive data_out:
         m00_axi_ready <= '1';
-        m01_axi_ready <= '1';
-       
-        for a in 0 to 150 loop
-            for b in 0 to 61 loop
-                
-                if(s00_axi_ready = '0' or s01_axi_ready = '0') then
-                    wait until (s00_axi_ready = '1' or s01_axi_ready = '1');
-                    report "a: " & integer'image(a) & " b: " & integer'image(b);
+      
+        wait for 1500 ns;
+        s00_axi_valid <= '1';
+      
+          for a in 0 to 75 loop
+            for b in 0 to 37 loop
+               
+                if(a = 75 and b = 37) then
+                    --wait until rising_edge(clk_s);
+                    s00_axi_last <= '1';
+                    s00_axi_valid <= '0';
+                    
+                    wait until rising_edge(clk_s);
+                    s00_axi_last <= '0';
+                    
                 end if;
                     
-                    if(a = 150 and b = 61) then
-                        s00_axi_last <= '1';
-                        s01_axi_last <= '1';
-                    end if;
+                data_in_s(0) <= dram1(2*a)(4*b)&dram1(2*a)(4*b+1)&dram1(2*a)(4*b+2)&dram1(2*a)(4*b+3); 
+                
+                if(s00_axi_ready = '0') then
+                    wait until (s00_axi_ready = '1');
+                    --wait until rising_edge(clk_s);
+                    report "a: " & integer'image(a) & " b: " & integer'image(b);
+                end if;
+                   
+                wait until rising_edge(clk_s);
+            end loop;            
+        end loop; 
+        
+--          s00_axi_last <= '1';
+--          s00_axi_valid <= '0';
+            
+--          wait until rising_edge(clk_s);
+--          s00_axi_last <= '0';
+        
+    wait;
+    end process; 
+        
+    stim_gen3: process
+        variable c : integer := 0;
+        variable d: integer := 0;
+    begin
+       
+        --AXI STREAM HP1 SETUP:------------------------------------------------------------
+       
+        s01_axi_strb <= "11111111";
+        s01_axi_valid <= '0';
+        s01_axi_last <= '0';
+        --imitating ddr being ready to receive data_out:
+        m01_axi_ready <= '1';
+        
+        wait for 1000 ns;
+        s01_axi_valid <= '1';
+       
+        --for a in 0 to 150 loop
+            --for b in 0 to 61 loop
+       for c in 0 to 75 loop
+         for d in 0 to 37 loop
+                
+                if(c = 75 and d = 37) then
+                    --wait until rising_edge(clk_s);
+                    s01_axi_last <= '1';
+                    s01_axi_valid <= '0';
                     
-                    data_in_s(0) <= dram1(2*a)(4*b)&dram1(2*a)(4*b+1)&dram1(2*a)(4*b+2)&dram1(2*a)(4*b+3); 
-                    data_in_s(1) <= dram1(2*a+1)(4*b)&dram1(2*a+1)(4*b+1)&dram1(2*a+1)(4*b+2)&dram1(2*a+1)(4*b+3);
+                    wait until rising_edge(clk_s);
+                    s01_axi_last <= '0';
+                end if;
+                    
+                data_in_s(1) <= dram1(2*c+1)(4*d)&dram1(2*c+1)(4*d+1)&dram1(2*c+1)(4*d+2)&dram1(2*c+1)(4*d+3);
+                
+                if(s01_axi_ready = '0') then
+                    wait until (s01_axi_ready = '1');
+                    --wait until rising_edge(clk_s);
+                    report "c: " & integer'image(c) & " d: " & integer'image(d);
+                end if;
                     
                 wait until rising_edge(clk_s);
             end loop;            
         end loop;  
         
+--        s01_axi_last <= '1';
+--        s01_axi_valid <= '0';
         
-        --need to setup constant read loop for status register:
-        --wait until (gp_axi_bvalid = '1');
-        
+--        wait until rising_edge(clk_s);
+--        s01_axi_last <= '0';
         
     wait;
     end process;

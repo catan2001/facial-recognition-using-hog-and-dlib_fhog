@@ -176,8 +176,8 @@ case state_dram_to_bram_r is
                         
             j_next <= (others => '0');
             k_next <= (others => '0');
-            axi_hp0_ready_in_next <= '1';
-            axi_hp1_ready_in_next <= '1';
+            --axi_hp0_ready_in_next <= '1';
+            --axi_hp1_ready_in_next <= '1';
             
             state_dram_to_bram_n <= loop_dram_to_bram1;
         end if;
@@ -185,19 +185,13 @@ case state_dram_to_bram_r is
     when loop_dram_to_bram1 =>
         if(axi_hp0_valid_in = '1' and axi_hp1_valid_in = '1') then
         
-            --if(k_reg = std_logic_vector((unsigned(width_2_reg)-4))) then
-            --    if(i_reg = std_logic_vector(unsigned(cycle_num_limit_reg) - 1)) then
-            --        if(j_reg = j_limit_reg) then
-            --            axi_hp0_ready_in_next <= '0';
-            --            axi_hp1_ready_in_next <= '0';
-            --        end if;
-            --    end if;
-            --end if;
+            axi_hp0_ready_in_next <= '1';
+            axi_hp1_ready_in_next <= '1';
         
-            if(k_reg = std_logic_vector((unsigned(width_2_reg)-2))) then 
+            if(k_reg = std_logic_vector((unsigned(width_2_reg)))) then 
                 k_next <= (others => '0'); 
                
-                --dovoljan jedan kako se i jedan i drugi podizu na 1 u istom momentu
+                --dovoljan jedan kako se i jedan i drugi podizu na 1 u istom momentu - NE PODIZU SE
                 if(axi_hp0_last_in = '1') then
                     we_in_next <= (others => '0');
                     dram_to_bram_finished_next <= '1';
