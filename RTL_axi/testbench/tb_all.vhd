@@ -130,7 +130,7 @@ impure function dram_init return dram_type is
     variable data : std_logic_vector(15 downto 0);
     variable dram_rows : rows_type;
     variable dram : dram_type;
-    file text_file : text open read_mode is "C:/Users/Andjela/Desktop/psds/gray_normalised.txt";
+    file text_file : text open read_mode is "/home/koshek/Desktop/emotion_recognition_git/facial-recognition-using-hog-and-dlib_fhog/input_files/input150_150/gray_normalised.txt";
 begin
     for row in 0 to IMG_HEIGHT - 1 loop
         readline(text_file, row_text);
@@ -304,7 +304,7 @@ port map(
         s00_axi_valid <= '0';
         s00_axi_last <= '0';
         --imitating ddr being ready to receive data_out:
-        m00_axi_ready <= '1';
+        m00_axi_ready <= '0';
       
         wait for 1500 ns;
         s00_axi_valid <= '1';
@@ -318,10 +318,10 @@ port map(
                     --wait until rising_edge(clk_s);
                     --wait for 50 ns;
                     s00_axi_last <= '1';
-                    s00_axi_valid <= '0';
                     
                     wait until rising_edge(clk_s);
                     s00_axi_last <= '0';
+                    s00_axi_valid <= '0';
                     
                 end if; 
                 
@@ -334,6 +334,9 @@ port map(
                 wait until rising_edge(clk_s);
             end loop;            
         end loop; 
+        
+        wait for 300100 ns;
+        m00_axi_ready <= '1';
         
 --          s00_axi_last <= '1';
 --          s00_axi_valid <= '0';
@@ -355,7 +358,7 @@ port map(
         s01_axi_valid <= '0';
         s01_axi_last <= '0';
         --imitating ddr being ready to receive data_out:
-        m01_axi_ready <= '1';
+        m01_axi_ready <= '0';
         
         wait for 1000 ns;
         s01_axi_valid <= '1';
@@ -371,10 +374,10 @@ port map(
                 --wait until rising_edge(clk_s);
                     --wait for 50 ns;
                     s01_axi_last <= '1';
-                    s01_axi_valid <= '0';
                     
                     wait until rising_edge(clk_s);
                     s01_axi_last <= '0';
+                    s01_axi_valid <= '0';               
                 end if;
                 
                 if(s01_axi_ready = '0') then
@@ -385,7 +388,11 @@ port map(
                     
                 wait until rising_edge(clk_s);
             end loop;            
-        end loop;  
+        end loop; 
+        
+        wait for 300200 ns;
+        m01_axi_ready <= '1';
+         
         
 --        s01_axi_last <= '1';
 --        s01_axi_valid <= '0';

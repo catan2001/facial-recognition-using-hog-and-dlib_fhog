@@ -175,9 +175,8 @@ case state_dram_to_bram_r is
             end if;
                         
             j_next <= (others => '0');
-            k_next <= (others => '0');
-            --axi_hp0_ready_in_next <= '1';
-            --axi_hp1_ready_in_next <= '1';
+            --initialise k as -2 the very first time because ready needs a  clk period to set itself to '1'
+            k_next <= "111111110";
             
             state_dram_to_bram_n <= loop_dram_to_bram1;
         end if;
@@ -188,7 +187,7 @@ case state_dram_to_bram_r is
             axi_hp0_ready_in_next <= '1';
             axi_hp1_ready_in_next <= '1';
         
-            if(k_reg = std_logic_vector((unsigned(width_2_reg)))) then 
+            if(k_reg = std_logic_vector((unsigned(width_2_reg)-2))) then 
                 k_next <= (others => '0'); 
                
                 --dovoljan jedan kako se i jedan i drugi podizu na 1 u istom momentu - NE PODIZU SE

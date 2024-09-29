@@ -85,6 +85,7 @@ if(rising_edge(clk)) then
 		row_cnt_reg <= (others => '0');
 		z_reg <= (others => '0');
 		
+		
 		bram_to_dram_finished_reg <= '0';
 		bram_addr_bram_to_dram_A_reg <= (others => '0');
 		bram_addr_bram_to_dram_B_reg <= (others => '0');
@@ -172,24 +173,33 @@ case state_bram_to_dram_r is
 			y_next <= (others => '0');
 			z_next <= (others => '0');
 			sel_dram_next <= (others => '0');
-			--axi_hp0_valid_out_next <= '1';
-			--axi_hp1_valid_out_next <= '1';
+			axi_hp0_valid_out_next <= '0';
+			axi_hp1_valid_out_next <= '0';
 			
 			state_bram_to_dram_n <= loop_bram_to_dram1;
 		end if;
 
 	when loop_bram_to_dram1 =>
-		axi_hp0_valid_out_next <= '1';
-		axi_hp1_valid_out_next <= '1';
-		if(axi_hp0_ready_out = '1' and axi_hp1_ready_out = '1') then
+		
+		--axi_hp0_valid_out_next <= '1';
+		--axi_hp1_valid_out_next <= '1';
+		
+		--if(axi_hp0_ready_out = '1' and axi_hp1_ready_out = '1') then
+		
+		    if(row_cnt_reg = std_logic_vector(unsigned(height_reg)-3) and z_reg = std_logic_vector(resize((unsigned(width_4_reg)-1),9))) then
+			         axi_hp0_last_out_next <= '1';
+					 axi_hp1_last_out_next <= '1';
+			end  if;
+			
 			if(z_reg = std_logic_vector(resize(unsigned(width_4_reg),9))) then
-				if(row_cnt_reg = std_logic_vector(unsigned(height_reg))) then
+				
+				if(row_cnt_reg = std_logic_vector(unsigned(height_reg)-3)) then
 					bram_to_dram_finished_next <= '1';
 					axi_hp0_valid_out_next <= '0';
-					axi_hp0_last_out_next <= '1';
+					axi_hp0_last_out_next <= '0';
 					
 					axi_hp1_valid_out_next <= '0';
-					axi_hp1_last_out_next <= '1';
+					axi_hp1_last_out_next <= '0';
 					
 					state_bram_to_dram_n <= end_bram_to_dram;
 				else
@@ -197,10 +207,10 @@ case state_bram_to_dram_r is
 					if(y_reg = std_logic_vector(unsigned(cycle_num_out_reg)-1) and sel_dram_reg = std_logic_vector(to_unsigned(11,5))) then
 						bram_to_dram_finished_next <= '1';
 						axi_hp0_valid_out_next <= '0';
-						axi_hp0_last_out_next <= '1';
+						--axi_hp0_last_out_next <= '1';
 						
 						axi_hp1_valid_out_next <= '0';
-						axi_hp1_last_out_next <= '1';
+						--axi_hp1_last_out_next <= '1';
 						
 						state_bram_to_dram_n <= end_bram_to_dram;
 					end if;
@@ -211,13 +221,15 @@ case state_bram_to_dram_r is
 						  if(y_reg = std_logic_vector(unsigned(cycle_num_out_reg)-1)) then  
 							bram_to_dram_finished_next <= '1';
 							axi_hp0_valid_out_next <= '0';
-							axi_hp0_last_out_next <= '1';
+							--axi_hp0_last_out_next <= '1';
 							
 							axi_hp1_valid_out_next <= '0';
-							axi_hp1_last_out_next <= '1';
+							--axi_hp1_last_out_next <= '1';
 							
 							state_bram_to_dram_n <= end_bram_to_dram;
 						else
+						    axi_hp0_valid_out_next <= '0';
+						    axi_hp1_valid_out_next <= '0';
 							z_next <= (others => '0');
 							sel_dram_next <= (others => '0');
 						end if;
@@ -229,11 +241,22 @@ case state_bram_to_dram_r is
 					end if;
 				end if;
 			else
+			 
+			    if(axi_hp0_ready_out = '1' and axi_hp1_ready_out = '1') then
+				    z_next <= std_logic_vector(unsigned(z_reg) + 1); 
+				    
+                    if(z_reg = "000000000") then
+                        axi_hp0_valid_out_next <= '1';
+                        axi_hp1_valid_out_next <= '1';
+                    end if;  
+			    end if;
+			   
+         
 				bram_addr_bram_to_dram_A_next <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+shift_left(unsigned(z_reg),1),10));
 				bram_addr_bram_to_dram_B_next <= std_logic_vector(resize(unsigned(y_reg)*(unsigned(width_2_reg)-1)+shift_left(unsigned(z_reg),1)+1,10));
-				z_next <= std_logic_vector(unsigned(z_reg)+1);   
+				
 			end if;
-		end if;
+		--end if;
 		
 	when end_bram_to_dram =>
 		axi_hp0_last_out_next <= '0';
