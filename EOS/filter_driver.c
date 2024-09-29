@@ -28,30 +28,14 @@ MODULE_ALIAS("custom: filter IP");
 #define DRIVER_NAME "filter_driver"
 
 //buffer size
-#define BUFF_SIZE 100 //??
+#define BUFF_SIZE 100 
 
 //sahe 1
 #define SAHE1_BASE_ADDR 0
-#define READY_REG_OFFSET 0
-#define START_REG_OFFSET 1
-#define WIDTH_REG_OFFSET 2
-#define HEIGHT_REG_OFFSET 12
-#define WIDTH_2_REG_OFFSET 23
 //sahe2
 #define SAHE2_BASE_ADDR 4
-#define WIDTH_4_REG_OFFSET 0
-#define EFFECTIVE_ROW_LIMIT_REG_OFFSET 8
-#define CYCLE_NUM_IN_REG_OFFSET 20
-#define CYCLE_NUM_OUT_REG_OFFSET 26
 //sahe 3
 #define SAHE3_BASE_ADDR 8
-#define ROWS_NUM_REG_OFFSET 0
-#define BRAM_HEIGHT_REG_OFFSET 10
-#define RESET_REG_OFFSET 15
-
-#define BRAM_HEIGHT 16
-
-#define ADDR_FACTOR 4
 
 //*******************FUNCTION PROTOTYPES************************************
 static int filter_probe(struct platform_device *pdev);
@@ -59,7 +43,8 @@ static int filter_open(struct inode *i, struct file *f);
 static int filter_close(struct inode *i, struct file *f);
 static ssize_t filter_read(struct file *f, char __user *buf, size_t len, loff_t *off);
 static ssize_t filter_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
-static ssize_t filter_dma_mmap(struct file *f, struct vm_area_struct *vma_s);
+static ssize_t filter_dma0_mmap(struct file *f, struct vm_area_struct *vma_s);
+static ssize_t filter_dma1_mmap(struct file *f, struct vm_area_struct *vma_s);
 static irqreturn_t dma0_isr(int irq, void*dev_id);
 static irqreturn_t dma1_isr(int irq, void*dev_id);
 int dma_init(void __iomem *base_address);
@@ -89,10 +74,7 @@ static struct class *my_class;
 static struct device *my_device;
 static struct filter_dma_info *dma0 = NULL;
 static struct filter_dma_info *dma1 = NULL;
-static struct hough_info *filter_core = NULL;
-
-DECLARE_WAIT_QUEUE_HEAD(readyQ);
-struct semaphore sem;
+static struct filter_info *filter_core = NULL;
 
 static struct file_operations my_fops =
 {
@@ -101,7 +83,8 @@ static struct file_operations my_fops =
     .release = filter_close,
     .read = filter_read,
     .write = filter_write
-    .mmap = filter_mmap
+    .mmap = filter_dma0_mmap //.mmap0
+	.mmap = filter_dma1_mmap //.mmap1
 };
 
 static struct of_device_id filter_of_match[] = 
@@ -125,8 +108,8 @@ static struct platform_driver my_driver = {
 
 MODULE_DEVICE_TABLE(of, filter_of_match);
 
-dma_addr_t tx_phy_buffer;
-u32 *tx_vir_buffer;
+dma_addr_t tx0_phy_buffer, tx2_phy_buffer;
+u32 *tx0_vir_buffer, *tx1_vir_buffer;
 
 //***************************************************************************
 // PROBE AND REMOVE
@@ -172,7 +155,7 @@ static int filter_probe(struct platform_device *pdev)
 			dma0->base_addr = ioremap(dma0->mem_start, dma0->mem_end - dma0->mem_start + 1);
 			if (!dma0->base_addr)
 			{
-				printk(KERN_ALERT "hough_probe: Could not allocate dma0 iomem\n");
+				printk(KERN_ALERT "filter_probe: Could not allocate dma0 iomem\n");
 				rc = -EIO;
 				goto error2;
 			}
@@ -197,10 +180,10 @@ static int filter_probe(struct platform_device *pdev)
 
             /* INIT DMA */
             dma_init(dma0->base_addr);
-            dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, dma0->base_addr); // helper function, defined later
+            dma_simple_write(tx0_phy_buffer, MAX_PKT_LEN, dma0->base_addr); // helper function, defined later
 
 			probe_counter++;
-			printk(KERN_INFO "hough_probe: dma0 driver registered.\n");
+			printk(KERN_INFO "filter_probe: dma0 driver registered.\n");
 			return 0;
 			
             error3:
@@ -240,7 +223,7 @@ static int filter_probe(struct platform_device *pdev)
 			dma1->base_addr = ioremap(dma1->mem_start, dma1->mem_end - dma1->mem_start + 1);
 			if (!dma1->base_addr)
 			{
-				printk(KERN_ALERT "hough_probe: Could not allocate dma1 iomem\n");
+				printk(KERN_ALERT "filter_probe: Could not allocate dma1 iomem\n");
 				rc = -EIO;
 				goto error2;
 			}
@@ -265,9 +248,9 @@ static int filter_probe(struct platform_device *pdev)
 
             /* INIT DMA */
             dma_init(dma1->base_addr);
-            dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, dma1->base_addr); // helper function, defined later
+            dma_simple_write(tx1_phy_buffer, MAX_PKT_LEN, dma1->base_addr); // helper function, defined later
 			probe_counter++;
-			printk(KERN_INFO "hough_probe: dma1 driver registered.\n");
+			printk(KERN_INFO "filter_probe: dma1 driver registered.\n");
 			return 0;
 			
             error3:
@@ -298,7 +281,7 @@ static int filter_probe(struct platform_device *pdev)
 			}
 			
 			filter_core->base_addr = ioremap(filter_core->mem_start, filter_core->mem_end - filter_core->mem_start + 1);
-			if (!hough_core->base_addr)
+			if (!filter_core->base_addr)
 			{
 				printk(KERN_ALERT "filter_core: Could not allocate filter iomem\n");
 				rc = -EIO;
@@ -377,14 +360,6 @@ static int filter_close(struct inode *i, struct file *f)
     return 0;
 }
 
-/*int acc0_i = 0;
-int acc1_i = 0;
-int img_i = 0;
-int endRead = 0;
-int theta = 135;
-int width, height, rho;
-int ready = 1;*/
-
 ssize_t filter_read(struct file *pfile, char __user *buf, size_t length, loff_t *off)
 {
 	char buff[BUFF_SIZE];
@@ -401,7 +376,7 @@ ssize_t filter_read(struct file *pfile, char __user *buf, size_t length, loff_t 
         ready = filter_val[0] & 0x00000001;
 
         len = scnprintf(buff, BUFF_SIZE, "%d %d %d ", filter_val[0], filter_val[1], filter_val[2]);
-        //printk(KERN_INFO "hough_read: ready_reg = %d\n", hough_val);
+        //printk(KERN_INFO "filter_read: ready_reg = %d\n", filter_val);
 
         if (copy_to_user(buf, buff, len))
         {	
@@ -441,7 +416,7 @@ ssize_t filter_write(struct file *pfile, const char __user *buf, size_t length, 
         else if(pos == SAHE2_REG_OFFSET)
         {
             //SAHE2
-            iowrite32(val , hough_core->base_addr + pos);
+            iowrite32(val , filter_core->base_addr + pos);
         }
         else
         {  
@@ -452,7 +427,7 @@ ssize_t filter_write(struct file *pfile, const char __user *buf, size_t length, 
 	return length;
 }
 
-static ssize_t filter_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
+static ssize_t filter_dma0_mmap(struct file *f, struct vm_area_struct *vma_s)
 {
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
@@ -465,7 +440,29 @@ static ssize_t filter_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 		printk(KERN_ERR "Trying to mmap more space than it's allocated\n");
 	}
 
-	ret = dma_mmap_coherent(NULL, vma_s, tx_vir_buffer, tx_phy_buffer, length);
+	ret = dma_mmap_coherent(NULL, vma_s, tx0_vir_buffer, tx0_phy_buffer, length);
+	if(ret<0)
+	{
+		printk(KERN_ERR "memory map failed\n");
+		return ret;
+	}
+	return 0;
+}
+
+static ssize_t filter_dma1_mmap(struct file *f, struct vm_area_struct *vma_s)
+{
+	int ret = 0;
+	long length = vma_s->vm_end - vma_s->vm_start;
+
+	//printk(KERN_INFO "DMA TX Buffer is being memory mapped\n");
+
+	if(length > MAX_PKT_LEN)
+	{
+		return -EIO;
+		printk(KERN_ERR "Trying to mmap more space than it's allocated\n");
+	}
+
+	ret = dma_mmap_coherent(NULL, vma_s, tx1_vir_buffer, tx1_phy_buffer, length);
 	if(ret<0)
 	{
 		printk(KERN_ERR "memory map failed\n");
@@ -486,7 +483,7 @@ static irqreturn_t dma0_isr(int irq, void*dev_id)
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
 
 	/*Send a transaction*/
-	dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, dma0->base_addr); //My function that starts a DMA transaction
+	dma_simple_write(tx0_phy_buffer, MAX_PKT_LEN, dma0->base_addr); //My function that starts a DMA transaction
 	return IRQ_HANDLED;;
 }
 
@@ -499,7 +496,7 @@ static irqreturn_t dma1_isr(int irq, void*dev_id)
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
 
 	/*Send a transaction*/
-	dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, dma1->base_addr); //My function that starts a DMA transaction
+	dma_simple_write(tx1_phy_buffer, MAX_PKT_LEN, dma1->base_addr); //My function that starts a DMA transaction
 	return IRQ_HANDLED;;
 }
 
@@ -545,16 +542,16 @@ static int __init filter_init(void)
 	int i = 0;
 
 	printk(KERN_INFO "\n");
-	printk(KERN_INFO "hough driver starting insmod.\n");
+	printk(KERN_INFO "filter driver starting insmod.\n");
 
-	if (alloc_chrdev_region(&my_dev_id, 0, 4, "hough_region") < 0)
+	if (alloc_chrdev_region(&my_dev_id, 0, 3, "filter_region") < 0)
 	{
 		printk(KERN_ERR "failed to register char device\n");
 		return -1;
 	}
 	printk(KERN_INFO "char device region allocated\n");
 
-	my_class = class_create(THIS_MODULE, "hough_class");
+	my_class = class_create(THIS_MODULE, "filter_class");
 	if (my_class == NULL)
 	{
 		printk(KERN_ERR "failed to create class\n");
@@ -562,53 +559,43 @@ static int __init filter_init(void)
 	}
 	printk(KERN_INFO "class created\n");
 
-	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 0), NULL, "acc0_bram_ctrl") == NULL) 
+	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 0), NULL, "dma0") == NULL) 
 	{
-		printk(KERN_ERR "failed to create device acc0_bram\n");
+		printk(KERN_ERR "failed to create device dma0\n");
 		goto fail_1;
 	}
-	printk(KERN_INFO "device created - acc0_bram\n");
+	printk(KERN_INFO "device created - dma0\n");
 
-	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 1), NULL, "acc1_bram_ctrl") == NULL) 
+	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 1), NULL, "dma1") == NULL) 
 	{
-		printk(KERN_ERR "failed to create device acc1_bram\n");
+		printk(KERN_ERR "failed to create device dma1\n");
 		goto fail_2;
 	}
-	printk(KERN_INFO "device created - acc1_bram\n");
+	printk(KERN_INFO "device created - dma1\n");
 
-	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 2), NULL, "img_bram_ctrl") == NULL) 
+	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 2), NULL, "filter_core") == NULL) 
 	{
-		printk(KERN_ERR "failed to create device img_bram\n");
+		printk(KERN_ERR "failed to create device filter_core\n");
 		goto fail_3;
 	}
-	printk(KERN_INFO "device created - img_bram\n");
-
-
-	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 3), NULL, "hough_core") == NULL) 
-	{
-		printk(KERN_ERR "failed to create device hough_coe\n");
-		goto fail_4;
-	}
-	printk(KERN_INFO "device created - hough_core\n");
+	printk(KERN_INFO "device created - filter_core\n");
 
 	my_cdev = cdev_alloc();
 	my_cdev->ops = &my_fops;
 	my_cdev->owner = THIS_MODULE;
 
-	if (cdev_add(my_cdev, my_dev_id, 4) == -1)
+	if (cdev_add(my_cdev, my_dev_id, 3) == -1)
 	{
 		printk(KERN_ERR "failed to add cdev\n");
-		goto fail_5;
+		goto fail_4;
 	}
 	printk(KERN_INFO "cdev added\n");
-	printk(KERN_INFO "hough driver initialized.\n");
-
+	printk(KERN_INFO "filter driver initialized.\n");
+    //tx_vir_buff ovdje i u fji ispod
 	return platform_driver_register(&my_driver);
 
-	fail_5:
-		device_destroy(my_class, MKDEV(MAJOR(my_dev_id),3));
 	fail_4:
-		device_destroy(my_class, MKDEV(MAJOR(my_dev_id),2));
+		device_destroy(my_class, MKDEV(MAJOR(my_dev_id),3));
 	fail_3:
 		device_destroy(my_class, MKDEV(MAJOR(my_dev_id),1));
 	fail_2:
@@ -622,7 +609,7 @@ static int __init filter_init(void)
 
 static void __exit filter_exit(void)
 {
-	printk(KERN_INFO "hough driver starting rmmod.\n");
+	printk(KERN_INFO "filter driver starting rmmod.\n");
 	platform_driver_unregister(&my_driver);
 	cdev_del(my_cdev);
 	
@@ -631,7 +618,9 @@ static void __exit filter_exit(void)
 	device_destroy(my_class, MKDEV(MAJOR(my_dev_id),0));
 	class_destroy(my_class);
 	unregister_chrdev_region(my_dev_id, 1);
-	printk(KERN_INFO "hough driver exited.\n");
+    dma_free_coherent(NULL, MAX_PKT_LEN, tx0_vir_buffer, tx0_phy_buffer);
+	dma_free_coherent(NULL, MAX_PKT_LEN, tx1_vir_buffer, tx1_phy_buffer);
+	printk(KERN_INFO "filter driver exited.\n");
 }
 
 module_init(filter_init);
