@@ -60,9 +60,10 @@ Open a terminal and run the following commands to install the necessary dependen
 sudo apt-get install libstdc++6:i386
 sudo apt-get install libgtk2.0-0:i386
 sudo apt-get install dpkg-dev:i386
+sudo apt-get install libcanberra-gtk-module murrine-themes 
 ```
 
-These packages are important for 32-bit compatibility and user interface components required by Vivado.
+These packages are important for 32-bit compatibility and user interface components required by Vivado. Also libcanberra and murrine-themes are used for solving frequent crashes when synthesizing the design
 
 #### 2. **Install Python Pip:**
 
@@ -165,15 +166,27 @@ cd /tools/Xilinx/Vivado/2020.2data/xicom/cable_drivers/lin64/install_script/inst
 sudo ./install_drivers
 ```
 
-#### 10. **Launch Vivado:**
+#### 10. **Install Board Files**
+If you want to use Zynq7000 board or other boards you will need to download them and put into Vivado install folder. 
+
+**First clone xilinx boards github repository:**
+```bash
+cd ~/Downloads/
+git clone https://github.com/Digilent/vivado-boards
+```
+
+**Now you can copy files into you Vivado board_files directory:**
+```bash
+sudo cp ~/Downloads/vivado-boards/new/board_files/* /tools/Xilinx/Vivado/2020.2/data/boards/board_files/ -r
+```
+
+**Note:** If you want to use older boards copy **vivado-boards/old/board_parts/***
+
+#### 11. **Launch Vivado:**
 You can now start Vivado by typing the following command in the terminal:
 ```bash
 vivado
 ```
-
-
-#### 11. **Install Board Files**
-If you want to use Zynq7000 board or other boards you will need to download them and put into Vivado install folder. 
 
 ## Petalinux-tools 2020.2
 
@@ -265,11 +278,15 @@ source ~/.bashrc
 ```bash
 petalinux-util --webtalk off
 ```
+
+
+
 ## Links used
 - [Exercise 12: Linux on Zybo Board (VGA DMA Controller)](https://www.elektronika.ftn.uns.ac.rs/mikroracunarski-sistemi-za-rad-u-realnom-vremenu/wp-content/uploads/sites/99/2018/03/Vezba12_Instaliranje_Linux-a_na_Zybo_ploci_na_primeru_DMA_VGA.pdf)
 - [Wiki.trenz Installation Guide](https://wiki.trenz-electronic.de/plugins/viewsource/viewpagesrc.action?pageId=139232257)
 - [Download PetaLinux from Xilinx Website](http://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools.html)
 - [Ubuntu Old-Releases](http://old-releases.ubuntu.com/releases/18.04.4/)
+- [Ubuntu 18.04.4 Old-Releases](http://old-releases.ubuntu.com/releases/18.04.4/ubuntu-18.04.4-desktop-amd64.iso)
 - [PetaLinux Tools Documentation-Reference Guide v2020.2](https://docs.amd.com/viewer/book-attachment/lI01EuQRZ2mtXOLWWVbmSA/vC~8fZCKf~Sqd7uqfK1LRA)
 - [PetaLinux 2020.2/3 - Product Update Release Notes and Known Issues](https://adaptivesupport.amd.com/s/article/75775?language=en_US)
 - [Vivado Design Suite User Guide](https://docs.amd.com/viewer/book-attachment/8o7OvxKMnG4NMFMc7SYHUA/p_iDDvNiuAkoje4cW6tJNw)
