@@ -70,7 +70,7 @@ These packages are important for 32-bit compatibility and user interface compone
 Vivado relies on Python for some of its features. Install **pip** for Python 3 by running:
 
 ```bash
-sudo apt install python3-pip
+sudo apt-get install python3-pip
 ```
 
 #### 3. **Install Additional Libraries:**
@@ -78,7 +78,7 @@ sudo apt install python3-pip
 Some versions of Vivado require specific libraries for terminal interaction and text-based interfaces. Install the following libraries:
 
 ```bash
-sudo apt install libtinfo5 libncurses5 libtinfo-dev
+sudo apt-get install libtinfo5 libncurses5 libtinfo-dev
 ```
 
 These libraries handle terminal functionality that Vivado depends on for some operations.
