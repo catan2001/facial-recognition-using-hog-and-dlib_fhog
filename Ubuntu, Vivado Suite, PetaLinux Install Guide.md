@@ -6,23 +6,23 @@
 At the bottom of this document, you’ll find links to the recommended versions and official resources. However, keep in mind that these links might not always reflect the latest versions, so it’s a good idea to search for the most up-to-date releases directly on the official websites.
 
 **Versions used for this setup**:
-- **Ubuntu**: **18.04.4** – This version ensures stability and compatibility with the required toolchain.
-- **Vivado**: **2020.2** – A version tailored for working with the selected hardware and PetaLinux.
-- **PetaLinux-tools**: **2020.2** – This version is aligned with the Vivado suite for seamless integration and development.
+- **Ubuntu**: **18.04.2** – This version ensures stability and compatibility with the required toolchain.
+- **Vivado**: **2019.2** – A version tailored for working with the selected hardware and PetaLinux.
+- **PetaLinux-tools**: **2019.2** – This version is aligned with the Vivado suite for seamless integration and development.
 
 ## Ubuntu 18.04.4
 
 Ubuntu is a popular, open-source Linux-based operating system known for its user-friendly interface and extensive software support. It is widely used for development and embedded systems projects, especially in hardware-related applications. Link is provided in the section **Links used**.
 
-For installation on specific hardware, it is crucial to use the correct version of the Ubuntu operating system. In this case, **Ubuntu 18.04.4** was used. 
+For installation on specific hardware, it is crucial to use the correct version of the Ubuntu operating system. In this case, **Ubuntu 18.04.2** was used. 
 
 Support for Ubuntu, including installation guides and compatibility details for tools like **Vivado** and **PetaLinux-tools**, can be found on the **Xilinx** website. These tools are essential for FPGA development and embedded Linux deployment.
 
 ### Installation
 
-For the installation, **Ubuntu 18.04.4** was used. Since this version is no longer officially supported, you will need to download it from the **Old-Releases** section of the Ubuntu archives.
+For the installation, **Ubuntu 18.04.2** was used. Since this version is no longer officially supported, you will need to download it from the **Old-Releases** section of the Ubuntu archives.
 
-To begin, download the **.iso** installation file for Ubuntu 18.04.4, and then use a tool like **Rufus** or a similar program to create a bootable USB drive. Once the USB is ready, boot your computer from the USB and proceed with the installation.
+To begin, download the **.iso** installation file for Ubuntu 18.04.2, and then use a tool like **Rufus** or a similar program to create a bootable USB drive. Once the USB is ready, boot your computer from the USB and proceed with the installation.
 
 It is crucial to **NOT allow any automatic updates** during the installation process, ensuring the system does not upgrade to a newer version of Ubuntu. Failing to do so may cause compatibility issues with the rest of the toolchain, potentially disrupting the setup of tools like **Vivado** and **PetaLinux**.
 
@@ -36,7 +36,7 @@ name@name~$ cat /etc/lsb-release
 DISTRIB_ID=Ubuntu
 DISTRIB_RELEASE=18.04
 DISTRIB_CODENAME=bionic
-DISTRIB_DESCRIPTION="Ubuntu 18.04.4 LTS"
+DISTRIB_DESCRIPTION="Ubuntu 18.04.2 LTS"
 ```
 
 Before jumping to the next stage it is advised to update your packages using next shell command in your terminal:
@@ -44,7 +44,7 @@ Before jumping to the next stage it is advised to update your packages using nex
 sudo apt-get update
 ```
 
-## Vivado Design Suite 2020.2
+## Vivado Design Suite 2019.2
 
 Vivado Design Suite is a software suite for synthesis and analysis of hardware description language designs, superseding Xilinx ISE with additional features for system on a chip development and high-level synthesis. 
 
@@ -84,16 +84,16 @@ sudo apt-get install libtinfo5 libncurses5 libtinfo-dev
 These libraries handle terminal functionality that Vivado depends on for some operations.
 
 ---
-### Vivado Design Suite 2020.2 Download and Install
+### Vivado Design Suite 2019.2 Download and Install
 
 First, you need to download the Vivado Design Suite from the Xilinx website. The link can be found at the end of this document.
 
-To install **Xilinx Unified 2020.2 Vivado** from a `.tar.gz` file on Ubuntu, follow these steps:
+To install **Xilinx Unified 2019.2 Vivado** from a `.tar.gz` file on Ubuntu, follow these steps:
 
 #### 1. **Extract the `.tar.gz` File:**
 Open a terminal and navigate to the directory where the `.tar.gz` file is located. Use the following command to extract it:
 ```bash
-tar -xvzf Xilinx_Unified_2020.2_*.tar.gz
+tar -xvzf Xilinx_*.tar.gz
 ```
 
    This will extract the installation files into a directory.
@@ -101,7 +101,7 @@ tar -xvzf Xilinx_Unified_2020.2_*.tar.gz
 #### 2. **Navigate to the Installer Directory:**
 Once extracted, navigate to the installer directory:
 ```bash
-cd Xilinx_Unified_2020.2_*_
+cd Xilinx_*_
 ```
 
 #### 3. **Run the Installer:**
@@ -115,24 +115,25 @@ Now, run the installer:
 sudo ./xsetup
 ```
 
-This will launch the Xilinx Unified 2020.2 installation wizard. 
+This will launch the Xilinx Unified 2019.2 installation wizard. 
    
 **NOTE**: It's important not to allow **Installation Wizard** to download newest version of Vivado!
 
 ---
 #### 4. **Choose Installation Options:**
-- Select **Vivado** or **Vitis with Vivado** (if you need it) as the product to install (you may also choose PetaLinux and other tools if needed).
+- Select **Vivado** as the product to install (you may also choose and other tools if needed). Select free version **WebPack**
 - You can select either a **Web Install** (recommended for the latest updates) or **Local Install** if you have all the files locally.
 - You can select what items you want to install. In this Installation following items were used:
-    - [x] Vitis Unified Software Platform
-        - [x] Vitis
-        - [x] Vivado
+    - [x] Design Tools
+        - [x] DocNav
+        - [x] Vivado Design Suite
     - [x] Install devices for Alveo and Xilinx edge acceleration platforms
     - [x] Devices for Custom Platforms
         - [x] SoCs
         - [x] 7 Series
         - [x] Ultrascale
-
+    - [x] Engineering Sample Devices
+    - [x] Installation Options
 #### 5. **Agree to License Terms:**
 
 Read and accept the license terms to proceed with the installation.
@@ -148,7 +149,7 @@ Once installed, you’ll need to set up environment variables so that Vivado can
 ```bash
 cd
 vim .bashrc
-source /tools/Xilinx/Vivado/2020.2/settings64.sh # paste this line and save file
+source /tools/Xilinx/Vivado/2019.2/settings64.sh # paste this line and save file
 ```
 
 Run the command:
@@ -161,7 +162,7 @@ Once you setup everything, the last thing to do is to install cable drivers. To 
 
 ```bash
 # cd into the drivers directory
-cd /tools/Xilinx/Vivado/2020.2data/xicom/cable_drivers/lin64/install_script/install_drivers
+cd /tools/Xilinx/Vivado/2019.2/data/xicom/cable_drivers/lin64/install_script/install_drivers
 # run the cable installer with root privileges
 sudo ./install_drivers
 ```
@@ -177,7 +178,7 @@ git clone https://github.com/Digilent/vivado-boards
 
 **Now you can copy files into you Vivado board_files directory:**
 ```bash
-sudo cp ~/Downloads/vivado-boards/new/board_files/* /tools/Xilinx/Vivado/2020.2/data/boards/board_files/ -r
+sudo cp ~/Downloads/vivado-boards/new/board_files/* /tools/Xilinx/Vivado/2019.2/data/boards/board_files/ -r
 ```
 
 **Note:** If you want to use older boards copy **vivado-boards/old/board_parts/***
@@ -188,7 +189,7 @@ You can now start Vivado by typing the following command in the terminal:
 vivado
 ```
 
-## Petalinux-tools 2020.2
+## Petalinux-tools 2019.2
 
 ### Introduction
 
@@ -199,13 +200,13 @@ usage of PetaLinux
 ### System Requirements
 The PetaLinux tools installation requirements are:
 - Minimum workstation requirements:
-    - 8 GB RAM (recommended minimum for Xilinx® tools)
-    - 2 GHz CPU clock or equivalent (minimum of eight cores)
-    - 100 GB free HDD space
-    - Supported OS:
-        - Red Hat Enterprise Workstation/Server 7.4, 7.5, 7.6, 7.7, 7.8 (64-bit)
-        - CentOS Workstation/Server 7.4, 7.5, 7.6, 7.7, 7.8 (64-bit)
-        - **Ubuntu Linux** Workstation/Server 16.04.5, 16.04.6, 18.04.1, 18.04.2, 18.04.3, **18.04.4** (64-bit)
+   - 8 GB RAM (recommended minimum for Xilinx® tools)
+   - 2 GHz CPU clock or equivalent (minimum of 8 cores)
+   - 100 GB free HDD space
+   - Supported OS:
+      - Red Hat Enterprise Workstation/Server 7.4, 7.5, 7.6 (64-bit)
+      - CentOS Workstation/Server 7.4, 7.5, 7.6 (64-bit)
+      - Ubuntu Linux Workstation/Server 16.04.5, 16.04.6, 18.04.1, **18.04.02** (64-bit)
 
 You need to have root access to install the required packages mentioned in the release notes.
 The PetaLinux tools need to be installed as a non-root user.
@@ -217,7 +218,7 @@ host Linux.
  If you are using Ubuntu
 distribution and your /bin/sh is 'dash', consult your system administrator to change your
 default system shell /bin/sh with the sudo dpkg-reconfigure dash command.
-Note: For package versions, refer to the PetaLinux 2020.2 Release Notes and Master Answer Record: 73296.
+Note: For package versions, refer to the PetaLinux 2019.2 Release Notes and Master Answer Record: 73296.
 
 ---
 ### Installing Prerequisites
@@ -248,24 +249,24 @@ sudo dpkg-reconfigure dash
 First you have to create a folder where you want to install PetaLinux. It is advised to create a folder in you home directory and copy installer in that folder:
 
 ```bash
-mkdir -p ~/petalinux/2020.2
-cp petalinux-v2020.2-final-installer.run ~/petalinux/2020.2/
-cd ~/petalinux/2020.2/
+mkdir -p ~/petalinux/2019.2
+cp petalinux-v2019.2-final-installer.run ~/petalinux/2020.2/
+cd ~/petalinux/2019.2/
 ```
 
 #### 2. **Install Petalinux**
 Now you can proceed to install PetaLinux. You have to accept all license agreements by putting **y** in terminal. To install PetaLinux follow next shell command:
 
 ```bash
-chmod +x petalinux-v2020.2-final-installer.run ~/petalinux/2020.2/
-./petalinux-v2020.2-final-installer.run
+chmod +x petalinux-v2019.2-final-installer.run ~/petalinux/2019.2/
+./petalinux-v2019.2-final-installer.run
 ```
 
 #### 3. Set up Environment Variable
 ```bash
 cd
 vim .bashrc
-source ~/petalinux/2020.2/settings.sh # paste this line and save file
+source ~/petalinux/2019.2/settings.sh # paste this line and save file
 ```
 
 Run the command:
