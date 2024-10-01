@@ -250,7 +250,7 @@ First you have to create a folder where you want to install PetaLinux. It is adv
 
 ```bash
 mkdir -p ~/petalinux/2019.2
-cp petalinux-v2019.2-final-installer.run ~/petalinux/2020.2/
+cp petalinux-v2019.2-final-installer.run ~/petalinux/2019.2/
 cd ~/petalinux/2019.2/
 ```
 
