@@ -282,14 +282,23 @@ petalinux-util --webtalk off
 
 
 
-## Links used
-- [Exercise 12: Linux on Zybo Board (VGA DMA Controller)](https://www.elektronika.ftn.uns.ac.rs/mikroracunarski-sistemi-za-rad-u-realnom-vremenu/wp-content/uploads/sites/99/2018/03/Vezba12_Instaliranje_Linux-a_na_Zybo_ploci_na_primeru_DMA_VGA.pdf)
-- [Wiki.trenz Installation Guide](https://wiki.trenz-electronic.de/plugins/viewsource/viewpagesrc.action?pageId=139232257)
-- [Download PetaLinux from Xilinx Website](http://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools.html)
-- [Ubuntu Old-Releases](http://old-releases.ubuntu.com/releases/18.04.4/)
-- [Ubuntu 18.04.4 Old-Releases](http://old-releases.ubuntu.com/releases/18.04.4/ubuntu-18.04.4-desktop-amd64.iso)
-- [PetaLinux Tools Documentation-Reference Guide v2020.2](https://docs.amd.com/viewer/book-attachment/lI01EuQRZ2mtXOLWWVbmSA/vC~8fZCKf~Sqd7uqfK1LRA)
-- [PetaLinux 2020.2/3 - Product Update Release Notes and Known Issues](https://adaptivesupport.amd.com/s/article/75775?language=en_US)
-- [Vivado Design Suite User Guide](https://docs.amd.com/viewer/book-attachment/8o7OvxKMnG4NMFMc7SYHUA/p_iDDvNiuAkoje4cW6tJNw)
-- [Vivado Design Suite 2020.2 Xilinx All OS installer](https://www.xilinx.com/member/forms/download/xef.html?filename=Xilinx_Unified_2020.2_1118_1232.tar.gz)
 
+## Links used
+
+### Ubuntu 18.04.2
+- [Ubuntu Old-Releases](http://old-releases.ubuntu.com/releases/)
+- [Ubuntu 18.04.4 Old-Releases](https://old-releases.ubuntu.com/releases/18.04.2/ubuntu-18.04.2-desktop-amd64.iso)
+
+### Vivado 2019.2
+- [Vivado Design Suite User Guide](https://docs.amd.com/viewer/book-attachment/8o7OvxKMnG4NMFMc7SYHUA/p_iDDvNiuAkoje4cW6tJNw)
+- [Vivado Design Suite 2019.2 Xilinx All OS installer](https://www.xilinx.com/member/forms/download/xef.html?filename=Xilinx_Vivado_2019.2_1106_2127.tar.gz)
+
+### Petalinux 2019.2/Linux on Zynq
+- [Wiki.trenz Installation Guide](https://wiki.trenz-electronic.de/plugins/viewsource/viewpagesrc.action?pageId=139232257)
+- [Linux on Zybo[**Video**]](https://www.youtube.com/watch?v=-dbS9tWPUPU)
+- [Exercise 12: Linux on Zybo Board (VGA DMA Controller)](https://www.elektronika.ftn.uns.ac.rs/mikroracunarski-sistemi-za-rad-u-realnom-vremenu/wp-content/uploads/sites/99/2018/03/Vezba12_Instaliranje_Linux-a_na_Zybo_ploci_na_primeru_DMA_VGA.pdf)
+- [Download PetaLinux from Xilinx Website](http://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools.html)
+- [PetaLinux Tools Documentation-Reference Guide v2019.2](https://docs.amd.com/v/u/2019.2-English/ug1144-petalinux-tools-reference-guide)
+- [PetaLinux 2019.2/1 - Product Update Release Notes and Known Issues](https://adaptivesupport.amd.com/s/article/72950?language=en_US)
+- [Ubuntu 2018.04.6 Zynq/Arm **RootFS**](https://rcn-ee.com/rootfs/eewiki/minfs/ubuntu-18.04.6-minimal-armhf-2022-12-20.tar.xz)
+- [Older Releases Debian/Ubuntu Zynq/Arm **RootFS**](https://rcn-ee.com/rootfs/eewiki/minfs/)
