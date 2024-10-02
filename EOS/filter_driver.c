@@ -2,7 +2,7 @@
 #include <linux/module.h>
 #include <linux/irq.h>
 #include <linux/platform_device.h>
-#include <asm/io.h>
+#include <linux/io.h>
 #include <linux/init.h>
 #include <linux/slab.h>
 #include <linux/io.h>
@@ -19,6 +19,15 @@
 #include <linux/wait.h>
 #include <linux/semaphore.h>
 
+#include <linux/dma-mapping.h>
+#include <linux/mm.h>
+#include <linux/interrupt.h>
+#include <linux/string.h>
+#include <linux/errno.h>
+#include <linux/of.h>
+#include <linux/ioport.h>
+
+
 MODULE_AUTHOR ("y24_g00");
 MODULE_DESCRIPTION("Test Driver for Filter IP.");
 MODULE_LICENSE("Dual BSD/GPL");
@@ -31,20 +40,20 @@ MODULE_ALIAS("custom: filter IP");
 #define BUFF_SIZE 100 //??
 
 //sahe 1
-#define SAHE1_BASE_ADDR 0
+#define SAHE1_REG_OFFSET 0
 #define READY_REG_OFFSET 0
 #define START_REG_OFFSET 1
 #define WIDTH_REG_OFFSET 2
 #define HEIGHT_REG_OFFSET 12
 #define WIDTH_2_REG_OFFSET 23
 //sahe2
-#define SAHE2_BASE_ADDR 4
+#define SAHE2_REG_OFFSET 4
 #define WIDTH_4_REG_OFFSET 0
 #define EFFECTIVE_ROW_LIMIT_REG_OFFSET 8
 #define CYCLE_NUM_IN_REG_OFFSET 20
 #define CYCLE_NUM_OUT_REG_OFFSET 26
 //sahe 3
-#define SAHE3_BASE_ADDR 8
+#define SAHE3_REG_OFFSET 8
 #define ROWS_NUM_REG_OFFSET 0
 #define BRAM_HEIGHT_REG_OFFSET 10
 #define RESET_REG_OFFSET 15
@@ -52,6 +61,8 @@ MODULE_ALIAS("custom: filter IP");
 #define BRAM_HEIGHT 16
 
 #define ADDR_FACTOR 4
+
+#define MAX_PKT_LEN 152*150*2
 
 //*******************FUNCTION PROTOTYPES************************************
 static int filter_probe(struct platform_device *pdev);
@@ -101,8 +112,8 @@ static struct file_operations my_fops =
     .open = filter_open,
     .release = filter_close,
     .read = filter_read,
-    .write = filter_write
-    .mmap = filter_mmap
+    .write = filter_write,
+    .mmap = (void *)filter_dma_mmap
 };
 
 static struct of_device_id filter_of_match[] = 
@@ -237,7 +248,7 @@ static int filter_probe(struct platform_device *pdev)
 			{
 				printk(KERN_ALERT "filter_probe: Couldn't lock memory region at %p\n",(void *)dma1->mem_start);
 				rc = -EBUSY;
-				goto error1;
+				goto error4;
 			}
 			// Remap phisical to virtual adresses
 
@@ -246,7 +257,7 @@ static int filter_probe(struct platform_device *pdev)
 			{
 				printk(KERN_ALERT "hog_probe: Could not allocate dma1 iomem\n");
 				rc = -EIO;
-				goto error2;
+				goto error5;
 			}
 
             // Get irq num 
@@ -255,13 +266,13 @@ static int filter_probe(struct platform_device *pdev)
             {
                 printk(KERN_ERR "filter_dma1_probe: Could not get IRQ resource\n");
                 rc = -ENODEV;
-                goto error2;
+                goto error5;
             }
 
-            if (request_irq(dma1->irq_num, dma_isr1, 0, DEVICE_NAME, NULL)) {
+            if (request_irq(dma1->irq_num, dma1_isr, 0, DEVICE_NAME, NULL)) {
                 printk(KERN_ERR "filter_dma1_probe: Could not register IRQ %d\n", dma1->irq_num);
                 return -EIO;
-                goto error3;
+                goto error6;
             }
             else {
                 printk(KERN_INFO "filter_dma1_probe: Registered IRQ %d\n", dma1->irq_num);
@@ -274,12 +285,12 @@ static int filter_probe(struct platform_device *pdev)
 			printk(KERN_INFO "hog_probe: dma1 driver registered.\n");
 			return 0;
 			
-            error3:
+            error6:
                 iounmap(dma1->base_addr);
-            error2:
+            error5:
                 release_mem_region(dma1->mem_start, dma1->mem_end - dma1->mem_start + 1);
                 kfree(dma1);
-            error1:
+            error4:
                 return rc;;
 			
 			break;
@@ -394,7 +405,7 @@ ssize_t filter_read(struct file *pfile, char __user *buf, size_t length, loff_t 
         filter_val[1] = ioread32(filter_core->base_addr + SAHE2_REG_OFFSET);
         filter_val[2] = ioread32(filter_core->base_addr + SAHE3_REG_OFFSET);
         
-        ready = filter_val[0] & 0x00000001;
+        //ready = filter_val[0] & 0x00000001;
 
         len = scnprintf(buff, BUFF_SIZE, "%d %d %d ", filter_val[0], filter_val[1], filter_val[2]);
         //printk(KERN_INFO "hog_read: ready_reg = %d\n", hog_val);
@@ -462,13 +473,12 @@ ssize_t filter_write(struct file *pfile, const char __user *buf, size_t length, 
 static ssize_t filter_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 {
 	int ret = 0;
-    
+        long length;
 	int minor;
-	minor = MINOR(pfile->f_inode->i_rdev);
 
-	
+	minor = MINOR(f->f_inode->i_rdev);
 
-	long length = vma_s->vm_end - vma_s->vm_start;
+	length = vma_s->vm_end - vma_s->vm_start;
 	//printk(KERN_INFO "DMA TX Buffer is being memory mapped\n");
 
 	if(length > MAX_PKT_LEN)
@@ -536,7 +546,7 @@ static irqreturn_t dma0_isr(int irq, void*dev_id)
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
 
 	/*Send a transaction*/
-	dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, dma0->base_addr); //My function that starts a DMA transaction
+	dma_simple_write(tx0_phy_buffer, MAX_PKT_LEN, dma0->base_addr); //My function that starts a DMA transaction
 	return IRQ_HANDLED;;
 }
 
@@ -549,7 +559,7 @@ static irqreturn_t dma1_isr(int irq, void*dev_id)
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
 
 	/*Send a transaction*/
-	dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, dma1->base_addr); //My function that starts a DMA transaction
+	dma_simple_write(tx1_phy_buffer, MAX_PKT_LEN, dma1->base_addr); //My function that starts a DMA transaction
 	return IRQ_HANDLED;;
 }
 
@@ -661,14 +671,14 @@ static int __init filter_init(void)
 	}
 	printk(KERN_INFO "cdev added\n");
 
-    tx0_vir_buffer = dma_alloc_coherent(dma0, MAX_PKT_LEN, &tx0_phy_buffer, GFP_DMA | GFP_KERNEL);
-	tx1_vir_buffer = dma_alloc_coherent(dma1, MAX_PKT_LEN, &tx1_phy_buffer, GFP_DMA | GFP_KERNEL);
+    	tx0_vir_buffer = dma_alloc_coherent(my_device, MAX_PKT_LEN, &tx0_phy_buffer, GFP_DMA | GFP_KERNEL);
+	//tx1_vir_buffer = dma_alloc_coherent(my_device, MAX_PKT_LEN, &tx1_phy_buffer, GFP_DMA | GFP_KERNEL);
 	
-	rx0_vir_buffer = dma_alloc_coherent(dma0, MAX_PKT_LEN, &rx0_phy_buffer, GFP_DMA | GFP_KERNEL);
-	rx1_vir_buffer = dma_alloc_coherent(dma1, MAX_PKT_LEN, &rx1_phy_buffer, GFP_DMA | GFP_KERNEL);
+	//rx0_vir_buffer = dma_alloc_coherent(my_device, MAX_PKT_LEN, &rx0_phy_buffer, GFP_DMA | GFP_KERNEL);
+	//rx1_vir_buffer = dma_alloc_coherent(my_device, MAX_PKT_LEN, &rx1_phy_buffer, GFP_DMA | GFP_KERNEL);
 	
 
-	if(!tx0_vir_buffer or !tx1_vir_buffer or !rx0_vir_buffer or !rx1_vir_buffer){
+	if((!tx0_vir_buffer || !tx1_vir_buffer) || (!rx0_vir_buffer || !rx1_vir_buffer)){
 		printk(KERN_ALERT "dma_init: Could not allocate dma_alloc_coherent for img");
 		goto fail_5;
 	}
@@ -723,11 +733,11 @@ static void __exit filter_exit(void)
 	device_destroy(my_class, MKDEV(MAJOR(my_dev_id),0));
 	class_destroy(my_class);
 
-	dma_free_coherent(dma0, MAX_PKT_LEN, tx0_vir_buffer, tx0_phy_buffer);
-	dma_free_coherent(dma1, MAX_PKT_LEN, tx1_vir_buffer, tx1_phy_buffer);
+	dma_free_coherent(my_device, MAX_PKT_LEN, tx0_vir_buffer, tx0_phy_buffer);
+	//dma_free_coherent(NULL, MAX_PKT_LEN, tx1_vir_buffer, tx1_phy_buffer);
 
-	dma_free_coherent(dma0, MAX_PKT_LEN, rx0_vir_buffer, rx0_phy_buffer);
-	dma_free_coherent(dma1, MAX_PKT_LEN, rx1_vir_buffer, rx1_phy_buffer);
+	//dma_free_coherent(NULL, MAX_PKT_LEN, rx0_vir_buffer, rx0_phy_buffer);
+	//dma_free_coherent(NULL, MAX_PKT_LEN, rx1_vir_buffer, rx1_phy_buffer);
 	
 	unregister_chrdev_region(my_dev_id, 3);
 	printk(KERN_INFO "hog driver exited.\n");
