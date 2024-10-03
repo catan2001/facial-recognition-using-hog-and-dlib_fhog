@@ -62,7 +62,8 @@ MODULE_ALIAS("custom: filter IP");
 
 #define ADDR_FACTOR 4
 
-#define MAX_PKT_LEN 152*150*2
+//a multiple of page size 4096
+#define MAX_PKT_LEN 49152 
 
 //*******************FUNCTION PROTOTYPES************************************
 static int filter_probe(struct platform_device *pdev);
@@ -98,7 +99,9 @@ struct filter_dma_info { //info that needs driver to control DMA
 static struct cdev *my_cdev;
 static dev_t my_dev_id;
 static struct class *my_class;
-static struct device *my_device;
+static struct device *my_device_dma0;
+static struct device *my_device_dma1;
+static struct device *my_device_filter;
 static struct filter_dma_info *dma0 = NULL;
 static struct filter_dma_info *dma1 = NULL;
 static struct filter_info *filter_core = NULL;
@@ -202,7 +205,7 @@ static int filter_probe(struct platform_device *pdev)
                 goto error2;
             }
 
-            if (request_irq(dma0->irq_num, dma0_isr, 0, DEVICE_NAME, NULL)) {
+            if (request_irq(dma0->irq_num, dma0_isr, 0, DEVICE_NAME, dma0)) {
                 printk(KERN_ERR "filter_dma0_probe: Could not register IRQ %d\n", dma0->irq_num);
                 return -EIO;
                 goto error3;
@@ -269,7 +272,7 @@ static int filter_probe(struct platform_device *pdev)
                 goto error5;
             }
 
-            if (request_irq(dma1->irq_num, dma1_isr, 0, DEVICE_NAME, NULL)) {
+            if (request_irq(dma1->irq_num, dma1_isr, 0, DEVICE_NAME, dma1)) {
                 printk(KERN_ERR "filter_dma1_probe: Could not register IRQ %d\n", dma1->irq_num);
                 return -EIO;
                 goto error6;
@@ -407,7 +410,7 @@ ssize_t filter_read(struct file *pfile, char __user *buf, size_t length, loff_t 
         
         //ready = filter_val[0] & 0x00000001;
 
-        len = scnprintf(buff, BUFF_SIZE, "%d %d %d ", filter_val[0], filter_val[1], filter_val[2]);
+        len = scnprintf(buff, BUFF_SIZE, "%x %x %x ", filter_val[0], filter_val[1], filter_val[2]);
         //printk(KERN_INFO "hog_read: ready_reg = %d\n", hog_val);
 
         if (copy_to_user(buf, buff, len))
@@ -421,24 +424,20 @@ ssize_t filter_read(struct file *pfile, char __user *buf, size_t length, loff_t 
 
 ssize_t filter_write(struct file *pfile, const char __user *buf, size_t length, loff_t *off)
 {
+
 	char buff[BUFF_SIZE];
-    int ret = 0;
+    	int ret = 0;
 	int minor = MINOR(pfile->f_inode->i_rdev);
 	int pos = 0;
 	int val = 0;
 
-	if(down_interruptible(&sem))
-		return -ERESTARTSYS;
-	
-    ret = copy_from_user(buff, buf, length);  
+    	ret = copy_from_user(buff, buf, length);  
 	if (ret)
 		return -EFAULT;
 	buff[length]='\0';
-
 	sscanf(buff, "%d, %d\n", &val, &pos);
 	//val -> tx_pkt_len
 	//pos -> rx_pkt_len
-	
 	if (minor == 2)
 	{
         // filter_core
@@ -458,13 +457,17 @@ ssize_t filter_write(struct file *pfile, const char __user *buf, size_t length, 
             iowrite32(val, filter_core->base_addr + pos);
         }
 	}else if(minor == 1){
-		dma_simple_write(tx0_phy_buffer, val, dma1->base_addr); // helper function, defined later
-		dma_simple_read(rx0_phy_buffer, pos, dma1->base_addr); 
+		dma_simple_write(tx1_phy_buffer, val, dma1->base_addr); // helper function, defined later
+		dma_simple_read(rx1_phy_buffer, pos, dma1->base_addr); 
+		printk(KERN_INFO "I entered configuration dma1");
+		printk(KERN_INFO "tx Phy buffer tx1: %x", tx1_phy_buffer);
+
 	
 	}else if(minor == 0){
-		dma_simple_write(tx1_phy_buffer, val, dma0->base_addr); // helper function, defined later
-		dma_simple_read(rx1_phy_buffer, pos, dma0->base_addr);
-
+		dma_simple_write(tx0_phy_buffer, val, dma0->base_addr); // helper function, defined later
+		dma_simple_read(rx0_phy_buffer, pos, dma0->base_addr);
+		printk(KERN_INFO "I entered configuration dma0");
+		printk(KERN_INFO "tx Phy buffer tx0: %x", tx0_phy_buffer);
 	}
 
 	return length;
@@ -475,27 +478,31 @@ static ssize_t filter_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 	int ret = 0;
         long length;
 	int minor;
-
 	minor = MINOR(f->f_inode->i_rdev);
-
+	printk(KERN_INFO "I ENTERED MMAP!");
 	length = vma_s->vm_end - vma_s->vm_start;
-	//printk(KERN_INFO "DMA TX Buffer is being memory mapped\n");
+
+	printk(KERN_INFO "vma_end: %ld vma_start: %ld len: %ld\n", vma_s->vm_end, vma_s->vm_start, length);
 
 	if(length > MAX_PKT_LEN)
 	{
-		return -EIO;
 		printk(KERN_ERR "Trying to mmap more space than it's allocated\n");
+		return -EIO;
 	}
 
 	switch(minor){
 		case 0:
-			switch(vma_s->vm_flags){
-				case VM_WRITE: 
-					ret = dma_mmap_coherent(NULL, vma_s, tx0_vir_buffer, tx0_phy_buffer, length);	
+			switch(vma_s->vm_flags & 0x3){
+				case VM_WRITE:
+				        printk(KERN_INFO "VM_WRITE dma0");	
+					ret = dma_mmap_coherent(my_device_dma0, vma_s, tx0_vir_buffer, tx0_phy_buffer, length);	
+					printk(KERN_INFO "ovog kurca sto ga printas %llu", tx0_vir_buffer[0]);
+					printk(KERN_INFO "bla blab la%x", tx0_vir_buffer[0]);
 				break;
 					
 				case VM_READ: 
-					ret = dma_mmap_coherent(NULL, vma_s, rx0_vir_buffer, rx0_phy_buffer, length);	
+					printk(KERN_INFO "VM_READ dma0");	
+					ret = dma_mmap_coherent(my_device_dma0, vma_s, rx0_vir_buffer, rx0_phy_buffer, length);	
 				break;
 
 				default:
@@ -505,13 +512,15 @@ static ssize_t filter_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 		break;
 
 		case 1:
-			switch(vma_s->vm_flags){
+			switch(vma_s->vm_flags & 0x3){
 				case VM_WRITE: 
-					ret = dma_mmap_coherent(NULL, vma_s, tx1_vir_buffer, tx1_phy_buffer, length);	
+					printk(KERN_INFO "VM_WRITE dma1");
+					ret = dma_mmap_coherent(my_device_dma1, vma_s, tx1_vir_buffer, tx1_phy_buffer, length);	
 				break;
 					
 				case VM_READ: 
-					ret = dma_mmap_coherent(NULL, vma_s, rx1_vir_buffer, rx1_phy_buffer, length);	
+					printk(KERN_INFO "VM_READ dma1");
+					ret = dma_mmap_coherent(my_device_dma1, vma_s, rx1_vir_buffer, rx1_phy_buffer, length);	
 				break;
 
 				default:
@@ -545,21 +554,27 @@ static irqreturn_t dma0_isr(int irq, void*dev_id)
 	iowrite32(IrqStatus | 0x00007000, dma0->base_addr + 4);//clear irq status in MM2S_DMASR register
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
 
+	printk(KERN_INFO "IRQ HAPPENED!");
+
+	/*printk(KERN_INFO "%llu ", tx0_vir_buffer[0]);
+	printk(KERN_INFO "%llu ", tx0_vir_buffer[1]);
+	printk(KERN_INFO "%llu ", tx0_vir_buffer[2]);
+	printk(KERN_INFO "%llu ", tx0_vir_buffer[3]); */
 	/*Send a transaction*/
-	dma_simple_write(tx0_phy_buffer, MAX_PKT_LEN, dma0->base_addr); //My function that starts a DMA transaction
+	//dma_simple_write(tx0_phy_buffer, MAX_PKT_LEN, dma0->base_addr); //My function that starts a DMA transaction
 	return IRQ_HANDLED;;
 }
 
 static irqreturn_t dma1_isr(int irq, void*dev_id)
 {
 	u32 IrqStatus;  
-	/* Read pending interrupts */
+	// Read pending interrupts 
 	IrqStatus = ioread32(dma1->base_addr + 4);//read irq status from MM2S_DMASR register
 	iowrite32(IrqStatus | 0x00007000, dma1->base_addr + 4);//clear irq status in MM2S_DMASR register
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
-
-	/*Send a transaction*/
-	dma_simple_write(tx1_phy_buffer, MAX_PKT_LEN, dma1->base_addr); //My function that starts a DMA transaction
+	printk(KERN_INFO "Interrupt DMA1!!");
+	//Send a transaction
+	//dma_simple_write(tx1_phy_buffer, MAX_PKT_LEN, dma1->base_addr); //My function that starts a DMA transaction
 	return IRQ_HANDLED;;
 }
 
@@ -638,22 +653,24 @@ static int __init filter_init(void)
 		goto fail_0;
 	}
 	printk(KERN_INFO "class created\n");
-
-	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 0), NULL, "dma0") == NULL) 
+	my_device_dma0 = device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 0), NULL, "dma0");
+	if (my_device_dma0 == NULL) 
 	{
 		printk(KERN_ERR "failed to create device dma0\n");
 		goto fail_1;
 	}
 	printk(KERN_INFO "device created - dma0\n");
 
-	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 1), NULL, "dma1") == NULL) 
+	my_device_dma1 = device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 1), NULL, "dma1"); 
+	if (my_device_dma1 == NULL) 
 	{
 		printk(KERN_ERR "failed to create device dma1\n");
 		goto fail_2;
 	}
 	printk(KERN_INFO "device created - dma1\n");
 
-	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 2), NULL, "filter_core") == NULL) 
+	my_device_filter = device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 2), NULL, "filter_core"); 
+	if (my_device_filter == NULL) 
 	{
 		printk(KERN_ERR "failed to create device filter_core\n");
 		goto fail_3;
@@ -671,13 +688,24 @@ static int __init filter_init(void)
 	}
 	printk(KERN_INFO "cdev added\n");
 
-    	tx0_vir_buffer = dma_alloc_coherent(my_device, MAX_PKT_LEN, &tx0_phy_buffer, GFP_DMA | GFP_KERNEL);
-	//tx1_vir_buffer = dma_alloc_coherent(my_device, MAX_PKT_LEN, &tx1_phy_buffer, GFP_DMA | GFP_KERNEL);
-	
-	//rx0_vir_buffer = dma_alloc_coherent(my_device, MAX_PKT_LEN, &rx0_phy_buffer, GFP_DMA | GFP_KERNEL);
-	//rx1_vir_buffer = dma_alloc_coherent(my_device, MAX_PKT_LEN, &rx1_phy_buffer, GFP_DMA | GFP_KERNEL);
-	
+	if (dma_set_coherent_mask(my_device_dma0, DMA_BIT_MASK(32))) {
+		printk(KERN_ERR "Bad Mask!\n");
+		goto fail_5;
+	}
 
+    	tx0_vir_buffer = dma_alloc_coherent(my_device_dma0, MAX_PKT_LEN, &tx0_phy_buffer, GFP_DMA | GFP_KERNEL);
+
+	if (dma_set_coherent_mask(my_device_dma1, DMA_BIT_MASK(32))) {
+		printk(KERN_ERR "Bad Mask!\n");
+		goto fail_5;
+	}
+	
+	tx1_vir_buffer = dma_alloc_coherent(my_device_dma1, MAX_PKT_LEN, &tx1_phy_buffer, GFP_DMA | GFP_KERNEL);
+		
+	rx0_vir_buffer = dma_alloc_coherent(my_device_dma0, MAX_PKT_LEN, &rx0_phy_buffer, GFP_DMA | GFP_KERNEL);
+	rx1_vir_buffer = dma_alloc_coherent(my_device_dma1, MAX_PKT_LEN, &rx1_phy_buffer, GFP_DMA | GFP_KERNEL);
+	
+	printk(KERN_INFO "Hello dumb");
 	if((!tx0_vir_buffer || !tx1_vir_buffer) || (!rx0_vir_buffer || !rx1_vir_buffer)){
 		printk(KERN_ALERT "dma_init: Could not allocate dma_alloc_coherent for img");
 		goto fail_5;
@@ -733,11 +761,11 @@ static void __exit filter_exit(void)
 	device_destroy(my_class, MKDEV(MAJOR(my_dev_id),0));
 	class_destroy(my_class);
 
-	dma_free_coherent(my_device, MAX_PKT_LEN, tx0_vir_buffer, tx0_phy_buffer);
-	//dma_free_coherent(NULL, MAX_PKT_LEN, tx1_vir_buffer, tx1_phy_buffer);
+	dma_free_coherent(my_device_dma0, MAX_PKT_LEN, tx0_vir_buffer, tx0_phy_buffer);
+	dma_free_coherent(my_device_dma1, MAX_PKT_LEN, tx1_vir_buffer, tx1_phy_buffer);
 
-	//dma_free_coherent(NULL, MAX_PKT_LEN, rx0_vir_buffer, rx0_phy_buffer);
-	//dma_free_coherent(NULL, MAX_PKT_LEN, rx1_vir_buffer, rx1_phy_buffer);
+	dma_free_coherent(my_device_dma0, MAX_PKT_LEN, rx0_vir_buffer, rx0_phy_buffer);
+	dma_free_coherent(my_device_dma1, MAX_PKT_LEN, rx1_vir_buffer, rx1_phy_buffer);
 	
 	unregister_chrdev_region(my_dev_id, 3);
 	printk(KERN_INFO "hog driver exited.\n");
