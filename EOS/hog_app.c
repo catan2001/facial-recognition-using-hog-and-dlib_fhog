@@ -1,6 +1,6 @@
 //#include "functions.h" 
 #include "firmware.h"
-#include "../RTL_axi/vitis/img_150_150.h"
+#include "img_150_150.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,27 +51,6 @@ int main(void)
 	int64_t *odd;
 	int64_t *dx;
 	int64_t *dy;
-/*
-	//DX DMA0:---------------------------------------------------
-	
-	fd = open("/dev/dma0", O_RDWR|O_NDELAY);
-	if (fd < 0)
-	{
-		printf("Cannot open /dev/dma0 for dx\n");
-		return -1;
-	}
-
-
-	dx=(int64_t *)mmap(0, (rows*(cols-2)*2), PROT_READ, MAP_SHARED, fd, 0);
-	memcpy(dx_img, dx, ((rows-2)*cols*2));
-
-	close(fd);
-	if (fd < 0)
-	{
-		printf("Cannot close /dev/dma0 for dx\n");
-		return -1;
-	}
-
 
 	//IMG_EVEN DMA0----------------------------------------------------
 
@@ -91,12 +70,11 @@ int main(void)
 		printf("Cannot close /dev/dma0 for img_even\n");
 		return -1;
 	}
-
+/*
 	for(int i = 0; i < rows/2; ++i)
 		for(int j = 0; j < cols/4; ++j)
-			printf("Even = %llu, image_even = %llu\n", even[i*cols/4 + j], image_even[i*cols/4 + j]);	
-
-
+			printf("image_even = %llu\n", image_even[i*cols/4 + j]);	
+*/
 	//IMG_ODD DMA1:--------------------------------------------------
 	
 	fd = open("/dev/dma1", O_RDWR|O_NDELAY);
@@ -109,10 +87,6 @@ int main(void)
 	odd=(int64_t*)mmap(0, (rows*cols), PROT_WRITE, MAP_SHARED, fd, 0);
 	memcpy(odd, image_odd, (rows*cols));
 
-	//dy=(uint64_t*)mmap(0, (rows*cols), PROT_READ, MAP_SHARED, fd, (rows*cols+1));
-	//memcpy(dy_img, dy, (rows*cols));
-	//munmap(dy, (rows*cols));	
-
 	close(fd);
 
 	if (fd < 0)
@@ -120,11 +94,30 @@ int main(void)
 		printf("Cannot close /dev/dma1 for img_odd\n");
 		return -1;
 	}
-
+/*
 	for(int i = 0; i < rows/2; ++i)
 		for(int j = 0; j < cols/4; ++j)
-			printf("Odd = %llu, image_odd = %llu\n", odd[i*cols/4 + j], image_odd[i*cols/4 + j]);	
+			printf("image_odd = %llu\n", image_odd[i*cols/4 + j]);	
+*/
+	//DX DMA0:--------------------------------------------------------
+	
+	fd = open("/dev/dma0", O_RDWR|O_NDELAY);
+	if (fd < 0)
+	{
+		printf("Cannot open /dev/dma0 for dx\n");
+		return -1;
+	}
 
+
+	dx=(int64_t *)mmap(0, ((rows-2)*cols*2), PROT_READ, MAP_SHARED, fd, 0);
+	memcpy(dx_img, dx, ((rows-2)*cols*2));
+
+	close(fd);
+	if (fd < 0)
+	{
+		printf("Cannot close /dev/dma0 for dx\n");
+		return -1;
+	}
 
 	//DY DMA1:--------------------------------------------------
 	fd = open("/dev/dma1", O_RDWR|O_NDELAY);
@@ -135,6 +128,7 @@ int main(void)
 	}
 
 	dy=(int64_t *)mmap(0, ((rows-2)*(cols)*2), PROT_READ, MAP_SHARED, fd, 0);
+	memcpy(dy_img, dy, ((rows-2)*cols*2));
 
 	close(fd);
 	if (fd < 0)
@@ -143,24 +137,23 @@ int main(void)
 		return -1;
 	}
 
-*/
-
 	//CONFIG DMA:-------------------------------------------
-
-	config_dma(rows*cols/8, (rows-2)*cols/4, 0); // config dma 0
-	config_dma(rows*cols/8, (rows-2)*cols/4, 1); // config dma 1
+	usleep(200);
+	config_dma(rows*cols, (rows-2)*cols*2, 0); // config dma 0
+	config_dma(rows*cols, (rows-2)*cols*2, 1); // config dma 1
 
 	sleep(2);
-/*
-	memcpy(dy_img, dy, ((rows-2)*cols*2));
+
 	for(int i = 0; i < rows-2; i++){
+		printf("ROW: %d\n", i);
 		for(int j = 0; j < cols/4; j++){
 			//printf("Even NOT : %llu", )
-			printf("%llu \n", dy[i*(cols/4) + j]); 
+			printf("%d: %llx ", j, dy[i*(cols/4) + j]); 
 		}
+		printf("\n");
 	}
 
-*/
+
 
 
 //	for(int i = 0; i < rows-2; ++i)
@@ -168,12 +161,12 @@ int main(void)
 //			printf("dy_img = %llu, dy = %llu\n", dy_img[i*cols + j], dy[i*cols + j]);	
 
 
-/*
+
 	munmap(even, (rows*cols));
 	munmap(odd, (rows*cols));
 	munmap(dx, ((rows-2)*cols*2));
 	munmap(dy, ((rows-2)*cols*2));
-*/
+
 	
 	return 0;
 }
