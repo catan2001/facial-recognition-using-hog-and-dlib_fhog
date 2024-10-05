@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-
+#include <bitset>
 
 using namespace std;
 
@@ -37,6 +37,7 @@ using namespace std;
 
 #define BRAM_HEIGHT 16
 #define BRAM_WIDTH 2048
+#define PTS_PER_COL 4
 
 #define BLOCK_SIZE 2
 #define CELL_SIZE 8
@@ -88,7 +89,7 @@ int main() {
 
         int upper_boundary = (ROWS > COLS)? COLS : ROWS;
         int step = ceil(floor((upper_boundary-floor(upper_boundary/3))/10)/4)*4; // parameter for face_recognition_range
-        int lower_boundary = upper_boundary-10*step;
+        int lower_boundary = upper_boundary-8*step;
 
         FILE * rach;
         rach = fopen("template/gray.txt", "rb");
@@ -96,6 +97,7 @@ int main() {
             cout << "ERROR! could not open file!" << endl;
             return 101;
         }
+
 
         double *gray = new double[ROWS * COLS];
         double val;
@@ -109,6 +111,7 @@ int main() {
         }
         fclose(rach);
 
+
         double time_filter = 0;
         double time_get_gradient = 0;
         double time_build_histogram = 0;
@@ -119,6 +122,7 @@ int main() {
         double algorithm_time = 0;
 
         auto start = chrono::high_resolution_clock::now();
+
 
         face_recognition_range(&gray[0], step, lower_boundary, upper_boundary, &time_face_rec, &time_extract_hog, &time_filter, &time_get_gradient, &time_build_histogram, &time_block_descriptor);
 
@@ -153,28 +157,47 @@ int main() {
     return 0;
 }
 
-void write_hard(unsigned char addr, int val)
-{
-	FILE *filter_file;
-	
-	filter_file = fopen("/dev/filter_core", "w");
-	fprintf(filter_file, "%d, %d\n", val, addr);
-	fflush(filter_file);
-	fclose(filter_file);
-}
-
-int read_hard(unsigned char addr)
-{
-	FILE *filter_file;
-	int val[3];
-	char tmp = addr/4;
-	
-	filter_file = fopen("/dev/filter_file", "r");
-	fscanf(filter_file, "%d %d %d \n", &val[0], &val[1], &val[2]);
-	fclose(filter_file);
-	
-	return val[tmp];
-}
+ void write_hard(unsigned char addr, int val)
+ {
+     FILE *filter_file;
+ 
+     filter_file = fopen("/dev/filter_core", "w");
+     fprintf(filter_file, "%d, %d\n", val, addr);
+     fflush(filter_file);
+     fclose(filter_file);
+ }
+ 
+ void config_dma(int tx_len, int rx_len, unsigned char num)
+ {
+     FILE *dma_file;
+     if(num == 1)
+         dma_file = fopen("/dev/dma1", "w");
+     else
+     if(num == 0)
+         dma_file = fopen("/dev/dma0", "w");
+     else    {
+         printf("There are two DMA [0, 1]");
+         fclose(dma_file);
+         return;
+     }
+     fprintf(dma_file, "%d, %d\n", tx_len, rx_len);
+     printf("tx = %d, rx = %d\n", tx_len, rx_len);
+     //fflush(dma_file);
+     fclose(dma_file);
+ }
+ 
+ 
+ int read_hard(unsigned char addr)
+ {
+     FILE *filter_file;
+     int val[3];
+     char tmp = addr/4;
+ 
+     filter_file = fopen("/dev/filter_core", "r");
+     fscanf(filter_file, "%d %d %d \n", &val[0], &val[1], &val[2]);
+     fclose(filter_file);
+     return val[tmp];
+ }
 
 void write_txt(double* found_faces, int len, char *name_txt){
 	
@@ -293,7 +316,34 @@ void find_max(int rows, int cols, double *matrix) {
      cout << "x = " << row *3 << " y= " << col*3 << endl;
 }
 
-void filter_hw(int rows, int cols, uint16_t *img, int64_t *dx_img, int64_t *dy_img){
+double fix_to_double(int64_t input, int shift){
+	
+	int64_t bit_mask;
+	int16_t value = 0;
+       	int sign = 1;	
+	double output = 0;
+
+	if(shift == 48) bit_mask = 0xFFFF000000000000;
+	if(shift == 32) bit_mask = 0x0000FFFF00000000;
+	if(shift == 16) bit_mask = 0x00000000FFFF0000;
+	if(shift == 0)  bit_mask = 0x000000000000FFFF;
+	
+
+ 	value = (int16_t)((input & bit_mask) >> shift);
+
+	if(value & 0x8000){
+		value = value - 1;
+		value = ~value;
+
+		sign = -1;
+	}
+	
+	output = (double)value / pow(2, 12);
+
+	return output*sign;
+}
+
+void filter_hw(int rows, int cols, double *img, double *dx_img, double *dy_img){
 
 	int fd;
 	int64_t *even;
@@ -306,45 +356,87 @@ void filter_hw(int rows, int cols, uint16_t *img, int64_t *dx_img, int64_t *dy_i
 
     //SAHE3:
     int bram_height = BRAM_HEIGHT;
-    int row_capacity_bram = floor(BRAM_WIDTH/(cols))*BRAM_HEIGHT;
-    
+    int row_capacity_bram = floor((double)BRAM_WIDTH/(cols)*BRAM_HEIGHT);
+
+    //printf("ROW_CAPACITY_BRAM %d\n", row_capacity_bram);    
+    //printf("cols %d\n", cols);
+    //printf("BRAM_HEIGHT %d\n", BRAM_HEIGHT);
     uint32_t SAHE3 = (bram_height << BRAM_HEIGHT_REG_OFFSET) + (row_capacity_bram << ROW_CAP_BRAM_REG_OFFSET);
 
     //SAHE2:
-    int cycle_num_out = floor(BRAM_WIDTH/(cols-2));
-    int cycle_num_in = floor(BRAM_WIDTH/cols);
-    int accumulated_loss = (ceil(rows/(BRAM_HEIGHT*floor(BRAM_WIDTH/cols)))-1)*4;
-    int effective_row_limit = floor(rows/PTS_PER_COL)*PTS_PER_COL + accumulated_loss;
-    int width_4 = floor(cols/4);
+    int cycle_num_out = floor((double)BRAM_WIDTH/(cols-2));
+    int cycle_num_in = floor((double)BRAM_WIDTH/cols);
+    int accumulated_loss = (ceil((double)rows/(BRAM_HEIGHT*floor((double)BRAM_WIDTH/cols)))-1)*4;
+    int effective_row_limit = floor((double)rows/PTS_PER_COL)*PTS_PER_COL + accumulated_loss;
+    int width_4 = floor((double)cols/4);
     
     uint32_t SAHE2 = (cycle_num_out << CYCLE_NUM_OUT_REG_OFFSET) + (cycle_num_in << CYCLE_NUM_IN_REG_OFFSET) + (effective_row_limit << EFFECTIVE_ROW_LIMIT_REG_OFFSET) + (width_4 << WIDTH_4_REG_OFFSET);
 
     //SAHE1:
-    int width_2 = (floor(cols/2)+1);
+    int width_2 = (floor((double)cols/2)); //+1
 
-	uint32_t SAHE1 = (width_2 << WIDTH_2_REG_OFFSET) + (rows << HEIGHT_REG_OFFSET) + (cols << WIDTH_REG_OFFSET);
+    uint32_t SAHE1 = (width_2 << WIDTH_2_REG_OFFSET) + (rows << HEIGHT_REG_OFFSET) + (cols << WIDTH_REG_OFFSET);
  	
+	//cout << "SAHE1: " << SAHE1 << endl;
+	//cout << "SAHE2: " << SAHE2 << endl;
+	//cout << "SAHE3: " << SAHE3 << endl;
+	//cout << cols << endl;
 
-	write_hard(SAHE3_addr, (0x00008000 | SAHE3));
-	while(!(read_hard(SAHE1_addr) & 0x00000001));
+	write_hard(SAHE3_addr, 0x00008000);
+
+	while(!(read_hard(SAHE1_addr) & 0x00000001)) {
+	}
+
+	//cout << "hw 1" << endl;
+
 	write_hard(SAHE3_addr, SAHE3);
-
 	write_hard(SAHE2_addr, SAHE2); 
-	
+
+	//cout << "hw 2" << endl;
 
 	for(int i = 0; i < rows; i+=2){ 
-	 	for(int j = 0; j < cols; j+=4){
-	 	 image_even[k] = ((uint64_t)img[i*cols + j] << 48) | ((uint64_t)(img[i*cols + j + 1]) << 32) | ((uint64_t)(img[i*cols + j + 2]) << 16) | ((uint64_t)(img[i*cols + j + 3]));
-		//printf("image_even %llu \n", image_even[k]);
-		 image_odd[k] = ((uint64_t)img[(i+1)*cols + j] << 48) | ((uint64_t)(img[(i+1)*cols + j + 1]) << 32) | ((uint64_t)(img[(i+1)*cols + j + 2]) << 16) | ((uint64_t)(img[(i+1)*cols + j + 3]));
-		//printf("image_odd %llu \n", image_odd[k]);
-	         k++;
+//		printf("ROW %d \n", i);
+	 	
+		for(int j = 0; j < cols; j+=4){
+		
+		image_even[k] = ((uint64_t)(img[i*cols + j] * pow(2, 15)) << 48) | ((uint64_t)(img[i*cols + j + 1] * pow(2, 15)) << 32) | ((uint64_t)(img[i*cols + j + 2]*pow(2, 15)) << 16) | ((uint64_t)(img[i*cols + j + 3]*pow(2, 15)));
+		 
+
+		//cout << "img_even " <<  k <<": " << image_even[k] << " \n";
+
+		 //cout << "img_even " <<  k <<": " << (bitset<64>(image_even[k])).to_string() << " ";
+		/* printf("img_orig<<48 %lf ", img[i*cols + j]);
+		 printf(" img<<48 %d ", (uint16_t)(img[i*cols + j] * pow(2, 15)));
+		 
+		 printf(" img_orig<<32 %lf ", img[i*cols + j + 1]);
+		 printf(" img<<32 %d ", (uint16_t)(img[i*cols + j + 1] * pow(2, 15)));
+		
+		 printf(" img_orig<<16 %lf ", img[i*cols + j + 2]);
+		 printf(" img<<16 %d ", (uint16_t)(img[i*cols + j + 2] * pow(2, 15)));
+		
+	 	 printf(" img_orig<<0 %lf ", img[i*cols + j + 3]);
+		 printf(" img<<0 %d \n ", (uint16_t)(img[i*cols + j + 3] * pow(2, 15)));*/
+
+		 
+		 image_odd[k] = ((uint64_t)(img[(i+1)*cols + j] * pow(2, 15)) << 48) | ((uint64_t)(img[(i+1)*cols + j + 1] * pow(2, 15)) << 32) | ((uint64_t)(img[(i+1)*cols + j + 2] * pow(2, 15)) << 16) | ((uint64_t)(img[(i+1)*cols + j + 3] * pow(2, 15)));
+		
+		// cout << "img_odd " <<  k <<": " << (bitset<64>(image_odd[k])).to_string() << " "; 
+		 
+		//cout << "img_odd " <<  k <<": " << image_odd[k] << " \n";
+
+
+		 k++;
 		}
-	}
-	
+//		printf("\n");
+	}	
+
+	//cout << "hw 3" << endl;
+
 	write_hard(SAHE1_addr, (SAHE1 | 0x2));
 	//while(!(read_hard(SAHE1) & 0x00000001));
 	write_hard(SAHE1_addr, SAHE1);
+
+	//cout << "hw 4" << endl;
 
 	//IMG_EVEN DMA0----------------------------------------------------
 
@@ -352,7 +444,7 @@ void filter_hw(int rows, int cols, uint16_t *img, int64_t *dx_img, int64_t *dy_i
 	if (fd < 0)
 	{
 		printf("Cannot open /dev/dma0 for img_even\n");
-		return -1;
+		//return 0;
 	}
 	
 	even=(int64_t *)mmap(0, (rows*cols), PROT_WRITE, MAP_SHARED, fd, 0);
@@ -362,7 +454,7 @@ void filter_hw(int rows, int cols, uint16_t *img, int64_t *dx_img, int64_t *dy_i
 	if (fd < 0)
 	{
 		printf("Cannot close /dev/dma0 for img_even\n");
-		return -1;
+		//return 0;
 	}
 
 	//IMG_ODD DMA1:--------------------------------------------------
@@ -371,7 +463,7 @@ void filter_hw(int rows, int cols, uint16_t *img, int64_t *dx_img, int64_t *dy_i
 	if (fd < 0)
 	{
 		printf("Cannot open /dev/dma1 for img_odd\n");
-		return -1;
+		//return 0;
 	}
 
 	odd=(int64_t*)mmap(0, (rows*cols), PROT_WRITE, MAP_SHARED, fd, 0);
@@ -382,7 +474,7 @@ void filter_hw(int rows, int cols, uint16_t *img, int64_t *dx_img, int64_t *dy_i
 	if (fd < 0)
 	{
 		printf("Cannot close /dev/dma1 for img_odd\n");
-		return -1;
+		//return 0;
 	}
 
 	//DX DMA0:--------------------------------------------------------
@@ -391,18 +483,16 @@ void filter_hw(int rows, int cols, uint16_t *img, int64_t *dx_img, int64_t *dy_i
 	if (fd < 0)
 	{
 		printf("Cannot open /dev/dma0 for dx\n");
-		return -1;
+		//return 0;
 	}
 
-
 	dx=(int64_t *)mmap(0, ((rows-2)*cols*2), PROT_READ, MAP_SHARED, fd, 0);
-	memcpy(dx_img, dx, ((rows-2)*cols*2));
 
 	close(fd);
 	if (fd < 0)
 	{
 		printf("Cannot close /dev/dma0 for dx\n");
-		return -1;
+		//return 0;
 	}
 
 	//DY DMA1:--------------------------------------------------
@@ -410,36 +500,101 @@ void filter_hw(int rows, int cols, uint16_t *img, int64_t *dx_img, int64_t *dy_i
 	if (fd < 0)
 	{
 		printf("Cannot open /dev/dma1 for dy\n");
-		return -1;
+		//return 0;
 	}
 
 	dy=(int64_t *)mmap(0, ((rows-2)*(cols)*2), PROT_READ, MAP_SHARED, fd, 0);
-	memcpy(dy_img, dy, ((rows-2)*cols*2));
 
 	close(fd);
 	if (fd < 0)
 	{
 		printf("Cannot close /dev/dma1 for dy\n");
-		return -1;
+		//return 0;
 	}
 
 	//CONFIG DMA:-------------------------------------------
-	usleep(200);
-
-	config_dma(rows*cols, (rows-2)*cols*2, 0); // config dma 0
+	//usleep(200);
+	config_dma(rows*cols, (rows-2)*cols*2, 0); // config dma 0	
+	//usleep(200);
 	config_dma(rows*cols, (rows-2)*cols*2, 1); // config dma 1
+	//usleep(200);
+	//cout << "prije baksuza" << endl;
 
 	usleep(200);
-/*
-	for(int i = 0; i < rows-2; i++){
+	//while(!(read_hard(SAHE1_addr) & 0x1));
+	
+	//cout << "poslije baksuza" << endl;
+	
+//	printf("DX \n");
+	/*for(int i = 0; i < rows-2; i++){
 		printf("ROW: %d\n", i);
 		for(int j = 0; j < cols/4; j++){
-			//printf("Even NOT : %llu", )
-			printf("%d: %llx ", j, dy[i*(cols/4) + j]); 
+			printf("%d: %llx", j, dx[i*(cols/4) + j]); 
 		}
 		printf("\n");
 	}
+	*/
+	//printf("Before large loops\n");
+	k = 0;
+	for(int i = 0; i < rows-2; i++){ 
+	 	for(int j = 0; j < cols/4; j++){
+
+			if(j == cols/4 - 1){
+	/*			 dx_img[k]   = (double)((dx[i*cols + j] & 0xFFFF000000000000) >> 48)/pow(2, 12);
+				 dx_img[k+1] = (double)((dx[i*cols + j] & 0x0000FFFF00000000) >> 32)/pow(2, 12);
+
+	 			 dy_img[k]   = (double)((dy[i*cols + j] & 0xFFFF000000000000)  >> 48)/pow(2, 12);
+				 dy_img[k+1] = (double)((dy[i*cols + j] & 0x0000FFFF00000000)  >> 32)/pow(2, 12);
+	*/
+
+				 dx_img[k] = fix_to_double(dx[i*cols/4 + j], 48);
+				 dx_img[k+1] = fix_to_double(dx[i*cols/4 + j], 32);
+
+	 			 dy_img[k]   = fix_to_double(dy[i*cols/4 + j], 48);
+				 dy_img[k+1] = fix_to_double(dy[i*cols/4 + j], 32);
+
+				 k+=2;
+
+			}else{
+	 	/*		 dx_img[k]   = (double)((dx[i*cols + j] & 0xFFFF000000000000) >> 48)/pow(2, 12);
+				 dx_img[k+1] = (double)((dx[i*cols + j] & 0x0000FFFF00000000)>> 32)/pow(2, 12);
+				 dx_img[k+2] = (double)((dx[i*cols + j] & 0x00000000FFFF0000)>> 16)/pow(2, 12);
+				 dx_img[k+3] = (double)(dx[i*cols + j]  & 0x000000000000FFFF)/pow(2, 12);
+
+	 			 dy_img[k]   = (double)((dy[i*cols + j] & 0xFFFF000000000000) >> 48)/pow(2, 12);
+				 dy_img[k+1] = (double)((dy[i*cols + j] & 0x0000FFFF00000000) >> 32)/pow(2, 12);
+				 dy_img[k+2] = (double)((dy[i*cols + j] & 0x00000000FFFF0000) >> 16)/pow(2, 12);
+				 dy_img[k+3] = (double)(dy[i*cols + j]  & 0x000000000000FFFF)/pow(2, 12);
+		*/
+
+				 dx_img[k]   = fix_to_double(dx[i*cols/4 + j], 48);
+				 dx_img[k+1] = fix_to_double(dx[i*cols/4 + j], 32);
+				 dx_img[k+2] = fix_to_double(dx[i*cols/4 + j], 16);
+				 dx_img[k+3] = fix_to_double(dx[i*cols/4 + j], 0);
+
+	 			 dy_img[k]   = fix_to_double(dy[i*cols/4 + j], 48);
+				 dy_img[k+1] = fix_to_double(dy[i*cols/4 + j], 32);
+				 dy_img[k+2] = fix_to_double(dy[i*cols/4 + j], 16);
+				 dy_img[k+3] = fix_to_double(dy[i*cols/4 + j], 0);
+		
+				 k+=4;
+			}
+
+		}
+	}
+
+/*
+	printf("DX_IMG \n");
+	for(int i = 0; i < rows-2; i++){
+		printf("ROW: %d\n", i);
+		for(int j = 0; j < cols-2; j++){
+			printf("%d: %lf ", j, dx_img[i*(cols-2) + j]); 
+		}
+		printf("\n");
+	}
+
 */
+	//printf("After large loops\n");
 	munmap(even, (rows*cols));
 	munmap(odd, (rows*cols));
 	munmap(dx, ((rows-2)*cols*2));
@@ -615,13 +770,18 @@ void extract_hog(int rows, int cols, double *im, double *hog, double* time_filte
 
     //auto start = chrono::high_resolution_clock::now();
 
-    filter_image(rows, cols, &im_dx[0], &im_dy[0], &padded_img[0]);
+    //filter_image(rows, cols, &im_dx[0], &im_dy[0], &padded_img[0]);
 
     //auto finish = chrono::high_resolution_clock::now();
 
     //*time_filter += chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count();
     //--------------------------------------------------------------------------------------------------------------------------------
-    
+
+  	//Filter image:----------------------------------------------------------------------------------------------------------------
+
+	filter_hw(rows+2, cols+2, &padded_img[0], &im_dx[0], &im_dy[0]);
+
+    //--------------------------------------------------------------------------------------------------------------------------------   
 
     double *grad_mag = new double[rows * cols];
     double *grad_angle = new double[rows * cols];
@@ -700,7 +860,6 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, double *I_t
     //*time_extract_hog += chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count();
     //--------------------------------------------------------------------------------------------------------------------------------
     
-
     double template_HOG_norm = 0;
     double template_HOG_mean = 0;
     
@@ -751,7 +910,6 @@ double *face_recognition(int img_h, int img_w, int box_h, int box_w, double *I_t
 
             //*time_extract_hog += chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count();
             //--------------------------------------------------------------------------------------------------------------------------------
-            
             
             img_HOG_mean = mean_subtract(hog_len, &img_HOG[0]);
         
@@ -876,12 +1034,12 @@ void face_recognition_range(double *I_target, int step, int LOWER_BOUNDARY, int 
     double *found_faces = (double *) malloc(sizeof(double)*3);
     num_faces = 0;
 
-    /*cout << "upper boundary: " << UPPER_BOUNDARY << endl;
+    cout << "upper boundary: " << UPPER_BOUNDARY << endl;
     cout << "lower boundary: " << LOWER_BOUNDARY << endl;
-    cout << "step: " << step << endl;*/
+    cout << "step: " << step << endl;
 
     for(int width = UPPER_BOUNDARY; width >= LOWER_BOUNDARY; width -= step) {
-     	//cout << "current template: " << width << endl;
+     	cout << "current template: " << width << endl;
         
         char gray_template[35] = "template/template_";
         char size_gray[4];
@@ -889,7 +1047,6 @@ void face_recognition_range(double *I_target, int step, int LOWER_BOUNDARY, int 
         strcat(gray_template, size_gray);
         strcat(gray_template, ".txt");
 
-        //cout << gray_template << endl;
             
         double *I_template = new double[width * width];
 
@@ -902,6 +1059,7 @@ void face_recognition_range(double *I_target, int step, int LOWER_BOUNDARY, int 
                 I_template[i * width + j] = val;
             }
         }
+
 
         //Face rec:----------------------------------------------------------------------------------------------------------------
         //auto start = chrono::high_resolution_clock::now();
@@ -928,7 +1086,7 @@ void face_recognition_range(double *I_target, int step, int LOWER_BOUNDARY, int 
             found_faces[(i+(num_faces-num_thresholded))*3 + 2] = found_boxes[i*3 + 2];
 
 
-           //cout << "x_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 0] << " y_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 1] << " score_ff: " <<  found_faces[(i+(num_faces-num_thresholded))*3 + 2] <<  endl;  
+           cout << "x_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 0] << " y_ff: " << found_faces[(i+(num_faces-num_thresholded))*3 + 1] << " score_ff: " <<  found_faces[(i+(num_faces-num_thresholded))*3 + 2] <<  endl;  
         }
 
         delete [] found_boxes;
@@ -936,13 +1094,13 @@ void face_recognition_range(double *I_target, int step, int LOWER_BOUNDARY, int 
 
     }
 
-    /*char faces_width[20] = "orig_";
+    char faces_width[20] = "orig_";
     char width[4];
-    snprintf(width, sizeof(width), "%d", W);
+    snprintf(width, sizeof(width), "%d", 150);
     strcat(faces_width, width);
     strcat(faces_width, ".txt");
 
-	write_txt(found_faces, num_faces, faces_width);*/
+	write_txt(found_faces, num_faces, faces_width);
     
     free(found_faces);
 
