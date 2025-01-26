@@ -123,8 +123,6 @@ In summary:
 - **Top-Level Module** integrates the DUT with the testbench.
 - **Coverage** ensures that the verification is comprehensive.
 
-Together, these components create a flexible and powerful UVM testbench capable of verifying complex DUTs.
-
 ## Call Hierarchy
 
 In the UVM testbench for the AXI Lite protocol, understanding the sequence of calls between components is essential to grasp how the testbench drives, observes, and verifies the Design Under Test (DUT). Here's a detailed explanation of the flow, outlining who calls who and when, step by step:
@@ -213,9 +211,6 @@ In the UVM testbench for the AXI Lite protocol, understanding the sequence of ca
 8. **UVM Scoreboard** checks the observed transactions against expected outcomes.
 9. **UVM Checker** verifies specific conditions or properties (if used).
 10. **UVM Coverage** collects data on scenario coverage (if used).
-
-This flow ensures a structured approach to verification, allowing systematic generation, driving, observation, and checking of the DUT’s behavior in a controlled and reusable manner.
-
 
 ## Example AXI Lite (short version)
 
@@ -586,18 +581,4 @@ module top;
    end
 endmodule
 ```
-
-### Summary
-
-- **Transaction Item (`axi_lite_seq_item`)**: Defines the structure of an AXI Lite transaction.
-- **Sequence (`axi_lite_sequence`)**: Generates transactions.
-- **Sequencer (`axi_lite_sequencer`)**: Manages the flow of transactions from the sequence to the driver.
-- **Driver (`axi_lite_driver`)**: Drives the transactions to the DUT.
-- **Monitor (`axi_lite_monitor`)**: Observes and checks the DUT's behavior.
-- **Environment (`axi_lite_env`)**: Connects the sequencer, driver, and monitor.
-- **Test (`axi_lite_test`)**: Configures and runs the test.
-- **Top-Level Module (`top`)**: Instantiates the DUT and UVM testbench.
-
-This full structure should give you a clear and detailed understanding of how each component interacts in a UVM-based testbench for the AXI Lite protocol.
-
 
