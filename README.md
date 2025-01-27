@@ -63,10 +63,13 @@ After the system was deployed, testing was conducted to evaluate its functionali
 
 Since the filtered pixel values aligned with expectations, additional functions were invoked to compute the coordinates of the detected faces in the images. These functions processed the filtered data to produce precise locations of faces, ensuring the accuracy and reliability of the detection algorithm. This successful outcome confirmed the system's capability to perform face detection as designed, marking a critical milestone in its validation.
 
+The resulting image showcasing the detected faces can be seen below:
 
 <p align="center">
   <img src="/results/arithmetic_face.png" />
 </p>
+
+It highlights the successful implementation of the system, where the identified face coordinates are accurately marked on the test images. This visual output serves as a concrete demonstration of the system's ability to process and analyze input data, confirming the correct functioning of the hardware and software components.
 
 
 ## Documentation (Serbian Language)
