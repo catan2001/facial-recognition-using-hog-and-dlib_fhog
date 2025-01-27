@@ -45,7 +45,7 @@ The UVM environment included:
 - **Functional Coverage**: To measure the completeness of verification and ensure that all corner cases were tested.
 
 Using UVM allowed for a modular, scalable, and reusable verification environment, which significantly reduced the debugging time and ensured high-quality hardware design.
-[Read More...](/UVM/README.md.md)
+[Read More...](/UVM/README.md)
 ### Linux Device Driver
 
 Once the hardware design was verified and implemented on the Zynq-7000 board, the next step was integrating it into a Linux environment. This stage involved the installation of Linux on the Zynq board, followed by the development of a Linux device driver to facilitate communication between the software application and the hardware accelerator.
