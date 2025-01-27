@@ -33,7 +33,10 @@ Before using these profiling tools, it’s highly recommended to rewrite your pr
 To install and run these tools, please follow the provided [tutorial](https://baptiste-wicht.com/posts/2011/09/profile-c-application-with-callgrind-kcachegrind.html). After installation, compile your program and run the tools. You should obtain results similar to what we achieved in our project.
 
 
-![alt text](/ESL/misc/Profiled%20Program.png)
+<p align="center">
+  <img src="/ESL/misc/Profiled%20Program.png" />
+</p>
+
 
 The same is shown in the table below:
 
@@ -145,7 +148,10 @@ This abstraction allows engineers to prioritize system functionality and archite
 
 A visualization of the virtual platform design, showing the interconnection between memory and computation units, is shown below.
 
-![alt text](/ESL/misc/VP.png)
+<p align="center">
+  <img src="/ESL/misc/VP.png" />
+</p>
+
 
 The system utilizes 16 Block RAM (BRAM) blocks for storing input data, as well as 16 BRAM blocks for each of the dx and dy outputs of the Sobel operator. To accelerate processing, a loop unrolling technique with a factor of 16 is applied, allowing the system to compute eight dx values and eight dy values in a single iteration. This approach significantly reduces the computation time per iteration and enhances the throughput of the system.
 
@@ -153,7 +159,9 @@ During the partitioning process, configuration registers were defined to manage 
 
 With fewer registers in use, more resources can be allocated to other critical components of the design. Detailed overview of SAHE can be found in the picture below:
 
-![alt text](/ESL/misc/SAHE.png)
+<p align="center">
+  <img src="/ESL/misc/SAHE.png" />
+</p>
 
 
 ## References
