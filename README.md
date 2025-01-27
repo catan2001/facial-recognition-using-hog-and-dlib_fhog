@@ -4,20 +4,10 @@ This project represents a structured and comprehensive implementation of a hardw
 
 ---
 
+<p align="center">
+  <img src="/misc/Chip.png" />
+</p>
 
-<div style="text-align:center;"> <svg xmlns="http://www.w3.org/2000/svg" width="125" height="125" viewBox="0 0 16 16">
-  <defs>
-    <linearGradient id="fadeColor" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#90D5FF">
-        <animate attributeName="stop-color" values="#90D5FF;#90D5FF;#696969;#90D5FF" dur="5s" repeatCount="indefinite" />
-      </stop>
-      <stop offset="100%" stop-color="#90D5FF">
-        <animate attributeName="stop-color" values="#90D5FF;#90D5FF;#696969;#90D5FF" dur="5s" repeatCount="indefinite" />
-      </stop>
-    </linearGradient> 
-  </defs>
-  <path d="M5 0a.5.5 0 0 1 .5.5V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2A2.5 2.5 0 0 1 14 4.5h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14a2.5 3.5 0 0 1-2.5 2.5v1.5a.5.5 0 0 1-1 0V14h-1v1.5a.5.5 0 0 1-1 0V14h-1v1.5a.5.5 0 0 1-1 0V14h-1v1.5a.5.5 0 0 1-1 0V14A2.5 2.5 0 0 1 2 11.5H.5a.5.5 0 0 1 0-1H2v-1H.5a.5.5 0 0 1 0-1H2v-1H.5a.5.5 0 0 1 0-1H2v-1H.5a.5.5 0 0 1 0-1H2A2.5 2.5 0 0 1 4.5 2V.5A.5.5 0 0 1 5 0m-.5 3A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13h7a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 11.5 3zM5 6.5A1.5 1.5 0 0 1 6.5 5h3A1.5 1.5 0 0 1 11 6.5v3A1.5 1.5 0 0 1 9.5 11h-3A1.5 1.5 0 0 1 5 9.5zM6.5 6a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5z" fill="url(#fadeColor)" />
-</svg></div>
 
 ## Introduction
 
@@ -32,7 +22,7 @@ The project encompassed several distinct but interconnected stages, each address
 The first stage of the project involved the development of an abstract model using a virtual platform in SystemC. This stage was crucial for exploring high-level design decisions without delving into hardware implementation details. The ESL model served as a blueprint for the project, helping to validate the overall architecture, functionality, and data flow. 
 
 Using SystemC allowed early detection of potential bottlenecks, enabling iterative refinement before hardware synthesis. The virtual platform also facilitated experimentation with various configurations and provided a software environment to begin developing the firmware and drivers in parallel.
-
+[Read More...](/ESL/README.md)
 ### Hardware Design
 
 The hardware design was implemented using VHDL, with a focus on the Zynq-7000 SoC. This stage involved translating the high-level design from the ESL model into a detailed register-transfer-level (RTL) description. 
@@ -43,7 +33,7 @@ Key considerations during this phase included:
 - **Modular Design**: Structuring the hardware into reusable and maintainable modules.
   
 The design leveraged the unique capabilities of the Zynq-7000, particularly its tightly coupled ARM processing system and programmable logic, which allowed for a seamless blend of hardware acceleration and software control.
-
+[Read More...]()
 ### UVM (Universal Verification Methodology)
 
 Verification played a critical role in ensuring the correctness and reliability of the hardware design. A UVM testbench was developed in parallel with the hardware design to simulate and validate the functionality of the RTL modules. 
@@ -55,7 +45,7 @@ The UVM environment included:
 - **Functional Coverage**: To measure the completeness of verification and ensure that all corner cases were tested.
 
 Using UVM allowed for a modular, scalable, and reusable verification environment, which significantly reduced the debugging time and ensured high-quality hardware design.
-
+[Read More...](/UVM/README.md.md)
 ### Linux Device Driver
 
 Once the hardware design was verified and implemented on the Zynq-7000 board, the next step was integrating it into a Linux environment. This stage involved the installation of Linux on the Zynq board, followed by the development of a Linux device driver to facilitate communication between the software application and the hardware accelerator.
@@ -66,5 +56,26 @@ The device driver included:
 - **Interrupt Handling**: Ensuring efficient handling of hardware events to minimize latency.
 
 This stage bridged the gap between the hardware and software, enabling the integration of the hardware accelerator into real-world applications running on a Linux-based system.
+[Read More...]()
+## Results
+
+After the system was deployed, testing was conducted to evaluate its functionality. The system was tested for its ability to detect faces in photographs, using the same test samples that were previously utilized during simulations on the virtual platform. The values stored in the DRAM memory matched the expected values, providing additional verification of the system's operation.
+
+Since the filtered pixel values aligned with expectations, additional functions were invoked to compute the coordinates of the detected faces in the images. These functions processed the filtered data to produce precise locations of faces, ensuring the accuracy and reliability of the detection algorithm. This successful outcome confirmed the system's capability to perform face detection as designed, marking a critical milestone in its validation.
 
 
+<p align="center">
+  <img src="/results/arithmetic_face.png" />
+</p>
+
+
+## Documentation (Serbian Language)
+- [Electronic System Level](/Documentation/Specifikacija_esl.docx)
+- [Hardware Design](/Documentation/Dokumentacija_PSDS.docx)
+- [Functional Verification](/Documentation/FV_dokumentacija.docx)
+- [Linux Device Driver](/Documentation/EOS_doc.docx)
+
+## Software Guides
+- [Ubuntu, Vivado Suite, PetaLinux Install Guide](/Ubuntu,%20Vivado%20Suite,%20PetaLinux%20Install%20Guide.md)
+- [Git Tutorial](/GIT%20notes.md)
+- [SystemC Install Guide](https://gist.github.com/bagheriali2001/0736fabf7da95fb02bbe6777d53fabf7)
