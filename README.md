@@ -34,6 +34,9 @@ Key considerations during this phase included:
   
 The design leveraged the unique capabilities of the Zynq-7000, particularly its tightly coupled ARM processing system and programmable logic, which allowed for a seamless blend of hardware acceleration and software control.
 [Read More...]()
+
+> [!WARNING]
+> ReadMe is still work in progress!
 ### UVM (Universal Verification Methodology)
 
 Verification played a critical role in ensuring the correctness and reliability of the hardware design. A UVM testbench was developed in parallel with the hardware design to simulate and validate the functionality of the RTL modules. 
@@ -57,6 +60,9 @@ The device driver included:
 
 This stage bridged the gap between the hardware and software, enabling the integration of the hardware accelerator into real-world applications running on a Linux-based system.
 [Read More...]()
+
+> [!WARNING]
+> ReadMe is still work in progress!
 ## Results
 
 After the system was deployed, testing was conducted to evaluate its functionality. The system was tested for its ability to detect faces in photographs, using the same test samples that were previously utilized during simulations on the virtual platform. The values stored in the DRAM memory matched the expected values, providing additional verification of the system's operation.

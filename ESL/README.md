@@ -6,7 +6,8 @@ This **README** provides a straightforward explanation of the purpose of ESL and
 
 The **Electronic System Level** (ESL) design methodology is a crucial foundation for any project. It acts as a guideline for subsequent sections and involves creating an abstract model of the hardware structure and its communication with the rest of the system.
 
-**NOTE:** A thorough understanding of the core components of the hardware system you're working with is essential for effectively integrating all parts of your virtual platform. Specifically, for [Zynq-7000](#other) architecture, it is highly recommended to familiarize yourself with its main components and interconnects to avoid getting overwhelmed by unnecessary details.
+> [!IMPORTANT]
+> A thorough understanding of the core components of the hardware system you're working with is essential for effectively integrating all parts of your virtual platform. Specifically, for [Zynq-7000](#other) architecture, it is highly recommended to familiarize yourself with its main components and interconnects to avoid getting overwhelmed by unnecessary details.
 
 ### List of Sections
 
@@ -19,7 +20,8 @@ The **Electronic System Level** (ESL) design methodology is a crucial foundation
 
 The first step in the ESL design process is understanding how your programs functions work and identifying which parts of the program are the slowest. This can be achieved by using **profiling tools**, which analyze the performance of each function in your program. The function with the highest execution time is typically the best candidate for hardware integration to achieve faster performance.
 
-**NOTE:** When using profiling tools, it’s ideal to work with a program that minimizes branching. Ideally, you want a single function to dominate execution time (e.g., taking up 90% of CPU processing time) to simplify hardware translation and optimization.
+> [!NOTE]
+> When using profiling tools, it’s ideal to work with a program that minimizes branching. Ideally, you want a single function to dominate execution time (e.g., taking up 90% of CPU processing time) to simplify hardware translation and optimization.
 
 ### Tools Used:
 - [Callgrind](https://valgrind.org/docs/manual/cl-manual.html)
@@ -28,7 +30,8 @@ The first step in the ESL design process is understanding how your programs func
 --- 
 Before using these profiling tools, it’s highly recommended to rewrite your program in C or C++ if it’s not already implemented in a low-level programming language. This can save significant time and effort later in the process.
 
-**Advice:** If you lack experience with programming, try to avoid large, complex libraries that are difficult to understand. Such libraries can make it challenging to isolate and analyze the specific function that needs to be translated into hardware.
+> [!TIP] 
+> If you lack experience with programming, try to avoid large, complex libraries that are difficult to understand. Such libraries can make it challenging to isolate and analyze the specific function that needs to be translated into hardware.
 
 To install and run these tools, please follow the provided [tutorial](https://baptiste-wicht.com/posts/2011/09/profile-c-application-with-callgrind-kcachegrind.html). After installation, compile your program and run the tools. You should obtain results similar to what we achieved in our project.
 
@@ -72,7 +75,8 @@ Since this project is for students, we used **filter_image** function for accele
    - \( P \) is the proportion of execution time affected by the optimization.
    - \( S \) is the speedup of the optimized portion.
 
-    **NOTE:** We did not use this in our project but it is advised to try it.
+> [!NOTE] 
+> We did not use Amdahl's Law in our project but it is advised to try it.
 
 ### Advice for Future Optimization:  
 
@@ -121,7 +125,8 @@ This means that input values into hardware are in range [0, 1].
 
 This means that output values from hardware are in range [-4, 4] .
 
-**NOTE:** Please take in consideration that representing negative values also affects the number of bits.
+> [!IMPORTANT]
+>  Please take in consideration that representing negative values also affects the number of bits.
 
 After calculating the number of bits needed to represent input and output data we can continue to the last section of modeling [Virtual Platform](#virtual-platform)
 
